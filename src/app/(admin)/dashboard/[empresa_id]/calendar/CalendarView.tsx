@@ -101,7 +101,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          setLocalEvents(updated);
          // Atualiza localStorage só com os que vieram do storage local
          const stored = JSON.parse(localStorage.getItem('voibi_mock_events') || '[]');
-         const updatedStored = stored.map((e: any) => e.id === formData.id ? updated.find(u => u.id === formData.id) : e);
+         const updatedStored = stored.map((e: any) => e.id === formData.id ? updated.find((u: any) => u.id === formData.id) : e);
          localStorage.setItem('voibi_mock_events', JSON.stringify(updatedStored));
       } else {
          const newEvent = {
