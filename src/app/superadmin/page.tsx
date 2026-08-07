@@ -12,11 +12,16 @@ export default async function SuperadminPage() {
   async function createEmpresa(formData: FormData) {
     'use server'
     const supabase = getServiceSupabase();
+    const plano_id = formData.get('plano_id')?.toString();
     const { data: empresa, error } = await supabase.from('agend_empresas').insert({ 
       nome: formData.get('nome'), 
       slug: formData.get('slug'),
-      plano_id: formData.get('plano_id')
+      plano_id: plano_id ? plano_id : null
     }).select().single();
+
+    if (error) {
+        console.error("Erro ao criar empresa:", error);
+    }
 
     if (empresa) {
       await supabase.from('agend_unidades').insert({
