@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (ag.cliente_id && ag.agend_clientes_finais) {
       clientesEncontrados.set(ag.cliente_id, {
         cliente: ag.agend_clientes_finais,
-        ultimoProcedimento: ag.agend_tipos_evento?.nome,
+        ultimoProcedimento: (ag.agend_tipos_evento as any)?.nome,
         ultimaData: ag.inicio
       });
     }
