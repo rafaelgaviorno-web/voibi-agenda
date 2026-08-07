@@ -65,7 +65,7 @@ export default async function AgendamentoPublicoPage({
     
     // Pegar disponibilidade do profissional
     const { data: dispData } = await supabase.from('agend_disponibilidade').select('dia_semana, hora_inicio, hora_fim').eq('profissional_id', agenda_id);
-    pData.disponibilidade = dispData || [];
+    (pData as any).disponibilidade = dispData || [];
     
     profissional = pData;
     
