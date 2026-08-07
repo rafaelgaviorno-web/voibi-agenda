@@ -50,9 +50,9 @@ export default function AgendaConfigClient({
           // Como o DB retorna linhas separadas, agrupamos por dia.
           // Aqui faríamos uma lógica para agrupar, mas para simplificar:
           // Se for a primeira vez que vemos o dia, substituímos o array padrão.
-          if (!dia.intervalos[0] || (dia.intervalos.length === 1 && dia.intervalos[0].inicio === '08:00' && dia.intervalos[0].fim === '18:00' && !dia._modificado)) {
+          if (!dia.intervalos[0] || (dia.intervalos.length === 1 && dia.intervalos[0].inicio === '08:00' && dia.intervalos[0].fim === '18:00' && !(dia as any)._modificado)) {
             dia.intervalos = [];
-            dia._modificado = true;
+            (dia as any)._modificado = true;
           }
           dia.intervalos.push({ inicio: d.hora_inicio.substring(0,5), fim: d.hora_fim.substring(0,5) });
         }
