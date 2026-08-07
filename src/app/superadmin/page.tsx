@@ -12,11 +12,18 @@ export default async function SuperadminPage() {
   async function createEmpresa(formData: FormData) {
     'use server'
     const supabase = getServiceSupabase();
-    await supabase.from('agend_empresas').insert({ 
+    const { data: empresa, error } = await supabase.from('agend_empresas').insert({ 
       nome: formData.get('nome'), 
       slug: formData.get('slug'),
       plano_id: formData.get('plano_id')
-    });
+    }).select().single();
+
+    if (empresa) {
+      await supabase.from('agend_unidades').insert({
+        empresa_id: empresa.id,
+        nome: 'Matriz'
+      });
+    }
     revalidatePath('/superadmin');
   }
 
