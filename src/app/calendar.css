@@ -1,0 +1,118 @@
+/* Google Calendar Theme for FullCalendar v6 */
+
+/* Variáveis de Cores (Material Design) */
+:root {
+  --fc-border-color: #dadce0;
+  --fc-day-today-bg-color: transparent;
+  --fc-today-bg-color: transparent;
+  --fc-now-indicator-color: #ea4335;
+  --fc-page-bg-color: #ffffff;
+}
+
+/* Remover bordas pesadas e deixar suave */
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: var(--fc-border-color);
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: none;
+}
+
+.fc-scrollgrid-sync-table {
+  border-top: none;
+}
+
+/* Cabeçalho do Google Calendar */
+.fc-col-header-cell {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Remover o link padrão que estragava a cor */
+.fc-col-header-cell-cushion {
+  text-decoration: none !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+/* Eixos de tempo (esquerdos) */
+.fc-timegrid-slot-label-cushion {
+  font-size: 10px;
+  color: #70757a;
+  text-transform: lowercase;
+}
+
+.fc-timegrid-slot {
+  height: 48px !important;
+}
+
+/* Oculta a linha no meio da hora (borda de baixo do slot principal) */
+.fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
+  border-bottom: none !important;
+}
+
+/* Mostra a linha no final da hora (borda de baixo do slot menor) */
+.fc-timegrid-slot-minor {
+  border-bottom: 1px solid #dadce0 !important;
+}
+
+/* Estilizar os blocos de eventos */
+.fc-timegrid-event {
+  border-radius: 4px;
+  border: none;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); /* Sombra interna sutil igual Google */
+  padding: 2px 4px;
+  transition: box-shadow 0.2s, filter 0.2s;
+  cursor: pointer;
+}
+
+.fc-timegrid-event:hover {
+  filter: brightness(0.9);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+  z-index: 5 !important;
+}
+
+/* Toolbar superior (Botões e Título) */
+.fc .fc-toolbar-title {
+  font-size: 22px;
+  font-weight: 400;
+  color: #3c4043;
+}
+
+.fc .fc-button-primary {
+  background-color: transparent;
+  border: 1px solid #dadce0;
+  color: #3c4043;
+  border-radius: 4px;
+  text-transform: capitalize;
+  font-weight: 500;
+  padding: 8px 16px;
+  transition: background-color 0.15s;
+}
+
+.fc .fc-button-primary:not(:disabled):hover {
+  background-color: #f1f3f4;
+  color: #3c4043;
+  border-color: #dadce0;
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #e8f0fe;
+  color: #1967d2;
+  border-color: #e8f0fe;
+}
+
+/* Linha do tempo vermelha */
+.fc-timegrid-now-indicator-line {
+  border-color: #ea4335;
+  border-width: 2px 0 0;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-color: #ea4335;
+  border-width: 6px 0 6px 7px;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
