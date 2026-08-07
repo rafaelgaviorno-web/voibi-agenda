@@ -2,7 +2,7 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
-import { ShieldCheck, User as UserIcon, CalendarDays, Clock, ArrowRight, Plus, Link as LinkIcon, Copy, CalendarX } from 'lucide-react';
+import { ShieldCheck, User as UserIcon, CalendarDays, Clock, ArrowRight, Plus, Link as LinkIcon, Copy, CalendarX, Trash2 } from 'lucide-react';
 import UserForm from './UserForm';
 import ProcedimentosManager from './ProcedimentosManager';
 import BloqueiosManager from './BloqueiosManager';
