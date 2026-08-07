@@ -90,7 +90,7 @@ export default async function SettingsPage(props: {
     const unidade_id = formData.get('unidade_id') as string;
     
     let abasPermitidas = formData.getAll('abas') as string[];
-    let agendasSalvar = agendasPermitidas;
+    let agendasSalvar = formData.getAll('agendas') as string[];
 
     // Se for admin, forçamos o acesso total a tudo
     if (papel === 'admin') {
