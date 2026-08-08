@@ -98,7 +98,9 @@ export default async function SettingsPage(props: {
     }
 
     try {
-      // 1. Criar o usuário no Supabase Auth
+      let authUserId = '';
+      
+      // 1. Tentar criar o usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: email,
         password: senha,
@@ -108,14 +110,36 @@ export default async function SettingsPage(props: {
         }
       });
 
-      if (authError || !authData.user) {
-         console.error("Erro ao criar usuário auth:", authError);
-         return { error: authError?.message || 'Erro ao criar conta no sistema.' };
+      if (authError) {
+         // Verificar se o erro é de usuário já existente (email já em uso)
+         if (authError.message.toLowerCase().includes('already registered') || authError.status === 422) {
+             // O usuário já existe no Supabase (ex: criado no Prothesys).
+             // Vamos buscar o ID dele gerando um link mágico falso (o link não é enviado, serve só para retornar os dados do usuário).
+             const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+                type: 'magiclink',
+                email: email
+             });
+             
+             if (linkError || !linkData?.user) {
+                console.error("Erro ao resgatar usuário existente:", linkError);
+                return { error: 'O e-mail já existe no sistema, mas não foi possível vinculá-lo.' };
+             }
+             authUserId = linkData.user.id;
+         } else {
+             console.error("Erro ao criar usuário auth:", authError);
+             return { error: authError.message || 'Erro ao criar conta no sistema.' };
+         }
+      } else if (authData?.user) {
+         authUserId = authData.user.id;
       }
 
-      // 2. Vincular o usuário recém-criado na tabela agend_usuarios
+      if (!authUserId) {
+         return { error: 'Erro desconhecido ao processar conta de usuário.' };
+      }
+
+      // 2. Vincular o usuário (novo ou existente) na tabela agend_usuarios
       const { data: newUser, error } = await supabase.from('agend_usuarios').insert({
-         id: authData.user.id,
+         id: authUserId,
          empresa_id: empresa_id,
          nome: nome,
          email: email,
@@ -126,8 +150,16 @@ export default async function SettingsPage(props: {
 
       if (error) {
          console.error("Erro ao inserir em agend_usuarios:", error);
-         // Rollback do usuário no auth
-         await supabase.auth.admin.deleteUser(authData.user.id);
+         
+         // Se for violação de PK/Unique, é porque ele já está na tabela de usuários
+         if (error.code === '23505') {
+            return { error: 'Este e-mail já está vinculado a uma clínica no Voibi Agenda.' };
+         }
+
+         // Rollback apenas se nós tivermos CRIADO o usuário agora (se authError foi null)
+         if (!authError) {
+            await supabase.auth.admin.deleteUser(authUserId);
+         }
          return { error: error.message };
       }
       
