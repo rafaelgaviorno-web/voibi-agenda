@@ -13,21 +13,55 @@ export default async function SuperadminPage() {
     'use server'
     const supabase = getServiceSupabase();
     const plano_id = formData.get('plano_id')?.toString();
-    const { data: empresa, error } = await supabase.from('agend_empresas').insert({ 
+    const cnpj = formData.get('cnpj')?.toString() || null;
+    const adminNome = formData.get('admin_nome')?.toString() || '';
+    const adminEmail = formData.get('admin_email')?.toString() || '';
+    const adminSenha = formData.get('admin_senha')?.toString() || '';
+
+    // 1. Criar Empresa
+    const { data: empresa, error: empresaError } = await supabase.from('agend_empresas').insert({ 
       nome: formData.get('nome'), 
       slug: formData.get('slug'),
-      plano_id: plano_id ? plano_id : null
+      plano_id: plano_id ? plano_id : null,
+      cnpj: cnpj
     }).select().single();
 
-    if (error) {
-        console.error("Erro ao criar empresa:", error);
+    if (empresaError) {
+        console.error("Erro ao criar empresa:", empresaError);
+        return;
     }
 
     if (empresa) {
+      // 2. Criar Unidade Base
       await supabase.from('agend_unidades').insert({
         empresa_id: empresa.id,
         nome: 'Matriz'
       });
+
+      // 3. Criar Usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: adminEmail,
+        password: adminSenha,
+        email_confirm: true,
+        user_metadata: {
+          nome: adminNome
+        }
+      });
+
+      if (authError) {
+         console.error("Erro ao criar usuário auth:", authError);
+         return;
+      }
+
+      // 4. Vincular usuário à tabela agend_usuarios
+      if (authData.user) {
+         await supabase.from('agend_usuarios').insert({
+            id: authData.user.id,
+            empresa_id: empresa.id,
+            papel: 'admin',
+            nome: adminNome
+         });
+      }
     }
     revalidatePath('/superadmin');
   }
@@ -41,27 +75,54 @@ export default async function SuperadminPage() {
 
       <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-6">
         <h3 className="font-semibold text-white mb-4">Cadastrar Nova Empresa</h3>
-        <form action={createEmpresa} className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 space-y-1 w-full">
-             <label className="text-sm font-medium text-zinc-300">Nome da Clínica</label>
-             <input required name="nome" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Ex: Clínica Sorriso" />
+        <form action={createEmpresa} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+               <label className="text-sm font-medium text-zinc-300">Nome da Clínica</label>
+               <input required name="nome" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Ex: Clínica Sorriso" />
+            </div>
+            <div className="space-y-1">
+               <label className="text-sm font-medium text-zinc-300">Slug (URL)</label>
+               <input required name="slug" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="clinica-sorriso" />
+            </div>
+            <div className="space-y-1">
+               <label className="text-sm font-medium text-zinc-300">CNPJ (Opcional)</label>
+               <input name="cnpj" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="00.000.000/0000-00" />
+            </div>
+            <div className="space-y-1">
+               <label className="text-sm font-medium text-zinc-300">Plano SaaS</label>
+               <select required name="plano_id" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                 <option value="">Selecione...</option>
+                 {planos?.map(plano => (
+                   <option key={plano.id} value={plano.id}>{plano.nome} (R$ {Number(plano.preco_mensal).toFixed(2)})</option>
+                 ))}
+               </select>
+            </div>
           </div>
-          <div className="flex-1 space-y-1 w-full">
-             <label className="text-sm font-medium text-zinc-300">Slug (URL)</label>
-             <input required name="slug" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="clinica-sorriso" />
+
+          <div className="border-t border-zinc-700/50 pt-4 mt-4">
+             <h4 className="font-medium text-white mb-4">Dados do Administrador da Clínica</h4>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                   <label className="text-sm font-medium text-zinc-300">Nome do Admin</label>
+                   <input required name="admin_nome" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="João Silva" />
+                </div>
+                <div className="space-y-1">
+                   <label className="text-sm font-medium text-zinc-300">Email (Login)</label>
+                   <input required type="email" name="admin_email" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="admin@clinica.com" />
+                </div>
+                <div className="space-y-1">
+                   <label className="text-sm font-medium text-zinc-300">Senha Padrão</label>
+                   <input required type="password" name="admin_senha" minLength={6} className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="******" />
+                </div>
+             </div>
           </div>
-          <div className="flex-1 space-y-1 w-full">
-             <label className="text-sm font-medium text-zinc-300">Plano SaaS</label>
-             <select required name="plano_id" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-               <option value="">Selecione...</option>
-               {planos?.map(plano => (
-                 <option key={plano.id} value={plano.id}>{plano.nome} (R$ {Number(plano.preco_mensal).toFixed(2)})</option>
-               ))}
-             </select>
+
+          <div className="flex justify-end pt-4">
+            <button type="submit" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md text-sm font-medium transition-colors">
+              Cadastrar Empresa Completa
+            </button>
           </div>
-          <button type="submit" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium transition-colors">
-            Cadastrar
-          </button>
         </form>
       </div>
 
