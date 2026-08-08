@@ -413,7 +413,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           </button>
           
           <div className="flex items-center gap-2 mr-4">
-            <span className="text-[22px] font-normal text-[#3c4043]">Agenda</span>
+            <span className="text-[22px] font-normal text-[#3c4043] dark:text-zinc-200">Agenda</span>
           </div>
 
           <button 

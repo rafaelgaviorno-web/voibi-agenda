@@ -15,8 +15,8 @@ export default async function LoginPage({
 
   async function signIn(formData: FormData) {
     'use server';
-    const email = formData.get('email')?.toString() || '';
-    const password = formData.get('password')?.toString() || '';
+    const email = formData.get('login_email_unique')?.toString() || '';
+    const password = formData.get('login_password_unique')?.toString() || '';
     const supabase = getServiceSupabase();
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -83,7 +83,8 @@ export default async function LoginPage({
             <input 
               required 
               type="email" 
-              name="email" 
+              name="login_email_unique" 
+              autoComplete="new-email"
               className="w-full bg-zinc-50 dark:bg-black border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600" 
               placeholder="seu@email.com" 
             />
@@ -97,7 +98,8 @@ export default async function LoginPage({
             <input 
               required 
               type="password" 
-              name="password" 
+              name="login_password_unique" 
+              autoComplete="new-password"
               className="w-full bg-zinc-50 dark:bg-black border border-zinc-300 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600" 
               placeholder="••••••••" 
             />

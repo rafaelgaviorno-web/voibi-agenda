@@ -26,11 +26,17 @@ export default async function DashboardLayout({
 
   const cookieStore = await cookies();
   const savedUnidadeId = cookieStore.get('voibi_unidade_id')?.value;
-
-  const supabase = getServiceSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user?.user_metadata?.is_superadmin === true) {
-    isSuperAdmin = true;
+  
+  const authCookie = cookieStore.get('voibi-auth')?.value;
+  if (authCookie) {
+    try {
+      const parsedAuth = JSON.parse(authCookie);
+      if (parsedAuth.is_superadmin) {
+        isSuperAdmin = true;
+      }
+    } catch (e) {
+      // Ignora erro de parse
+    }
   }
 
   if (empresa_id === 'mock-clinic') {
@@ -48,6 +54,7 @@ export default async function DashboardLayout({
       { id: 'prof-3', nome: 'Dr. Pedro (Zona Sul)', cor: '#eab308', unidade_id: 'un-2' }
     ];
   } else {
+    const supabase = getServiceSupabase();
     const { data } = await supabase
       .from('agend_empresas')
       .select('*')
