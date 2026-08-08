@@ -22,9 +22,16 @@ export default async function DashboardLayout({
   let unidades: any[] = [];
   let currentUnidadeId = '';
   let agendas: any[] = [];
+  let isSuperAdmin = false;
 
   const cookieStore = await cookies();
   const savedUnidadeId = cookieStore.get('voibi_unidade_id')?.value;
+
+  const supabase = getServiceSupabase();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user?.user_metadata?.is_superadmin === true) {
+    isSuperAdmin = true;
+  }
 
   if (empresa_id === 'mock-clinic') {
     empresa = { id: 'mock-clinic', nome: 'Clínica de Teste Voibi' };
@@ -41,7 +48,6 @@ export default async function DashboardLayout({
       { id: 'prof-3', nome: 'Dr. Pedro (Zona Sul)', cor: '#eab308', unidade_id: 'un-2' }
     ];
   } else {
-    const supabase = getServiceSupabase();
     const { data } = await supabase
       .from('agend_empresas')
       .select('*')
@@ -97,6 +103,18 @@ export default async function DashboardLayout({
 
           <SettingsDropdown baseUrl={baseUrl} />
         </nav>
+        
+        {isSuperAdmin && (
+          <div className="px-4 mb-2">
+            <Link 
+              href="/superadmin" 
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm"
+            >
+              <Blocks className="w-4 h-4" />
+              Painel SuperAdmin
+            </Link>
+          </div>
+        )}
         
         <ProfileDropdown />
       </aside>
