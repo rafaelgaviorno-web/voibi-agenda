@@ -15,8 +15,8 @@ export default async function SuperadminPage() {
     const plano_id = formData.get('plano_id')?.toString();
     const cnpj = formData.get('cnpj')?.toString() || null;
     const adminNome = formData.get('admin_nome')?.toString() || '';
-    const adminEmail = formData.get('admin_email')?.toString() || '';
-    const adminSenha = formData.get('admin_senha')?.toString() || '';
+    const adminEmail = formData.get('new_admin_email_unique')?.toString() || '';
+    const adminSenha = formData.get('new_admin_password_unique')?.toString() || '';
 
     // 1. Criar Empresa
     const { data: empresa, error: empresaError } = await supabase.from('agend_empresas').insert({ 
@@ -109,11 +109,11 @@ export default async function SuperadminPage() {
                 </div>
                 <div className="space-y-1">
                    <label className="text-sm font-medium text-zinc-300">Email (Login)</label>
-                   <input required type="email" name="admin_email" autoComplete="new-email" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="admin@clinica.com" />
+                   <input required type="email" name="new_admin_email_unique" autoComplete="new-password" placeholder="admin@clinica.com" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                 </div>
                 <div className="space-y-1">
                    <label className="text-sm font-medium text-zinc-300">Senha Padrão</label>
-                   <input required type="password" name="admin_senha" minLength={6} autoComplete="new-password" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="******" />
+                   <input required type="password" name="new_admin_password_unique" minLength={6} autoComplete="new-password" placeholder="******" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                 </div>
              </div>
           </div>

@@ -48,11 +48,11 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
 
   return (
     <div className="p-5">
-      <p className="text-sm text-zinc-500 mb-6">
+      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
         Adicione períodos de bloqueio para que não seja possível agendar horários. Você pode bloquear a clínica inteira (Fundo colorido) ou uma agenda específica (Card Cinza).
       </p>
 
-      <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-200 mb-8 space-y-4">
+      <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 mb-8 space-y-4">
         
         <div className="flex items-center gap-2 mb-2">
           <input 
@@ -64,19 +64,19 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
               // Limpar as datas quando alterna o modo para evitar erros de formatação
               setNovoBloqueio({...novoBloqueio, inicio: '', fim: ''});
             }}
-            className="w-4 h-4 text-blue-600 rounded border-zinc-300 focus:ring-blue-500"
+            className="w-4 h-4 text-blue-600 rounded border-zinc-300 dark:border-zinc-600 focus:ring-blue-500"
           />
-          <label htmlFor="diaTodo" className="text-sm font-medium text-zinc-700">Bloquear dia todo</label>
+          <label htmlFor="diaTodo" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Bloquear dia todo</label>
         </div>
 
         <div className="flex flex-wrap gap-4 items-end">
           {unidades && unidades.length > 0 && (
             <div className="flex-1 min-w-[140px] space-y-1.5">
-               <label className="text-xs font-medium text-zinc-700">Unidade Afetada</label>
+               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Unidade Afetada</label>
                <select 
                   value={novoBloqueio.unidade_id} 
                   onChange={e => setNovoBloqueio({...novoBloqueio, unidade_id: e.target.value})} 
-                  className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500"
                >
                  <option value="">Todas (Geral)</option>
                  {unidades.map((u: any) => (
@@ -86,11 +86,11 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
             </div>
           )}
           <div className="flex-1 min-w-[140px] space-y-1.5">
-             <label className="text-xs font-medium text-zinc-700">Agenda Afetada</label>
+             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Agenda Afetada</label>
              <select 
                 value={novoBloqueio.profissional_id} 
                 onChange={e => setNovoBloqueio({...novoBloqueio, profissional_id: e.target.value})} 
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500"
              >
                <option value="">Todas da Unidade</option>
                {agendas.filter((a:any) => !novoBloqueio.unidade_id || a.unidade_id === novoBloqueio.unidade_id).map((a: any) => (
@@ -99,16 +99,16 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
              </select>
           </div>
           <div className="flex-1 min-w-[160px] space-y-1.5">
-             <label className="text-xs font-medium text-zinc-700">Data Inicial</label>
-             <input type={isDiaTodo ? "date" : "datetime-local"} value={novoBloqueio.inicio} onChange={e => setNovoBloqueio({...novoBloqueio, inicio: e.target.value})} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-blue-500" />
+             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Data Inicial</label>
+             <input type={isDiaTodo ? "date" : "datetime-local"} value={novoBloqueio.inicio} onChange={e => setNovoBloqueio({...novoBloqueio, inicio: e.target.value})} className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500" />
           </div>
           <div className="flex-1 min-w-[160px] space-y-1.5">
-             <label className="text-xs font-medium text-zinc-700">Data Final</label>
-             <input type={isDiaTodo ? "date" : "datetime-local"} value={novoBloqueio.fim} onChange={e => setNovoBloqueio({...novoBloqueio, fim: e.target.value})} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-blue-500" />
+             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Data Final</label>
+             <input type={isDiaTodo ? "date" : "datetime-local"} value={novoBloqueio.fim} onChange={e => setNovoBloqueio({...novoBloqueio, fim: e.target.value})} className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500" />
           </div>
           <div className="flex-1 min-w-[140px] space-y-1.5">
-             <label className="text-xs font-medium text-zinc-700">Motivo</label>
-             <input type="text" placeholder="Opcional" value={novoBloqueio.motivo} onChange={e => setNovoBloqueio({...novoBloqueio, motivo: e.target.value})} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-blue-500" />
+             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">Motivo</label>
+             <input type="text" placeholder="Opcional" value={novoBloqueio.motivo} onChange={e => setNovoBloqueio({...novoBloqueio, motivo: e.target.value})} className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500" />
           </div>
           <div className="w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
             <button onClick={handleAddBloqueio} disabled={isSaving || !novoBloqueio.inicio || !novoBloqueio.fim} className="w-full sm:w-auto bg-zinc-900 hover:bg-black text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 h-[38px] flex items-center justify-center">
@@ -119,13 +119,13 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
       </div>
 
       <div>
-        <h3 className="font-semibold text-zinc-900 mb-4">Bloqueios Ativos</h3>
+        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Bloqueios Ativos</h3>
         {bloqueios.length === 0 ? (
-          <p className="text-sm text-zinc-500 italic">Nenhum bloqueio cadastrado.</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">Nenhum bloqueio cadastrado.</p>
         ) : (
-          <div className="border border-zinc-200 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-sm text-zinc-600">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-700 font-medium">
+          <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+            <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
+              <thead className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium">
                 <tr>
                   <th className="px-4 py-3">Início</th>
                   <th className="px-4 py-3">Fim</th>
@@ -138,7 +138,7 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                 {bloqueios.map((b: any) => {
                   const agendaAfetada = b.profissional_id ? agendas.find((a:any) => a.id === b.profissional_id)?.nome : 'Geral (Clínica toda)';
                   return (
-                  <tr key={b.id} className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50/50">
+                  <tr key={b.id} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50/50 dark:bg-zinc-900/50">
                     <td className="px-4 py-3">{new Date(b.inicio).toLocaleString('pt-BR')}</td>
                     <td className="px-4 py-3">{new Date(b.fim).toLocaleString('pt-BR')}</td>
                     <td className="px-4 py-3 font-medium">

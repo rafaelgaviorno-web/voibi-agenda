@@ -240,7 +240,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       eventContent: (arg) => {
         if (arg.event.extendedProps.status === 'bloqueio') {
           return { 
-            html: `<div class="p-1 text-zinc-700 font-bold text-[10px] uppercase text-center w-full h-full flex items-center justify-center bg-zinc-200/50 rounded-sm border border-zinc-300 border-dashed" style="min-height: 24px;">
+            html: `<div class="p-1 text-zinc-700 dark:text-zinc-300 font-bold text-[10px] uppercase text-center w-full h-full flex items-center justify-center bg-zinc-200/50 rounded-sm border border-zinc-300 dark:border-zinc-600 border-dashed" style="min-height: 24px;">
                      ${arg.event.title}
                    </div>` 
           };
@@ -399,7 +399,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   };
 
   return (
-    <div className="flex flex-col h-screen w-full font-sans text-sm bg-white text-[#3c4043]">
+    <div className="flex flex-col h-screen w-full font-sans text-sm bg-white dark:bg-zinc-900 text-[#3c4043]">
       
       {/* Top Bar - Estilo Google Calendar */}
       <header className="flex items-center justify-between px-4 py-2 border-b border-[#dadce0]">
@@ -461,7 +461,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
             <input 
               type="text" 
               placeholder="Pesquisar..." 
-              className="pl-10 pr-4 py-2 bg-[#f1f3f4] border-none rounded-md focus:bg-white focus:ring-1 focus:ring-blue-500 focus:shadow-md transition-all text-sm w-64"
+              className="pl-10 pr-4 py-2 bg-[#f1f3f4] border-none rounded-md focus:bg-white dark:bg-zinc-900 focus:ring-1 focus:ring-blue-500 focus:shadow-md transition-all text-sm w-64"
               value={searchPatient}
               onChange={e => setSearchPatient(e.target.value)}
             />
@@ -470,7 +470,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           <select 
             value={currentView} 
             onChange={handleViewChange}
-            className="border border-[#dadce0] rounded px-3 py-2 text-sm font-medium hover:bg-[#f1f3f4] focus:outline-none transition-colors appearance-none bg-white min-w-[100px] cursor-pointer"
+            className="border border-[#dadce0] rounded px-3 py-2 text-sm font-medium hover:bg-[#f1f3f4] focus:outline-none transition-colors appearance-none bg-white dark:bg-zinc-900 min-w-[100px] cursor-pointer"
           >
             <option value="timeGridDay">Dia</option>
             <option value="timeGridWeek">Semana</option>
@@ -481,7 +481,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
       <div className="flex flex-1 overflow-hidden">
         {/* Grade do Calendário */}
-        <div className="flex-1 overflow-hidden bg-white relative z-0">
+        <div className="flex-1 overflow-hidden bg-white dark:bg-zinc-900 relative z-0">
           <div ref={calendarRef} className="absolute inset-0"></div>
         </div>
       </div>

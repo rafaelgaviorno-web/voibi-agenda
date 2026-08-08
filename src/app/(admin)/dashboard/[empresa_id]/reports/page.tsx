@@ -87,7 +87,7 @@ export default async function ReportsPage({ params }: { params: Promise<{ empres
   }
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+    <div className="flex-1 overflow-hidden flex flex-col bg-white dark:bg-zinc-900">
       <ReportsClient 
         rawEvents={agendamentos}
         profissionais={profissionais}

@@ -96,12 +96,12 @@ export default function AgendaConfigClient({
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href={`/dashboard/${empresaId}/agendas`} className="p-2 hover:bg-zinc-100 rounded-full transition-colors text-zinc-500">
+          <Link href={`/dashboard/${empresaId}/agendas`} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full transition-colors text-zinc-500 dark:text-zinc-400">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{agenda.nome}</h1>
-            <p className="text-sm text-zinc-500 mt-1">Configurações da agenda</p>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{agenda.nome}</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Configurações da agenda</p>
           </div>
         </div>
         {saveMessage && (
@@ -112,17 +112,17 @@ export default function AgendaConfigClient({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-zinc-200 mb-6">
+      <div className="flex border-b border-zinc-200 dark:border-zinc-700 mb-6">
         <button 
           onClick={() => setActiveTab('basico')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'basico' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'}`}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'basico' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:border-zinc-600'}`}
         >
           <User className="w-4 h-4" />
           Dados Básicos
         </button>
         <button 
           onClick={() => setActiveTab('horarios')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'horarios' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'}`}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'horarios' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:border-zinc-600'}`}
         >
           <Clock className="w-4 h-4" />
           Horários de Atendimento
@@ -130,7 +130,7 @@ export default function AgendaConfigClient({
 
         <button 
           onClick={() => setActiveTab('formulario')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'formulario' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'}`}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'formulario' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:border-zinc-600'}`}
         >
           <FormInput className="w-4 h-4" />
           Formulário do Cliente
@@ -139,14 +139,14 @@ export default function AgendaConfigClient({
 
       {/* Content: Dados Básicos */}
       {activeTab === 'basico' && (
-        <form onSubmit={handleSaveBasico} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm max-w-2xl">
+        <form onSubmit={handleSaveBasico} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm max-w-2xl">
           <div className="space-y-4">
             <div>
-               <label className="block text-sm font-medium text-zinc-700 mb-1">Nome da Agenda</label>
-               <input value={nome} onChange={e => setNome(e.target.value)} required className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nome da Agenda</label>
+               <input value={nome} onChange={e => setNome(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
             </div>
             <div>
-               <label className="block text-sm font-medium text-zinc-700 mb-2">Cor no Calendário</label>
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Cor no Calendário</label>
                <div className="flex flex-wrap items-center gap-2">
                  {[
                   '#1d4ed8', '#3b82f6', '#60a5fa', // Azuis
@@ -170,32 +170,32 @@ export default function AgendaConfigClient({
                  )}
                </div>
             </div>
-            <div className="pt-4 border-t border-zinc-100">
-               <label className="block text-sm font-medium text-zinc-700 mb-1">Webhook URL (Opcional)</label>
-               <p className="text-xs text-zinc-500 mb-2">Dispara um POST para este link quando houver um agendamento. (Substitui o webhook global da clínica)</p>
-               <input type="url" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} placeholder="https://n8n.exemplo.com/webhook/..." className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Webhook URL (Opcional)</label>
+               <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Dispara um POST para este link quando houver um agendamento. (Substitui o webhook global da clínica)</p>
+               <input type="url" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} placeholder="https://n8n.exemplo.com/webhook/..." className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
             </div>
             
-            <div className="pt-4 border-t border-zinc-100">
-              <label className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-xl cursor-pointer hover:bg-zinc-100/50 transition-colors">
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <label className="flex items-start gap-3 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-xl cursor-pointer hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
                 <div className="flex items-center h-5">
                   <input
                     type="checkbox"
                     checked={permitirSobreposicao}
                     onChange={(e) => setPermitirSobreposicao(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-white border-zinc-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-600 rounded focus:ring-blue-500"
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-zinc-900">Permitir sobreposição com outras agendas</span>
-                  <span className="text-xs text-zinc-500 mt-1">
+                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Permitir sobreposição com outras agendas</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                     Se marcado, esta agenda poderá ter agendamentos no mesmo horário que outras agendas (ex: profissionais atendendo em salas separadas). Se desmarcado, um agendamento nela bloqueia a clínica inteira naquele horário.
                   </span>
                 </div>
               </label>
             </div>
           </div>
-          <div className="mt-6 pt-6 border-t border-zinc-100 flex justify-end">
+          <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
             <button type="submit" disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
               {isSaving ? 'Salvando...' : 'Salvar Alterações'}
             </button>
@@ -205,14 +205,14 @@ export default function AgendaConfigClient({
 
       {/* Content: Horários */}
       {activeTab === 'horarios' && (
-        <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-          <p className="text-sm text-zinc-500 mb-6">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
             Defina os horários em que esta agenda estará disponível para receber agendamentos. Você pode adicionar múltiplos intervalos por dia (ex: pausa para almoço).
           </p>
           
           <div className="space-y-4">
             {disponibilidade.map((dia, diaIdx) => (
-              <div key={dia.dia_semana} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border border-zinc-100 rounded-lg bg-zinc-50/50">
+              <div key={dia.dia_semana} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border border-zinc-100 dark:border-zinc-800 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50">
                 <div className="w-40 flex items-center gap-3">
                   <input 
                     type="checkbox" 
@@ -222,9 +222,9 @@ export default function AgendaConfigClient({
                       newDisp[diaIdx].ativo = e.target.checked;
                       setDisponibilidade(newDisp);
                     }}
-                    className="w-4 h-4 text-blue-600 rounded border-zinc-300 focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 rounded border-zinc-300 dark:border-zinc-600 focus:ring-blue-500"
                   />
-                  <span className={`text-sm font-medium ${dia.ativo ? 'text-zinc-900' : 'text-zinc-400'}`}>
+                  <span className={`text-sm font-medium ${dia.ativo ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400'}`}>
                     {diasDaSemana.find(d => d.num === dia.dia_semana)?.label}
                   </span>
                 </div>
@@ -241,7 +241,7 @@ export default function AgendaConfigClient({
                             newDisp[diaIdx].intervalos[intIdx].inicio = e.target.value;
                             setDisponibilidade(newDisp);
                           }}
-                          className="bg-white border border-zinc-300 rounded px-2 py-1 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         />
                         <span className="text-zinc-400 text-sm">até</span>
                         <input 
@@ -252,7 +252,7 @@ export default function AgendaConfigClient({
                             newDisp[diaIdx].intervalos[intIdx].fim = e.target.value;
                             setDisponibilidade(newDisp);
                           }}
-                          className="bg-white border border-zinc-300 rounded px-2 py-1 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         />
                         {dia.intervalos.length > 1 && (
                           <button 
@@ -300,11 +300,11 @@ export default function AgendaConfigClient({
 
       {/* Content: Formulário */}
       {activeTab === 'formulario' && (
-        <form onSubmit={handleSaveBasico} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
+        <form onSubmit={handleSaveBasico} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-bold text-zinc-900">Campos do Agendamento</h2>
-              <p className="text-sm text-zinc-500">Defina quais informações o cliente precisa preencher ao agendar (além de Nome e WhatsApp).</p>
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Campos do Agendamento</h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Defina quais informações o cliente precisa preencher ao agendar (além de Nome e WhatsApp).</p>
             </div>
             <button 
               type="button"
@@ -317,9 +317,9 @@ export default function AgendaConfigClient({
 
           <div className="space-y-3">
             {campos.map((campo, index) => (
-              <div key={campo.id} className="flex flex-col sm:flex-row gap-3 p-4 border border-zinc-200 rounded-xl bg-zinc-50/30 items-start sm:items-center">
+              <div key={campo.id} className="flex flex-col sm:flex-row gap-3 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-zinc-50/30 dark:bg-zinc-900/30 items-start sm:items-center">
                 <div className="flex-1">
-                  <label className="block text-xs font-semibold text-zinc-500 mb-1 uppercase tracking-wider">Título do Campo</label>
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wider">Título do Campo</label>
                   <input 
                     value={campo.titulo}
                     onChange={e => {
@@ -328,12 +328,12 @@ export default function AgendaConfigClient({
                       setCampos(newCampos);
                     }}
                     placeholder="Ex: CPF, Data de Nascimento..."
-                    className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     required
                   />
                 </div>
                 <div className="w-full sm:w-40">
-                  <label className="block text-xs font-semibold text-zinc-500 mb-1 uppercase tracking-wider">Tipo</label>
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wider">Tipo</label>
                   <select 
                     value={campo.tipo}
                     onChange={e => {
@@ -344,7 +344,7 @@ export default function AgendaConfigClient({
                       }
                       setCampos(newCampos);
                     }}
-                    className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                    className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
                   >
                     <option value="text">Texto Curto</option>
                     <option value="textarea">Texto Longo</option>
@@ -354,7 +354,7 @@ export default function AgendaConfigClient({
                 
                 {campo.tipo === 'select' && (
                   <div className="w-full sm:w-64">
-                    <label className="block text-xs font-semibold text-zinc-500 mb-1 uppercase tracking-wider">Opções (separadas por vírgula)</label>
+                    <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1 uppercase tracking-wider">Opções (separadas por vírgula)</label>
                     <input 
                       value={campo.opcoes || ''}
                       onChange={e => {
@@ -363,13 +363,13 @@ export default function AgendaConfigClient({
                         setCampos(newCampos);
                       }}
                       placeholder="Ex: Unimed, SulAmérica, Particular"
-                      className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>
                 )}
 
                 <div className="flex items-center gap-4 mt-2 sm:mt-0 pt-6">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-700 dark:text-zinc-300">
                     <input 
                       type="checkbox"
                       checked={campo.obrigatorio}
@@ -378,7 +378,7 @@ export default function AgendaConfigClient({
                         newCampos[index].obrigatorio = e.target.checked;
                         setCampos(newCampos);
                       }}
-                      className="w-4 h-4 text-blue-600 rounded border-zinc-300 focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 rounded border-zinc-300 dark:border-zinc-600 focus:ring-blue-500"
                     />
                     Obrigatório
                   </label>
@@ -394,13 +394,13 @@ export default function AgendaConfigClient({
             ))}
             
             {campos.length === 0 && (
-              <div className="text-center py-8 text-zinc-400 border-2 border-dashed border-zinc-200 rounded-xl">
+              <div className="text-center py-8 text-zinc-400 border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-xl">
                 Nenhum campo personalizado adicionado.
               </div>
             )}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-zinc-100 flex justify-end">
+          <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
             <button type="submit" disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
               {isSaving ? 'Salvando...' : 'Salvar Alterações'}
             </button>

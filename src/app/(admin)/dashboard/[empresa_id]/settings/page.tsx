@@ -224,14 +224,14 @@ export default async function SettingsPage(props: {
   return (
     <div className="space-y-8 max-w-4xl mx-auto p-8 lg:p-12">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900">Configurações</h2>
-        <p className="text-sm text-zinc-500 mt-1">Gerencie os procedimentos e serviços oferecidos pela sua clínica.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Configurações</h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Gerencie os procedimentos e serviços oferecidos pela sua clínica.</p>
       </div>
 
       {activeTab === 'procedimentos' && (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-zinc-200 bg-zinc-50/50 flex items-center justify-between">
-          <h3 className="font-semibold text-zinc-900">Procedimentos (Serviços)</h3>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Procedimentos (Serviços)</h3>
         </div>
         
         <ProcedimentosManager 
@@ -250,10 +250,10 @@ export default async function SettingsPage(props: {
       )}
 
       {activeTab === 'agendas' && (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-zinc-200 bg-zinc-50/50 flex items-center justify-between">
-          <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-zinc-500" />
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
             Agendas (Profissionais)
           </h3>
           <Link href={`/dashboard/${empresa_id}/agendas`} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
@@ -263,13 +263,13 @@ export default async function SettingsPage(props: {
         <div className="p-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {agendas.map(agenda => (
-              <div key={agenda.id} className="border border-zinc-200 rounded-xl p-4 flex flex-col justify-between hover:border-blue-200 transition-colors group">
+              <div key={agenda.id} className="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 flex flex-col justify-between hover:border-blue-200 transition-colors group">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 shadow-sm border border-zinc-100" style={{ backgroundColor: agenda.cor }}></div>
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 shadow-sm border border-zinc-100 dark:border-zinc-800" style={{ backgroundColor: agenda.cor }}></div>
                     <div>
-                      <h4 className="font-semibold text-zinc-900 line-clamp-1">{agenda.nome}</h4>
-                      <p className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
+                      <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-1">{agenda.nome}</h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-1">
                         <Clock className="w-3.5 h-3.5" /> Horários configurados
                       </p>
                     </div>
@@ -280,7 +280,7 @@ export default async function SettingsPage(props: {
                 </div>
                 <Link 
                   href={`/dashboard/${empresa_id}/agendas/${agenda.id}`}
-                  className="w-full py-2 bg-zinc-50 group-hover:bg-blue-50 text-zinc-600 group-hover:text-blue-600 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2 bg-zinc-50 dark:bg-zinc-950 group-hover:bg-blue-50 text-zinc-600 dark:text-zinc-400 group-hover:text-blue-600 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   Gerenciar Horários
                   <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity -ml-2 group-hover:ml-0" />
@@ -293,17 +293,17 @@ export default async function SettingsPage(props: {
       )}
 
       {activeTab === 'usuarios' && (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-zinc-200 bg-zinc-50/50 flex items-center justify-between">
-          <h3 className="font-semibold text-zinc-900">Equipe e Acessos (Usuários)</h3>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Equipe e Acessos (Usuários)</h3>
         </div>
         
         <div className="p-5">
           <UserForm agendas={agendas} unidades={unidades} createUsuario={createUsuario} />
 
-          <div className="border border-zinc-200 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-sm text-zinc-600">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-xs uppercase text-zinc-500 font-semibold">
+          <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+            <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
+              <thead className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-700 text-xs uppercase text-zinc-500 dark:text-zinc-400 font-semibold">
                 <tr>
                   <th className="px-4 py-3">Nome / E-mail</th>
                   <th className="px-4 py-3">Acesso às Agendas</th>
@@ -312,21 +312,21 @@ export default async function SettingsPage(props: {
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {usuarios.map(u => (
-                  <tr key={u.id} className="hover:bg-zinc-50/50">
+                  <tr key={u.id} className="hover:bg-zinc-50/50 dark:bg-zinc-900/50">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2 mb-1">
-                        <div className="font-medium text-zinc-900">{u.nome}</div>
+                        <div className="font-medium text-zinc-900 dark:text-zinc-100">{u.nome}</div>
                         {u.papel === 'admin' ? (
                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
                              <ShieldCheck className="w-3 h-3" /> Admin
                            </span>
                         ) : (
-                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
+                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                              <UserIcon className="w-3 h-3" /> Usuário
                            </span>
                         )}
                       </div>
-                      <div className="text-xs text-zinc-500 flex items-center gap-3">
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-3">
                         <span>{u.email}</span>
                         {u.whatsapp && <span>• {u.whatsapp}</span>}
                       </div>
@@ -336,13 +336,13 @@ export default async function SettingsPage(props: {
                         <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 tracking-wider">Agendas</div>
                         <div className="flex flex-wrap gap-1">
                           {u.papel === 'admin' ? (
-                            <span className="text-xs text-zinc-600 font-medium">Acesso Total (Todas as agendas)</span>
+                            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Acesso Total (Todas as agendas)</span>
                           ) : (
                             u.agendas && u.agendas.length > 0 ? (
                               u.agendas.map((agId: string) => {
                                 const ag = agendas.find(a => a.id === agId);
                                 return ag ? (
-                                  <span key={agId} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-white border border-zinc-200 shadow-sm">
+                                  <span key={agId} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-sm">
                                     <span className="w-2 h-2 rounded-full" style={{backgroundColor: ag.cor}}></span>
                                     {ag.nome}
                                   </span>
@@ -359,7 +359,7 @@ export default async function SettingsPage(props: {
                         <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 tracking-wider">Telas Liberadas</div>
                         <div className="flex flex-wrap gap-1">
                           {u.papel === 'admin' ? (
-                            <span className="text-xs text-zinc-600 font-medium">Todas as telas</span>
+                            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Todas as telas</span>
                           ) : (
                             u.abas_acesso && u.abas_acesso.length > 0 ? (
                               u.abas_acesso.map((aba: string) => (
@@ -388,7 +388,7 @@ export default async function SettingsPage(props: {
                 ))}
                 {usuarios.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-zinc-500">
+                    <td colSpan={3} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
                       Nenhum usuário cadastrado.
                     </td>
                   </tr>
@@ -401,10 +401,10 @@ export default async function SettingsPage(props: {
       )}
 
       {activeTab === 'bloqueios' && (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-zinc-200 bg-zinc-50/50 flex items-center justify-between">
-            <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
-              <CalendarX className="w-5 h-5 text-zinc-500" />
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <CalendarX className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
               Bloqueios e Exceções
             </h3>
           </div>

@@ -64,7 +64,7 @@ export default async function LoginPage({
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="max-w-md w-full p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl">
         <div className="flex justify-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Voibi Agenda</h1>
+          <h1 className="text-2xl font-bold tracking-tight"><span className="text-blue-600">Voibi</span> <span className="text-white">Agenda</span></h1>
         </div>
         
         <p className="text-zinc-400 text-center mb-8 text-sm">Faça login para acessar sua agenda</p>
@@ -90,7 +90,7 @@ export default async function LoginPage({
           <div className="space-y-2">
             <div className="flex justify-between items-center ml-1">
               <label className="text-sm font-medium text-zinc-300">Senha</label>
-              <a href="#" className="text-xs font-medium text-blue-500 hover:text-blue-400 transition-colors">Esqueci minha senha</a>
+              <a href="/esqueci-senha" className="text-xs font-medium text-blue-500 hover:text-blue-400 transition-colors">Esqueci minha senha</a>
             </div>
             <input 
               required 

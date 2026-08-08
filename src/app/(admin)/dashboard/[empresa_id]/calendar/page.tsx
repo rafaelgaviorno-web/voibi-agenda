@@ -143,7 +143,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-white">
+    <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
       <CalendarWrapper 
         rawEvents={agendamentos}
         profissionais={profissionais}

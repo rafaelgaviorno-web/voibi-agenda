@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import AutomationsDropdown from './AutomationsDropdown';
 import SidebarAgendas from './SidebarAgendas';
 import SettingsDropdown from './SettingsDropdown';
+import ProfileDropdown from './ProfileDropdown';
 import UnidadeSwitcher from './UnidadeSwitcher';
 import { cookies } from 'next/headers';
 
@@ -69,24 +70,24 @@ export default async function DashboardLayout({
   const baseUrl = `/dashboard/${empresa_id}`;
 
   return (
-    <div className="flex h-screen bg-zinc-50 text-zinc-900 font-sans">
+    <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col">
-        <div className="p-6 border-b border-zinc-100">
+      <aside className="w-64 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
+        <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
           <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-blue-600">Voibi</span> <span className="text-zinc-900">Agenda</span>
+            <span className="text-blue-600 dark:text-blue-500">Voibi</span> <span className="text-zinc-900 dark:text-white">Agenda</span>
           </h1>
-          <p className="text-xs text-zinc-500 mt-1 truncate">{empresa.nome}</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">{empresa.nome}</p>
         </div>
         
         <nav className="flex-1 p-4 pt-0 space-y-1 overflow-y-auto mt-4">
-          <Link href={`${baseUrl}/calendar`} className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-zinc-100 text-sm font-medium transition-colors">
-            <LayoutDashboard className="w-4 h-4 text-zinc-500" />
+          <Link href={`${baseUrl}/calendar`} className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm font-medium transition-colors">
+            <LayoutDashboard className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
             Calendário
           </Link>
 
-          <Link href={`${baseUrl}/reports`} className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-zinc-100 text-sm font-medium transition-colors">
-            <FileText className="w-4 h-4 text-zinc-500" />
+          <Link href={`${baseUrl}/reports`} className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm font-medium transition-colors">
+            <FileText className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
             Relatórios
           </Link>
           
@@ -96,10 +97,12 @@ export default async function DashboardLayout({
 
           <SettingsDropdown baseUrl={baseUrl} />
         </nav>
+        
+        <ProfileDropdown />
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 bg-white relative z-0 overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-zinc-950 relative z-0 overflow-y-auto">
         {children}
       </main>
     </div>

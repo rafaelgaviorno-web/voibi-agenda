@@ -73,26 +73,26 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
   return (
     <div className="p-8 max-w-4xl mx-auto w-full">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Agendas</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Agendas</h1>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
           Crie e gerencie as agendas da sua clínica. Uma agenda pode ser um profissional (ex: Dr. João) ou um recurso/unidade (ex: Sala 1).
         </p>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm mb-8">
-        <h2 className="text-lg font-semibold text-zinc-900 mb-4">Nova Agenda</h2>
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm mb-8">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Nova Agenda</h2>
         <form action={createAgenda} className="flex flex-col lg:flex-row gap-6 items-end">
           <input type="hidden" name="empresa_id" value={empresa_id} />
           
           <div className="flex-1 min-w-[200px] space-y-1.5">
-             <label className="text-sm font-medium text-zinc-700">Nome da Agenda</label>
-             <input required name="nome" className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Ex: Dr. Carlos / Sala de Raio-X" />
+             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome da Agenda</label>
+             <input required name="nome" className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Ex: Dr. Carlos / Sala de Raio-X" />
           </div>
 
           {unidades.length > 0 && (
             <div className="flex-1 min-w-[150px] space-y-1.5">
-               <label className="text-sm font-medium text-zinc-700">Unidade</label>
-               <select name="unidade_id" required className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+               <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Unidade</label>
+               <select name="unidade_id" required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
                  <option value="">Selecione...</option>
                  {unidades.map(u => (
                    <option key={u.id} value={u.id}>{u.nome}</option>
@@ -102,7 +102,7 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
           )}
           
           <div className="space-y-1.5">
-             <label className="text-sm font-medium text-zinc-700">Cor no Calendário</label>
+             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cor no Calendário</label>
              <div className="flex flex-wrap items-center gap-2">
                 {[
                   '#1d4ed8', '#3b82f6', '#60a5fa', // Azuis
@@ -127,21 +127,21 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900">Agendas Cadastradas</h2>
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Agendas Cadastradas</h2>
         {agendas.length === 0 ? (
-          <div className="text-center py-10 bg-zinc-50 rounded-xl border border-zinc-200 border-dashed">
-            <p className="text-sm text-zinc-500">Nenhuma agenda cadastrada ainda.</p>
+          <div className="text-center py-10 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-700 border-dashed">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Nenhuma agenda cadastrada ainda.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {agendas.map(agenda => (
-              <Link key={agenda.id} href={`/dashboard/${empresa_id}/agendas/${agenda.id}`} className="bg-white border border-zinc-200 rounded-xl p-5 flex items-start gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
+              <Link key={agenda.id} href={`/dashboard/${empresa_id}/agendas/${agenda.id}`} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 flex items-start gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
                 <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-105" style={{ backgroundColor: agenda.cor || '#ccc' }}>
                   {agenda.nome.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-zinc-900 truncate group-hover:text-blue-600 transition-colors" title={agenda.nome}>{agenda.nome}</h3>
-                  <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2">
+                  <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 transition-colors" title={agenda.nome}>{agenda.nome}</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: agenda.cor || '#ccc' }}></span>
                     Configurar horários
                   </p>

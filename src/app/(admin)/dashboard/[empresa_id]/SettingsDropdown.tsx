@@ -15,12 +15,12 @@ export default function SettingsDropdown({ baseUrl }: { baseUrl: string }) {
     <div className="space-y-1 mt-2">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 transition-colors ${
-          isActive && !isOpen ? 'bg-zinc-100 text-zinc-900 font-semibold' : 'text-zinc-700 font-medium'
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 transition-colors ${
+          isActive && !isOpen ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-700 dark:text-zinc-300 font-medium'
         } text-sm`}
       >
         <div className="flex items-center gap-3">
-          <Settings className={`w-4 h-4 ${isActive ? 'text-zinc-700' : 'text-zinc-500'}`} />
+          <Settings className={`w-4 h-4 ${isActive ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-500 dark:text-zinc-400'}`} />
           <span>Configurações</span>
         </div>
         {isOpen ? (
@@ -34,35 +34,35 @@ export default function SettingsDropdown({ baseUrl }: { baseUrl: string }) {
         <div className="pl-10 pr-3 py-1 space-y-1">
           <Link 
             href={`${baseUrl}/settings?tab=procedimentos`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') !== 'usuarios' && searchParams.get('tab') !== 'agendas' && searchParams.get('tab') !== 'bloqueios' && searchParams.get('tab') !== 'unidades' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') !== 'usuarios' && searchParams.get('tab') !== 'agendas' && searchParams.get('tab') !== 'bloqueios' && searchParams.get('tab') !== 'unidades' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
           >
             <Stethoscope className="w-3.5 h-3.5" />
             Procedimentos
           </Link>
           <Link 
             href={`${baseUrl}/settings?tab=unidades`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'unidades' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'unidades' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
           >
             <Building2 className="w-3.5 h-3.5" />
             Unidades
           </Link>
           <Link 
             href={`${baseUrl}/settings?tab=agendas`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'agendas' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'agendas' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
             Agendas (Profissionais)
           </Link>
           <Link 
             href={`${baseUrl}/settings?tab=usuarios`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'usuarios' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'usuarios' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
           >
             <Users className="w-3.5 h-3.5" />
             Equipe e Acessos
           </Link>
           <Link 
             href={`${baseUrl}/settings?tab=bloqueios`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'bloqueios' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'}`}
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'bloqueios' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
           >
             <CalendarX className="w-3.5 h-3.5" />
             Bloqueios e Exceções

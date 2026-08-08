@@ -38,12 +38,12 @@ export default function AgendasDropdown({ agendas, baseUrl }: { agendas: any[], 
 
   return (
     <details className="group [&_summary::-webkit-details-marker]:hidden" open>
-      <summary className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 text-sm font-medium transition-colors cursor-pointer text-zinc-700">
+      <summary className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 text-sm font-medium transition-colors cursor-pointer text-zinc-700 dark:text-zinc-300">
         <div className="flex items-center gap-3">
-          <CalendarDays className="w-4 h-4 text-zinc-500" />
+          <CalendarDays className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
           Agendas
         </div>
-        <svg className="w-4 h-4 text-zinc-500 transition-transform group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <svg className="w-4 h-4 text-zinc-500 dark:text-zinc-400 transition-transform group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
         </svg>
       </summary>
@@ -72,7 +72,7 @@ export default function AgendasDropdown({ agendas, baseUrl }: { agendas: any[], 
                 </svg>
               )}
             </div>
-            <span className="text-sm text-zinc-600 group-hover:text-zinc-900 transition-colors truncate">
+            <span className="text-sm text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:text-zinc-100 transition-colors truncate">
               {agenda.nome}
             </span>
           </label>

@@ -70,12 +70,12 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
     <div className="space-y-1">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 transition-colors ${
-          isOpen ? 'bg-zinc-100 text-zinc-900 font-semibold' : 'text-zinc-700 font-medium'
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 transition-colors ${
+          isOpen ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-700 dark:text-zinc-300 font-medium'
         } text-sm`}
       >
         <div className="flex items-center gap-3">
-          <CalendarDays className={`w-4 h-4 ${isOpen ? 'text-indigo-600' : 'text-zinc-500'}`} />
+          <CalendarDays className={`w-4 h-4 ${isOpen ? 'text-indigo-600' : 'text-zinc-500 dark:text-zinc-400'}`} />
           <span>Agendas</span>
         </div>
         {isOpen ? (
@@ -88,16 +88,16 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
       {isOpen && (
         <div className="pl-6 pr-3 py-1 space-y-1">
           {agendas.map(agenda => (
-            <div key={agenda.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-zinc-50 rounded-lg group transition-colors">
+            <div key={agenda.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-zinc-50 dark:bg-zinc-950 rounded-lg group transition-colors">
               <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
                 <input 
                   type="checkbox"
                   checked={selectedAgendas.includes(agenda.id)}
                   onChange={() => toggleAgenda(agenda.id)}
-                  className="w-4 h-4 rounded text-indigo-600 border-zinc-300 focus:ring-indigo-500/20"
+                  className="w-4 h-4 rounded text-indigo-600 border-zinc-300 dark:border-zinc-600 focus:ring-indigo-500/20"
                 />
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: agenda.cor }}></div>
-                <span className="text-sm font-medium text-zinc-600 group-hover:text-zinc-900 truncate">{agenda.nome}</span>
+                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:text-zinc-100 truncate">{agenda.nome}</span>
               </label>
               <button
                 onClick={() => { setTransferSourceId(agenda.id); setIsTransferModalOpen(true); }}

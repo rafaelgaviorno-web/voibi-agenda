@@ -66,10 +66,10 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
   };
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-      <div className="p-5 border-b border-zinc-200 bg-zinc-50/50 flex items-center justify-between">
-        <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-zinc-500" />
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-sm">
+      <div className="p-5 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
           Unidades (Filiais)
         </h3>
         {!isAdding && !editingId && (
@@ -81,20 +81,20 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
 
       <div className="p-5">
         {(isAdding || editingId) && (
-          <form onSubmit={handleSubmit} className="mb-6 bg-zinc-50 border border-zinc-200 p-4 rounded-lg flex items-end gap-4">
+          <form onSubmit={handleSubmit} className="mb-6 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 p-4 rounded-lg flex items-end gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Nome da Unidade</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nome da Unidade</label>
               <input 
                 type="text" 
                 required
                 value={nome}
                 onChange={e => setNome(e.target.value)}
-                className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                className="w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
                 placeholder="Ex: Filial Zona Sul"
               />
             </div>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setIsAdding(false); setEditingId(null); }} className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-md text-sm font-medium hover:bg-zinc-50">
+              <button type="button" onClick={() => { setIsAdding(false); setEditingId(null); }} className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-md text-sm font-medium hover:bg-zinc-50 dark:bg-zinc-950">
                 Cancelar
               </button>
               <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
@@ -104,9 +104,9 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
           </form>
         )}
 
-        <div className="border border-zinc-200 rounded-lg overflow-hidden">
-          <table className="w-full text-left text-sm text-zinc-600">
-            <thead className="bg-zinc-50 border-b border-zinc-200 text-xs uppercase text-zinc-500 font-semibold">
+        <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+          <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
+            <thead className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-700 text-xs uppercase text-zinc-500 dark:text-zinc-400 font-semibold">
               <tr>
                 <th className="px-4 py-3">Nome da Unidade</th>
                 <th className="px-4 py-3 w-24 text-right">Ações</th>
@@ -114,11 +114,11 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {unidades.length === 0 && (
-                 <tr><td colSpan={2} className="px-4 py-8 text-center text-zinc-500">Nenhuma unidade cadastrada.</td></tr>
+                 <tr><td colSpan={2} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">Nenhuma unidade cadastrada.</td></tr>
               )}
               {unidades.map(unidade => (
-                <tr key={unidade.id} className="hover:bg-zinc-50/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-zinc-900">{unidade.nome}</td>
+                <tr key={unidade.id} className="hover:bg-zinc-50/50 dark:bg-zinc-900/50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{unidade.nome}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => { setEditingId(unidade.id); setNome(unidade.nome); }} className="p-1.5 text-zinc-400 hover:text-blue-600 rounded transition-colors" title="Editar">

@@ -32,8 +32,8 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
   return (
     <div className="space-y-8 max-w-5xl mx-auto p-8 lg:p-12">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900">Automações e Integrações</h2>
-        <p className="text-sm text-zinc-500 mt-1">Conecte sua agenda a sistemas externos, robôs de WhatsApp e muito mais.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Automações e Integrações</h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Conecte sua agenda a sistemas externos, robôs de WhatsApp e muito mais.</p>
       </div>
 
       <AutomationsClient 

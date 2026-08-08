@@ -214,14 +214,14 @@ export default function EventModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             {isEditMode ? 'Editar Agendamento' : 'Novo Agendamento'}
           </h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors">
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-400 p-1 rounded-full hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -230,26 +230,26 @@ export default function EventModal({
         <form id="event-form" onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
           
           {isEditMode && (
-            <div className="flex items-center gap-2 mb-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mr-2">Status:</span>
+            <div className="flex items-center gap-2 mb-2 p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-100 dark:border-zinc-800">
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mr-2">Status:</span>
               <button 
                 type="button"
                 onClick={() => setFormData({...formData, status: 'atendido'})}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'atendido' ? 'bg-[#10b981] text-white shadow-sm' : 'bg-white text-zinc-600 border border-zinc-200 hover:border-[#10b981] hover:text-[#10b981]'}`}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'atendido' ? 'bg-[#10b981] text-white shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-[#10b981] hover:text-[#10b981]'}`}
               >
                 Atendido
               </button>
               <button 
                 type="button"
                 onClick={() => setFormData({...formData, status: 'faltou'})}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'faltou' ? 'bg-[#ef4444] text-white shadow-sm' : 'bg-white text-zinc-600 border border-zinc-200 hover:border-[#ef4444] hover:text-[#ef4444]'}`}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'faltou' ? 'bg-[#ef4444] text-white shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-[#ef4444] hover:text-[#ef4444]'}`}
               >
                 Faltou
               </button>
               <button 
                 type="button"
                 onClick={() => setFormData({...formData, status: 'reagendou'})}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'reagendou' ? 'bg-[#f97316] text-white shadow-sm' : 'bg-white text-zinc-600 border border-zinc-200 hover:border-[#f97316] hover:text-[#f97316]'}`}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'reagendou' ? 'bg-[#f97316] text-white shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-[#f97316] hover:text-[#f97316]'}`}
               >
                 Reagendou
               </button>
@@ -257,7 +257,7 @@ export default function EventModal({
           )}
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
               <User className="w-4 h-4 text-zinc-400" />
               Nome do Paciente/Cliente
             </label>
@@ -265,27 +265,27 @@ export default function EventModal({
               required
               value={formData.nome}
               onChange={e => setFormData({...formData, nome: e.target.value})}
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
               placeholder="Nome completo"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
               <Phone className="w-4 h-4 text-zinc-400" />
               WhatsApp
             </label>
             <input 
               value={formData.whatsapp}
               onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
               placeholder="(00) 00000-0000"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-zinc-400" />
                 Data
               </label>
@@ -294,12 +294,12 @@ export default function EventModal({
                 required
                 value={formData.data}
                 onChange={e => setFormData({...formData, data: e.target.value})}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
               />
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
                 <User className="w-4 h-4 text-zinc-400" />
                 Agenda
               </label>
@@ -307,7 +307,7 @@ export default function EventModal({
                 required
                 value={formData.agendaId}
                 onChange={e => setFormData({...formData, agendaId: e.target.value})}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
                 <option value="" disabled>Selecione</option>
                 {agendas.map(ag => (
@@ -319,14 +319,14 @@ export default function EventModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-zinc-400" />
                 Procedimento
               </label>
               <select 
                 value={formData.procedimentoId}
                 onChange={e => setFormData({...formData, procedimentoId: e.target.value, horaFim: calculateEnd(formData.horaInicio, e.target.value)})}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
                 <option value="" disabled>Selecione</option>
                 {procedimentos?.map(p => (
@@ -336,7 +336,7 @@ export default function EventModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-zinc-400" />
                 Horário Disponível
               </label>
@@ -344,7 +344,7 @@ export default function EventModal({
                 required
                 value={formData.horaInicio}
                 onChange={e => setFormData({...formData, horaInicio: e.target.value, horaFim: calculateEnd(e.target.value)})}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
                 {!formData.horaInicio && availableSlots.length === 0 && <option value="" disabled>Selecione uma agenda...</option>}
                 {formData.horaInicio && !availableSlots.includes(formData.horaInicio) && (
@@ -363,14 +363,14 @@ export default function EventModal({
                 type="checkbox" 
                 checked={formData.is_encaixe}
                 onChange={e => setFormData({...formData, is_encaixe: e.target.checked})}
-                className="w-4 h-4 rounded border-zinc-300 text-yellow-500 focus:ring-yellow-500/20"
+                className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-yellow-500 focus:ring-yellow-500/20"
               />
-              <span className="text-sm font-medium text-zinc-700">Marcar como Encaixe</span>
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Marcar como Encaixe</span>
             </label>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-700 flex items-center gap-2">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
               <FileText className="w-4 h-4 text-zinc-400" />
               Observação
             </label>
@@ -378,7 +378,7 @@ export default function EventModal({
               value={formData.observacao}
               onChange={e => setFormData({...formData, observacao: e.target.value})}
               rows={3}
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none" 
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none" 
               placeholder="Anotações adicionais..."
             />
           </div>
@@ -386,7 +386,7 @@ export default function EventModal({
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
           {isEditMode ? (
             <button 
               type="button" 
@@ -406,7 +406,7 @@ export default function EventModal({
               type="button" 
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-200 rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>

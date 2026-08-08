@@ -91,17 +91,17 @@ export default function ProcedimentosManager({
     <div className="p-5">
       <form id="form-create-proc" action={handleCreate} className="flex flex-col sm:flex-row flex-wrap gap-4 items-end mb-6">
         <div className="flex-1 min-w-[200px] space-y-1.5 w-full">
-           <label className="text-sm font-medium text-zinc-700">Nome do Procedimento</label>
-           <input required name="nome" disabled={isPending} className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="Ex: Consulta Inicial" />
+           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome do Procedimento</label>
+           <input required name="nome" disabled={isPending} className="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="Ex: Consulta Inicial" />
         </div>
         <div className="w-full sm:w-32 space-y-1.5">
-           <label className="text-sm font-medium text-zinc-700">Minutos</label>
-           <input type="number" required name="duracao" defaultValue="30" min="5" step="5" disabled={isPending} className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Minutos</label>
+           <input type="number" required name="duracao" defaultValue="30" min="5" step="5" disabled={isPending} className="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
         </div>
         {unidades && unidades.length > 0 && (
           <div className="w-full sm:w-48 space-y-1.5">
-             <label className="text-sm font-medium text-zinc-700">Unidade (Opcional)</label>
-             <select name="unidade_id" disabled={isPending} className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
+             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Unidade (Opcional)</label>
+             <select name="unidade_id" disabled={isPending} className="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                <option value="">Todas (Geral)</option>
                {unidades.map(u => (
                  <option key={u.id} value={u.id}>{u.nome}</option>
@@ -111,8 +111,8 @@ export default function ProcedimentosManager({
         )}
         <div className="w-full sm:w-auto space-y-1.5 flex flex-col justify-end pb-2">
            <label className="flex items-center gap-2 cursor-pointer">
-             <input type="checkbox" name="is_recorrente" value="true" disabled={isPending} className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 w-4 h-4" />
-             <span className="text-sm font-medium text-zinc-700">Recorrência Mensal</span>
+             <input type="checkbox" name="is_recorrente" value="true" disabled={isPending} className="rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500 w-4 h-4" />
+             <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Recorrência Mensal</span>
            </label>
         </div>
         <button type="submit" disabled={isPending} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shrink-0">
@@ -121,9 +121,9 @@ export default function ProcedimentosManager({
         </button>
       </form>
 
-      <div className="border border-zinc-200 rounded-lg overflow-hidden">
-        <table className="w-full text-left text-sm text-zinc-600">
-          <thead className="bg-zinc-50 border-b border-zinc-200 text-xs uppercase text-zinc-500 font-semibold">
+      <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+        <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
+          <thead className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-700 text-xs uppercase text-zinc-500 dark:text-zinc-400 font-semibold">
             <tr>
               <th className="px-4 py-3">Nome</th>
               <th className="px-4 py-3 w-32">Duração</th>
@@ -139,18 +139,18 @@ export default function ProcedimentosManager({
               const isEditing = editingId === p.id;
               
               return (
-                <tr key={p.id} className="hover:bg-zinc-50/50">
+                <tr key={p.id} className="hover:bg-zinc-50/50 dark:bg-zinc-900/50">
                   <td className="px-4 py-3">
                     {isEditing ? (
                       <input 
                         type="text" 
                         value={editNome} 
                         onChange={e => setEditNome(e.target.value)} 
-                        className="w-full border border-zinc-200 rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" 
+                        className="w-full border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" 
                         autoFocus 
                       />
                     ) : (
-                      <span className="font-medium text-zinc-900">{p.nome}</span>
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">{p.nome}</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -160,9 +160,9 @@ export default function ProcedimentosManager({
                           type="number" 
                           value={editDuracao} 
                           onChange={e => setEditDuracao(parseInt(e.target.value) || 0)} 
-                          className="w-16 border border-zinc-200 rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" 
+                          className="w-16 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" 
                         />
-                        <span className="text-zinc-500">min</span>
+                        <span className="text-zinc-500 dark:text-zinc-400">min</span>
                       </div>
                     ) : (
                       <span className="flex items-center gap-1.5">
@@ -177,13 +177,13 @@ export default function ProcedimentosManager({
                         <select 
                           value={editUnidade} 
                           onChange={e => setEditUnidade(e.target.value)} 
-                          className="w-full border border-zinc-200 rounded px-2 py-1 text-sm focus:border-blue-500 outline-none"
+                          className="w-full border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-sm focus:border-blue-500 outline-none"
                         >
                           <option value="">Geral</option>
                           {unidades.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
                         </select>
                       ) : (
-                        <span className="text-zinc-600 text-sm">
+                        <span className="text-zinc-600 dark:text-zinc-400 text-sm">
                           {p.unidade_id ? (unidades.find(u => u.id === p.unidade_id)?.nome || 'Geral') : 'Geral'}
                         </span>
                       )}
@@ -195,7 +195,7 @@ export default function ProcedimentosManager({
                         type="checkbox" 
                         checked={editIsRecorrente} 
                         onChange={e => setEditIsRecorrente(e.target.checked)}
-                        className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                        className="rounded border-zinc-300 dark:border-zinc-600 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
                     ) : (
                       p.is_recorrente ? (
@@ -214,7 +214,7 @@ export default function ProcedimentosManager({
                           <button onClick={() => saveEdit(p.id)} disabled={isPending} className="text-green-600 hover:bg-green-50 p-1.5 rounded-md transition-colors" title="Salvar">
                             <Check className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setEditingId(null)} disabled={isPending} className="text-zinc-400 hover:bg-zinc-100 p-1.5 rounded-md transition-colors" title="Cancelar">
+                          <button onClick={() => setEditingId(null)} disabled={isPending} className="text-zinc-400 hover:bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-md transition-colors" title="Cancelar">
                             <X className="w-4 h-4" />
                           </button>
                         </>
@@ -235,7 +235,7 @@ export default function ProcedimentosManager({
             })}
             {procedimentos.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={3} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
                   Nenhum procedimento cadastrado.
                 </td>
               </tr>
