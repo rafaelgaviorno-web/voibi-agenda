@@ -47,7 +47,7 @@ export default async function SettingsPage(props: {
       ...customAgendas
     ];
     usuarios = [
-      { id: 'usr-1', nome: 'Recepção (Mock)', email: 'recepcao@voibi.com', whatsapp: '11999999999', agendas: ['prof-1', 'prof-2'], papel: 'profissional', abas_acesso: ['calendar', 'agendas'] }
+      { id: 'usr-1', nome: 'Recepção (Mock)', email: 'recepcao@voibi.com', whatsapp: '11999999999', agendas: ['prof-1', 'prof-2'], role: 'profissional', abas_acesso: ['calendar', 'agendas'] }
     ];
     bloqueios = [
       { id: 'bq-1', inicio: new Date().toISOString(), fim: new Date(Date.now() + 86400000).toISOString(), motivo: 'Feriado', profissional_id: null }
@@ -62,6 +62,12 @@ export default async function SettingsPage(props: {
       supabase.from('agend_usuarios').select('*, agend_usuario_agendas(agenda_id)').eq('empresa_id', empresa_id),
       supabase.from('agend_bloqueios').select('*')
     ]);
+
+    if (pDataRes.error) console.error("Erro pData:", pDataRes.error);
+    if (unsRes.error) console.error("Erro unsRes:", unsRes.error);
+    if (agDataRes.error) console.error("Erro agData:", agDataRes.error);
+    if (usDataRes.error) console.error("Erro usData:", usDataRes.error);
+    if (bDataRes.error) console.error("Erro bData:", bDataRes.error);
 
     procedimentos = pDataRes.data || [];
     unidades = unsRes.data || [];
@@ -85,14 +91,14 @@ export default async function SettingsPage(props: {
     const email = formData.get('email') as string;
     const whatsapp = formData.get('whatsapp') as string;
     const senha = formData.get('senha') as string;
-    const papel = (formData.get('papel') as string) || 'profissional';
+    const role = (formData.get('role') as string) || 'profissional';
     const unidade_id = formData.get('unidade_id') as string;
     
     let abasPermitidas = formData.getAll('abas') as string[];
     let agendasSalvar = formData.getAll('agendas') as string[];
 
     // Se for admin, forçamos o acesso total a tudo
-    if (papel === 'admin') {
+    if (role === 'admin') {
        abasPermitidas = ['calendar', 'agendas', 'automations', 'settings'];
        agendasSalvar = agendas.map(a => a.id); // Todas as agendas
     }
@@ -144,7 +150,7 @@ export default async function SettingsPage(props: {
          nome: nome,
          email: email,
          whatsapp: whatsapp,
-         papel: papel,
+         role: role,
          abas_acesso: abasPermitidas
       }).select().single();
 
@@ -373,7 +379,7 @@ export default async function SettingsPage(props: {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="font-medium text-zinc-900 dark:text-zinc-100">{u.nome}</div>
-                        {u.papel === 'admin' ? (
+                        {u.role === 'admin' ? (
                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
                              <ShieldCheck className="w-3 h-3" /> Admin
                            </span>
@@ -389,11 +395,11 @@ export default async function SettingsPage(props: {
                       </div>
                     </td>
                     <td className="px-4 py-4 space-y-2">
-                      <div>
-                        <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 tracking-wider">Agendas</div>
-                        <div className="flex flex-wrap gap-1">
-                          {u.papel === 'admin' ? (
-                            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Acesso Total (Todas as agendas)</span>
+                       <div>
+                         <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 tracking-wider">Telas</div>
+                         <div className="flex flex-wrap gap-1">
+                          {u.role === 'admin' ? (
+                            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Acesso Total (Configurações)</span>
                           ) : (
                             u.agendas && u.agendas.length > 0 ? (
                               u.agendas.map((agId: string) => {
@@ -415,7 +421,7 @@ export default async function SettingsPage(props: {
                       <div>
                         <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 tracking-wider">Telas Liberadas</div>
                         <div className="flex flex-wrap gap-1">
-                          {u.papel === 'admin' ? (
+                          {u.role === 'admin' ? (
                             <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Todas as telas</span>
                           ) : (
                             u.abas_acesso && u.abas_acesso.length > 0 ? (

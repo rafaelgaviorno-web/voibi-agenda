@@ -62,7 +62,7 @@ export default async function SuperadminPage() {
          await supabase.from('agend_usuarios').insert({
             id: authData.user.id,
             empresa_id: empresa.id,
-            papel: 'admin',
+            role: 'admin',
             nome: adminNome
          });
       }

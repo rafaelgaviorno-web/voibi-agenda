@@ -41,7 +41,7 @@ export default function UserForm({ agendas, unidades, createUsuario }: { agendas
           <label className="flex items-center gap-2 cursor-pointer">
             <input 
               type="radio" 
-              name="papel" 
+              name="role" 
               value="profissional" 
               checked={!isAdmin}
               onChange={() => setRole('profissional')}
@@ -52,7 +52,7 @@ export default function UserForm({ agendas, unidades, createUsuario }: { agendas
           <label className="flex items-center gap-2 cursor-pointer">
             <input 
               type="radio" 
-              name="papel" 
+              name="role" 
               value="admin" 
               checked={isAdmin}
               onChange={() => setRole('admin')}
