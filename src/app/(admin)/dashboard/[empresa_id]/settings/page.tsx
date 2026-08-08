@@ -99,12 +99,28 @@ export default async function SettingsPage(props: {
     }
 
     try {
+      // 1. Criar o usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: senha,
+        email_confirm: true,
+        user_metadata: {
+          nome: nome
+        }
+      });
+
+      if (authError || !authData.user) {
+         console.error("Erro ao criar usuário auth:", authError);
+         return;
+      }
+
+      // 2. Vincular o usuário recém-criado na tabela agend_usuarios
       const { data: newUser, error } = await supabase.from('agend_usuarios').insert({
+         id: authData.user.id,
          empresa_id: empresa_id,
          nome: nome,
          email: email,
          whatsapp: whatsapp,
-         senha_hash: senha,
          papel: papel,
          abas_acesso: abasPermitidas,
          unidade_id: unidade_id || null
@@ -129,6 +145,8 @@ export default async function SettingsPage(props: {
     if (empresa_id === 'mock-clinic') return;
     const id = formData.get('id') as string;
     const supabase = getServiceSupabase();
+    // Apaga do Supabase Auth (isso vai disparar cascade para agend_usuarios se houver FK, mas garantimos apagando)
+    await supabase.auth.admin.deleteUser(id);
     await supabase.from('agend_usuarios').delete().eq('id', id);
     revalidatePath(`/dashboard/${empresa_id}/settings`);
   }
