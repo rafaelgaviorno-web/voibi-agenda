@@ -109,11 +109,11 @@ export default async function SuperadminPage() {
                 </div>
                 <div className="space-y-1">
                    <label className="text-sm font-medium text-zinc-300">Email (Login)</label>
-                   <input required type="email" name="admin_email" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="admin@clinica.com" />
+                   <input required type="email" name="admin_email" autoComplete="new-email" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="admin@clinica.com" />
                 </div>
                 <div className="space-y-1">
                    <label className="text-sm font-medium text-zinc-300">Senha Padrão</label>
-                   <input required type="password" name="admin_senha" minLength={6} className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="******" />
+                   <input required type="password" name="admin_senha" minLength={6} autoComplete="new-password" className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="******" />
                 </div>
              </div>
           </div>
