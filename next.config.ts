@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/',
-        destination: '/dashboard/c89d25a6-91f0-4f24-abdd-acabbabcfee3/calendar',
+        destination: '/login',
         permanent: false,
       },
     ];
