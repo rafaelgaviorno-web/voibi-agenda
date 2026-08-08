@@ -54,26 +54,25 @@ export default async function SettingsPage(props: {
     ];
   } else {
     const supabase = getServiceSupabase();
-    const { data: pData } = await supabase.from('agend_tipos_evento').select('*').eq('empresa_id', empresa_id);
-    procedimentos = pData || [];
     
-    const { data: uns } = await supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id);
-    unidades = uns || [];
+    const [pDataRes, unsRes, agDataRes, usDataRes, bDataRes] = await Promise.all([
+      supabase.from('agend_tipos_evento').select('*').eq('empresa_id', empresa_id),
+      supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
+      supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id),
+      supabase.from('agend_usuarios').select('*, agend_usuario_agendas(agenda_id)').eq('empresa_id', empresa_id),
+      supabase.from('agend_bloqueios').select('*')
+    ]);
 
-    const { data: agData } = await supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id);
-    agendas = agData || [];
-
-    const { data: usData } = await supabase.from('agend_usuarios').select('*, agend_usuario_agendas(agenda_id)').eq('empresa_id', empresa_id);
-    usuarios = (usData || []).map(u => ({
+    procedimentos = pDataRes.data || [];
+    unidades = unsRes.data || [];
+    agendas = agDataRes.data || [];
+    
+    usuarios = (usDataRes.data || []).map(u => ({
        ...u,
        agendas: u.agend_usuario_agendas?.map((a: any) => a.agenda_id) || []
     }));
 
-    // Buscar os bloqueios globais e específicos da empresa
-    const { data: bData } = await supabase.from('agend_bloqueios').select('*');
-    // Para filtrar por empresa, vamos pegar os bloqueios que são globais (profissional_id nulo) 
-    // ou cujos profissionais pertencem a esta empresa.
-    bloqueios = (bData || []).filter(b => b.profissional_id === null || agendas.some(a => a.id === b.profissional_id));
+    bloqueios = (bDataRes.data || []).filter(b => b.profissional_id === null || agendas.some(a => a.id === b.profissional_id));
   }
 
   async function createUsuario(formData: FormData) {
@@ -111,7 +110,7 @@ export default async function SettingsPage(props: {
 
       if (authError || !authData.user) {
          console.error("Erro ao criar usuário auth:", authError);
-         return;
+         return { error: authError?.message || 'Erro ao criar conta no sistema.' };
       }
 
       // 2. Vincular o usuário recém-criado na tabela agend_usuarios
@@ -122,9 +121,15 @@ export default async function SettingsPage(props: {
          email: email,
          whatsapp: whatsapp,
          papel: papel,
-         abas_acesso: abasPermitidas,
-         unidade_id: unidade_id || null
+         abas_acesso: abasPermitidas
       }).select().single();
+
+      if (error) {
+         console.error("Erro ao inserir em agend_usuarios:", error);
+         // Rollback do usuário no auth
+         await supabase.auth.admin.deleteUser(authData.user.id);
+         return { error: error.message };
+      }
       
       if (newUser && agendasSalvar.length > 0) {
          const agns = agendasSalvar.map(agenda_id => ({
@@ -133,11 +138,13 @@ export default async function SettingsPage(props: {
          }));
          await supabase.from('agend_usuario_agendas').insert(agns);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      return { error: e.message };
     }
     
     revalidatePath(`/dashboard/${empresa_id}/settings`);
+    return { error: null };
   }
 
   async function deleteUsuario(formData: FormData) {

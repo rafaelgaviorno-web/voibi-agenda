@@ -14,7 +14,7 @@ const TABS = [
   { id: 'bloqueios', label: 'Bloqueios e Exceções' }
 ];
 
-export default function UserForm({ agendas, unidades, createUsuario }: { agendas: any[], unidades: any[], createUsuario: (data: FormData) => Promise<void> }) {
+export default function UserForm({ agendas, unidades, createUsuario }: { agendas: any[], unidades: any[], createUsuario: (data: FormData) => Promise<{ error: string | null } | undefined> }) {
   const [role, setRole] = useState('profissional');
   const [isPending, setIsPending] = useState(false);
   const [selectedAbas, setSelectedAbas] = useState<string[]>([]);
@@ -26,15 +26,14 @@ export default function UserForm({ agendas, unidades, createUsuario }: { agendas
   const agendasFiltradas = unidadeId ? agendas.filter(a => a.unidade_id === unidadeId) : agendas;
 
   return (
-    <form action={async (formData) => {
-      setIsPending(true);
-      if (isAdmin) {
-        // Se for admin, forçar envio de todas as permissões e abas no backend,
-        // mas vamos enviar o papel
-      }
-      await createUsuario(formData);
-      setIsPending(false);
-    }} className="space-y-6 mb-8">
+      <form action={async (formData) => {
+        setIsPending(true);
+        const res = await createUsuario(formData);
+        if (res?.error) {
+          alert('Erro ao criar usuário: ' + res.error);
+        }
+        setIsPending(false);
+      }} className="space-y-6 mb-8">
       
       <div className="space-y-1.5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Acesso (Papel)</label>
