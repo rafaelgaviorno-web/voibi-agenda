@@ -6,8 +6,12 @@ export const dynamic = 'force-dynamic';
 
 export default async function SuperadminPage() {
   const supabase = getServiceSupabase();
-  const { data: empresas } = await supabase.from('agend_empresas').select('*, agend_planos(nome)').order('created_at', { ascending: false });
-  const { data: planos } = await supabase.from('agend_planos').select('id, nome, preco_mensal').order('preco_mensal', { ascending: true });
+  const [empresasRes, planosRes] = await Promise.all([
+    supabase.from('agend_empresas').select('*, agend_planos(nome)').order('created_at', { ascending: false }),
+    supabase.from('agend_planos').select('id, nome, preco_mensal').order('preco_mensal', { ascending: true })
+  ]);
+  const empresas = empresasRes.data;
+  const planos = planosRes.data;
 
   async function createEmpresa(formData: FormData) {
     'use server'

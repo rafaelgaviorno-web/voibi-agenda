@@ -31,7 +31,7 @@ export default async function DashboardLayout({
   if (authCookie) {
     try {
       const parsedAuth = JSON.parse(authCookie);
-      if (parsedAuth.is_superadmin) {
+      if (parsedAuth.isSuperadmin || parsedAuth.is_superadmin) {
         isSuperAdmin = true;
       }
     } catch (e) {
@@ -55,22 +55,19 @@ export default async function DashboardLayout({
     ];
   } else {
     const supabase = getServiceSupabase();
-    const { data } = await supabase
-      .from('agend_empresas')
-      .select('*')
-      .eq('id', empresa_id)
-      .single();
-    empresa = data;
     
-    const { data: uns } = await supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id);
-    unidades = uns || [];
+    // Executa as queries em paralelo para carregar mais rápido
+    const [empresaRes, unidadesRes, profissionaisRes] = await Promise.all([
+      supabase.from('agend_empresas').select('*').eq('id', empresa_id).single(),
+      supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
+      supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id)
+    ]);
+
+    empresa = empresaRes.data;
+    unidades = unidadesRes.data || [];
+    agendas = profissionaisRes.data || [];
     
     currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
-
-    if (empresa) {
-      const { data: profs } = await supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id);
-      agendas = profs || [];
-    }
   }
 
   // Filtrar agendas pela unidade selecionada
