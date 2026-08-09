@@ -25,7 +25,7 @@ export default async function LoginPage({
     });
 
     if (authError || !authData.user) {
-      redirect('/login?error=Credenciais+inválidas');
+      redirect('/login?error=' + encodeURIComponent('Credenciais inválidas'));
     }
 
     // Verificar se é superadmin (usando a metadata que criamos)
@@ -57,7 +57,7 @@ export default async function LoginPage({
       redirect(`/dashboard/${userData.empresa_id}/calendar`);
     } else {
       // Falha ao achar a empresa
-      redirect('/login?error=Usuário+sem+clínica+vinculada');
+      redirect('/login?error=' + encodeURIComponent('Usuário sem clínica vinculada'));
     }
   }
 
