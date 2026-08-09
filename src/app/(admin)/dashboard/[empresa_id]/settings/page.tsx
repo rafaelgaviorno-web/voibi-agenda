@@ -197,8 +197,8 @@ export default async function SettingsPage(props: {
     if (empresa_id === 'mock-clinic') return;
     const id = formData.get('id') as string;
     const supabase = getServiceSupabase();
-    // Apaga do Supabase Auth (isso vai disparar cascade para agend_usuarios se houver FK, mas garantimos apagando)
-    await supabase.auth.admin.deleteUser(id);
+    // Remove APENAS da clínica atual (agend_usuarios). 
+    // Não apagamos do auth.users para não destruir a conta dele em outros apps (ex: Prothesys).
     await supabase.from('agend_usuarios').delete().eq('id', id);
     revalidatePath(`/dashboard/${empresa_id}/settings`);
   }
