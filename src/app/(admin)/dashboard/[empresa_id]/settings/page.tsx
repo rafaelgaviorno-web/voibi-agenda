@@ -103,9 +103,10 @@ export default async function SettingsPage(props: {
        agendasSalvar = agendas.map(a => a.id); // Todas as agendas
     }
 
+    let isExistingUser = false;
+    
     try {
       let authUserId = '';
-      let isExistingUser = false;
       
       // 1. Tentar criar o usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
