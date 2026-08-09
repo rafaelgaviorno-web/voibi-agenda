@@ -105,6 +105,7 @@ export default async function SettingsPage(props: {
 
     try {
       let authUserId = '';
+      let isExistingUser = false;
       
       // 1. Tentar criar o usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -131,6 +132,7 @@ export default async function SettingsPage(props: {
                 return { error: 'O e-mail já existe no sistema, mas não foi possível vinculá-lo.' };
              }
              authUserId = linkData.user.id;
+             isExistingUser = true;
          } else {
              console.error("Erro ao criar usuário auth:", authError);
              return { error: authError.message || 'Erro ao criar conta no sistema.' };
@@ -182,6 +184,11 @@ export default async function SettingsPage(props: {
     }
     
     revalidatePath(`/dashboard/${empresa_id}/settings`);
+    
+    if (isExistingUser) {
+       return { warning: 'O usuário já possuía uma conta no sistema (ex: Prothesys). Ele foi adicionado à clínica, mas a senha provisória que você digitou foi ignorada. O usuário deve usar a senha original dele.' };
+    }
+    
     return { error: null };
   }
 

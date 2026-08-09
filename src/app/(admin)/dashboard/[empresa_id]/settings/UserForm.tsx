@@ -14,7 +14,7 @@ const TABS = [
   { id: 'bloqueios', label: 'Bloqueios e Exceções' }
 ];
 
-export default function UserForm({ agendas, unidades, createUsuario }: { agendas: any[], unidades: any[], createUsuario: (data: FormData) => Promise<{ error: string | null } | undefined> }) {
+export default function UserForm({ agendas, unidades, createUsuario }: { agendas: any[], unidades: any[], createUsuario: (data: FormData) => Promise<{ error?: string | null, warning?: string | null } | undefined> }) {
   const [role, setRole] = useState('profissional');
   const [isPending, setIsPending] = useState(false);
   const [selectedAbas, setSelectedAbas] = useState<string[]>([]);
@@ -31,6 +31,8 @@ export default function UserForm({ agendas, unidades, createUsuario }: { agendas
         const res = await createUsuario(formData);
         if (res?.error) {
           alert('Erro ao criar usuário: ' + res.error);
+        } else if (res?.warning) {
+          alert('Sucesso com aviso: ' + res.warning);
         }
         setIsPending(false);
       }} className="space-y-6 mb-8">
