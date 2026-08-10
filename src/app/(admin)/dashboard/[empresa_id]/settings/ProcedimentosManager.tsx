@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 
 export default function ProcedimentosManager({ 
@@ -25,6 +25,10 @@ export default function ProcedimentosManager({
   const [editUnidade, setEditUnidade] = useState('');
   const [editIsRecorrente, setEditIsRecorrente] = useState(false);
   const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    setProcedimentos(initialProcedimentos);
+  }, [initialProcedimentos]);
 
   async function handleCreate(formData: FormData) {
     if (empresa_id === 'mock-clinic') {
