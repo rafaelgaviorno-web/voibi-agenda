@@ -7,6 +7,7 @@ import UserForm from './UserForm';
 import ProcedimentosManager from './ProcedimentosManager';
 import BloqueiosManager from './BloqueiosManager';
 import UnidadesManager from './UnidadesManager';
+import UserRowActions from './UserRowActions';
 import CopyLinkButton from './CopyLinkButton';
 
 export const dynamic = 'force-dynamic';
@@ -204,6 +205,50 @@ export default async function SettingsPage(props: {
     revalidatePath(`/dashboard/${empresa_id}/settings`);
   }
 
+  async function updateUsuario(formData: FormData) {
+    'use server'
+    if (empresa_id === 'mock-clinic') return { error: null };
+    
+    const id = formData.get('id') as string;
+    const nome = formData.get('nome') as string;
+    const whatsapp = formData.get('whatsapp') as string;
+    const role = formData.get('role') as string;
+    const abasStr = formData.get('abas_acesso') as string;
+    const agendasStr = formData.get('agendas') as string;
+    
+    let abasPermitidas = abasStr ? JSON.parse(abasStr) : [];
+    let agendasSalvar = agendasStr ? JSON.parse(agendasStr) : [];
+    
+    if (role === 'admin') {
+       abasPermitidas = ['calendar', 'agendas', 'automations', 'settings'];
+       agendasSalvar = agendas.map(a => a.id);
+    }
+    
+    const supabase = getServiceSupabase();
+    
+    const { error } = await supabase.from('agend_usuarios').update({
+       nome: nome,
+       whatsapp: whatsapp,
+       role: role,
+       abas_acesso: abasPermitidas
+    }).eq('id', id);
+    
+    if (error) return { error: error.message };
+    
+    // Atualiza as agendas do usuário: deleta todas as antigas e insere as novas
+    await supabase.from('agend_usuario_agendas').delete().eq('usuario_id', id);
+    if (agendasSalvar.length > 0) {
+       const agns = agendasSalvar.map((agenda_id: string) => ({
+          usuario_id: id,
+          agenda_id: agenda_id
+       }));
+       await supabase.from('agend_usuario_agendas').insert(agns);
+    }
+    
+    revalidatePath(`/dashboard/${empresa_id}/settings`);
+    return { error: null };
+  }
+
   async function saveBloqueio(data: any, action: 'add' | 'remove') {
     'use server'
     if (empresa_id === 'mock-clinic') {
@@ -234,6 +279,34 @@ export default async function SettingsPage(props: {
       revalidatePath(`/dashboard/${empresa_id}/calendar`);
       return newBlock;
     }
+  }
+
+  async function createUnidade(formData: FormData) {
+    'use server'
+    if (empresa_id === 'mock-clinic') return;
+    const nome = formData.get('nome') as string;
+    const supabase = getServiceSupabase();
+    await supabase.from('agend_unidades').insert({ empresa_id, nome });
+    revalidatePath(`/dashboard/${empresa_id}/settings`);
+  }
+
+  async function updateUnidade(formData: FormData) {
+    'use server'
+    if (empresa_id === 'mock-clinic') return;
+    const id = formData.get('id') as string;
+    const nome = formData.get('nome') as string;
+    const supabase = getServiceSupabase();
+    await supabase.from('agend_unidades').update({ nome }).eq('id', id);
+    revalidatePath(`/dashboard/${empresa_id}/settings`);
+  }
+
+  async function deleteUnidade(formData: FormData) {
+    'use server'
+    if (empresa_id === 'mock-clinic') return;
+    const id = formData.get('id') as string;
+    const supabase = getServiceSupabase();
+    await supabase.from('agend_unidades').delete().eq('id', id);
+    revalidatePath(`/dashboard/${empresa_id}/settings`);
   }
 
   async function createProcedimento(formData: FormData) {
@@ -317,7 +390,13 @@ export default async function SettingsPage(props: {
       )}
 
       {activeTab === 'unidades' && (
-        <UnidadesManager unidades={unidades} empresa_id={empresa_id} />
+        <UnidadesManager 
+          unidades={unidades} 
+          empresa_id={empresa_id} 
+          createUnidade={createUnidade}
+          updateUnidade={updateUnidade}
+          deleteUnidade={deleteUnidade}
+        />
       )}
 
       {activeTab === 'agendas' && (
@@ -447,12 +526,12 @@ export default async function SettingsPage(props: {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {empresa_id !== 'mock-clinic' && (
-                        <form action={deleteUsuario}>
-                          <input type="hidden" name="id" value={u.id} />
-                          <button type="submit" className="text-zinc-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Excluir">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </form>
+                        <UserRowActions 
+                          usuario={u} 
+                          agendas={agendas} 
+                          updateUsuario={updateUsuario} 
+                          deleteUsuario={deleteUsuario} 
+                        />
                       )}
                     </td>
                   </tr>

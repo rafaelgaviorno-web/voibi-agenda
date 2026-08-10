@@ -4,7 +4,19 @@ import { useState } from 'react';
 import { Plus, Trash2, Edit2, Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function UnidadesManager({ unidades, empresa_id }: { unidades: any[], empresa_id: string }) {
+export default function UnidadesManager({ 
+  unidades, 
+  empresa_id,
+  createUnidade,
+  updateUnidade,
+  deleteUnidade
+}: { 
+  unidades: any[], 
+  empresa_id: string,
+  createUnidade: (data: FormData) => Promise<void>,
+  updateUnidade: (data: FormData) => Promise<void>,
+  deleteUnidade: (data: FormData) => Promise<void>
+}) {
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -15,8 +27,6 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
     e.preventDefault();
     setIsLoading(true);
     
-    // Na vida real chamaria server actions para inserir/atualizar
-    // Mock apenas dá um refresh na página ou simula alert
     if (empresa_id === 'mock-clinic') {
        alert(`Unidade mockada ${editingId ? 'editada' : 'criada'}: ` + nome);
        setIsAdding(false);
@@ -27,21 +37,19 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
     }
 
     try {
-      const res = await fetch(`/api/v1/unidades`, {
-        method: editingId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-           id: editingId,
-           nome,
-           empresa_id
-        })
-      });
-      if (res.ok) {
-        setIsAdding(false);
-        setEditingId(null);
-        setNome('');
-        router.refresh();
+      const fd = new FormData();
+      fd.append('nome', nome);
+      
+      if (editingId) {
+        fd.append('id', editingId);
+        await updateUnidade(fd);
+      } else {
+        await createUnidade(fd);
       }
+      
+      setIsAdding(false);
+      setEditingId(null);
+      setNome('');
     } catch(err) {
       console.error(err);
     }
@@ -57,8 +65,9 @@ export default function UnidadesManager({ unidades, empresa_id }: { unidades: an
        return;
     }
     try {
-      await fetch(`/api/v1/unidades?id=${id}`, { method: 'DELETE' });
-      router.refresh();
+      const fd = new FormData();
+      fd.append('id', id);
+      await deleteUnidade(fd);
     } catch(err) {
       console.error(err);
     }
