@@ -116,21 +116,24 @@ export default function EventModal({
   useEffect(() => {
     if (formData.agendaId && formData.data) {
        const selectedAgenda = agendas.find(a => a.id === formData.agendaId);
-       if (!selectedAgenda || !selectedAgenda.disponibilidade) {
-         setAvailableSlots([]);
-         return;
-       }
        
        const [year, month, day] = formData.data.split('-');
        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
        const dayOfWeek = dateObj.getDay();
        
-       const disps = selectedAgenda.disponibilidade.filter((d:any) => d.dia_semana === dayOfWeek);
+       let disps = selectedAgenda?.disponibilidade?.filter((d:any) => Number(d.dia_semana) === dayOfWeek) || [];
        
        const slots: string[] = [];
+       
+       if (disps.length === 0) {
+         // Fallback availability if nothing is configured
+         disps = [{ hora_inicio: '08:00', hora_fim: '18:00' }];
+       }
+
        disps.forEach((d:any) => {
-          let current = new Date(`1970-01-01T${d.hora_inicio}`);
-          const end = new Date(`1970-01-01T${d.hora_fim}`);
+          let current = new Date(`1970-01-01T${d.hora_inicio.substring(0,5)}:00`);
+          const endStr = d.hora_fim ? d.hora_fim.substring(0,5) : '18:00';
+          const end = new Date(`1970-01-01T${endStr}:00`);
           
           while(current < end) {
              const timeStr = current.toTimeString().substring(0, 5);
@@ -196,9 +199,14 @@ export default function EventModal({
     }
 
     setIsSaving(true);
-    await onSave(formData);
-    setIsSaving(false);
-    onClose();
+    try {
+      await onSave(formData);
+    } catch (err) {
+      alert("Erro ao salvar agendamento!");
+    } finally {
+      setIsSaving(false);
+      onClose();
+    }
   };
 
   const handleDelete = async () => {
