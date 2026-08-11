@@ -122,7 +122,10 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          localStorage.setItem('voibi_mock_events', JSON.stringify(stored));
       }
     } else {
-      await saveAppointment(formData, empresaId);
+      const res = await saveAppointment(formData, empresaId);
+      if (!res.success) {
+        throw new Error("Erro ao salvar no banco de dados.");
+      }
       router.refresh();
     }
   };

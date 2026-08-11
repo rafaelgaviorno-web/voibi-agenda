@@ -201,11 +201,11 @@ export default function EventModal({
     setIsSaving(true);
     try {
       await onSave(formData);
+      onClose(); // Só fecha se salvar com sucesso
     } catch (err) {
-      alert("Erro ao salvar agendamento!");
+      alert("Erro ao salvar agendamento! Verifique se há conflitos de horário.");
     } finally {
       setIsSaving(false);
-      onClose();
     }
   };
 
@@ -284,6 +284,7 @@ export default function EventModal({
               WhatsApp
             </label>
             <input 
+              required
               value={formData.whatsapp}
               onChange={e => setFormData({...formData, whatsapp: e.target.value})}
               className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 

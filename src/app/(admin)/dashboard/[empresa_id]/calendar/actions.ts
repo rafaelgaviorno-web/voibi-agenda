@@ -16,12 +16,12 @@ export async function saveAppointment(data: any, empresaId: string) {
     
     // 1. Lidar com o cliente (se não tiver ID, busca por whatsapp ou cria novo)
     if (!clienteId && data.whatsapp) {
-      // Tentar buscar cliente pelo whatsapp na mesma empresa
+      // Tentar buscar cliente pelo telefone na mesma empresa
       const { data: existingClient } = await supabase
         .from('agend_clientes_finais')
         .select('id')
         .eq('empresa_id', empresaId)
-        .eq('whatsapp', data.whatsapp)
+        .eq('telefone', data.whatsapp)
         .maybeSingle();
         
       if (existingClient) {
@@ -35,7 +35,7 @@ export async function saveAppointment(data: any, empresaId: string) {
           .insert({
             empresa_id: empresaId,
             nome: data.nome,
-            whatsapp: data.whatsapp
+            telefone: data.whatsapp
           }).select('id').single();
           
         if (newClient) {
