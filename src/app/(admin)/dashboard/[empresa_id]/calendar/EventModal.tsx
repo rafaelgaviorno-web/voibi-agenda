@@ -25,6 +25,7 @@ export default function EventModal({
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     id: '',
+    clienteId: '',
     nome: '',
     whatsapp: '',
     data: '',
@@ -62,6 +63,7 @@ export default function EventModal({
     if (event) {
       setFormData({
         id: event.id || '',
+        clienteId: event.cliente?.id || '',
         nome: event.cliente?.nome || '',
         whatsapp: event.cliente?.whatsapp || event.cliente?.telefone || '',
         data: formatLocalDate(event.inicio),
@@ -80,6 +82,7 @@ export default function EventModal({
       const initialHoraInicio = '09:00';
       setFormData({
         id: '',
+        clienteId: '',
         nome: '',
         whatsapp: '',
         data: formatLocalDate(today.toISOString()),

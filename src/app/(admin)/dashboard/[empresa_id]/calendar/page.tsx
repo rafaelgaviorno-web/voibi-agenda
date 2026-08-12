@@ -106,23 +106,31 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
     unidades = uns || [];
     currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
 
-    const { data: agendamentosData } = await supabase.from('agend_agendamentos').select(`
-      id, inicio, fim, status, is_encaixe,
-      cliente:agend_clientes_finais(id, nome, telefone),
-      profissional:agend_profissionais!inner(id, nome, cor, empresa_id),
-      evento:agend_tipos_evento(nome)
-    `).eq('profissional.empresa_id', empresa_id);
-    agendamentos = agendamentosData || [];
+    const [
+      { data: agendamentosData },
+      { data: profData },
+      { data: dispData },
+      { data: bloqueiosData },
+      { data: procData }
+    ] = await Promise.all([
+      supabase.from('agend_agendamentos').select(`
+        id, inicio, fim, status, is_encaixe,
+        cliente:agend_clientes_finais(id, nome, telefone),
+        profissional:agend_profissionais!inner(id, nome, cor, empresa_id),
+        evento:agend_tipos_evento(nome)
+      `).eq('profissional.empresa_id', empresa_id),
+      supabase.from('agend_profissionais').select('id, nome, cor').eq('empresa_id', empresa_id),
+      supabase.from('agend_disponibilidade').select('profissional_id, dia_semana, hora_inicio, hora_fim'),
+      supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id'),
+      supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id)
+    ]);
 
-    const { data: profData } = await supabase.from('agend_profissionais').select('id, nome, cor').eq('empresa_id', empresa_id);
-    const { data: dispData } = await supabase.from('agend_disponibilidade').select('profissional_id, dia_semana, hora_inicio, hora_fim');
+    agendamentos = agendamentosData || [];
     
     profissionais = (profData || []).map(p => ({
       ...p,
       disponibilidade: (dispData || []).filter(d => d.profissional_id === p.id)
     }));
-
-    const { data: bloqueiosData } = await supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id');
     const bloqueios = (bloqueiosData || []).filter(b => b.profissional_id === null || profissionais.some(p => p.id === b.profissional_id)).map(b => ({
       id: b.id,
       inicio: b.inicio,
@@ -138,7 +146,6 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       agendamentos = agendamentos.filter(a => !a.profissional || (a.profissional as any).unidade_id === currentUnidadeId || !(a.profissional as any).unidade_id);
     }
 
-    const { data: procData } = await supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id);
     procedimentos = procData || [];
   }
 

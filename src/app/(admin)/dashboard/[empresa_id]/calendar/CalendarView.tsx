@@ -351,8 +351,9 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
            const formData = {
              id: original.id,
+             clienteId: original.cliente?.id,
              nome: original.cliente?.nome,
-             whatsapp: original.cliente?.whatsapp,
+             whatsapp: original.cliente?.whatsapp || original.cliente?.telefone,
              data: adjustedData,
              horaInicio: adjustedHoraInicio,
              horaFim: adjustedHoraFim,
@@ -373,8 +374,9 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
            const formData = {
              id: original.id,
+             clienteId: original.cliente?.id,
              nome: original.cliente?.nome,
-             whatsapp: original.cliente?.whatsapp,
+             whatsapp: original.cliente?.whatsapp || original.cliente?.telefone,
              data: adjustedData,
              horaInicio: adjustedHoraInicio,
              horaFim: adjustedHoraFim,
