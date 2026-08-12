@@ -124,7 +124,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     } else {
       const res = await saveAppointment(formData, empresaId);
       if (!res.success) {
-        throw new Error(res.error?.message || res.error?.details || "Erro ao salvar no banco de dados.");
+        const err = res.error as any;
+        throw new Error(err?.message || err?.details || "Erro ao salvar no banco de dados.");
       }
       router.refresh();
     }
