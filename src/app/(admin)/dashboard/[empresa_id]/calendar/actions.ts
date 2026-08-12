@@ -30,7 +30,7 @@ export async function saveAppointment(data: any, empresaId: string) {
         await supabase.from('agend_clientes_finais').update({ nome: data.nome }).eq('id', clienteId);
       } else {
         // Criar novo cliente
-        const { data: newClient } = await supabase
+        const { data: newClient, error: insertErr } = await supabase
           .from('agend_clientes_finais')
           .insert({
             empresa_id: empresaId,
@@ -38,18 +38,21 @@ export async function saveAppointment(data: any, empresaId: string) {
             telefone: data.whatsapp
           }).select('id').single();
           
+        if (insertErr) throw insertErr;
+        
         if (newClient) {
           clienteId = newClient.id;
         }
       }
     } else if (!clienteId) {
        // Se não tem whatsapp, cria um cliente genérico
-       const { data: newClient } = await supabase
+       const { data: newClient, error: insertErr } = await supabase
           .from('agend_clientes_finais')
           .insert({
             empresa_id: empresaId,
             nome: data.nome
           }).select('id').single();
+       if (insertErr) throw insertErr;
        if (newClient) clienteId = newClient.id;
     }
 
@@ -62,7 +65,7 @@ export async function saveAppointment(data: any, empresaId: string) {
     // 2. Criar ou Atualizar Agendamento
     if (data.id) {
       // Atualizar
-      await supabase.from('agend_agendamentos').update({
+      const { error: updateErr } = await supabase.from('agend_agendamentos').update({
         profissional_id: data.agendaId,
         tipo_evento_id: data.procedimentoId || null,
         cliente_id: clienteId,
@@ -71,9 +74,11 @@ export async function saveAppointment(data: any, empresaId: string) {
         observacao: data.observacao,
         is_encaixe: data.is_encaixe
       }).eq('id', data.id);
+      
+      if (updateErr) throw updateErr;
     } else {
       // Criar novo
-      await supabase.from('agend_agendamentos').insert({
+      const { error: insertErr2 } = await supabase.from('agend_agendamentos').insert({
         empresa_id: empresaId,
         profissional_id: data.agendaId,
         tipo_evento_id: data.procedimentoId || null,
@@ -84,6 +89,8 @@ export async function saveAppointment(data: any, empresaId: string) {
         observacao: data.observacao,
         is_encaixe: data.is_encaixe
       });
+      
+      if (insertErr2) throw insertErr2;
     }
 
     revalidatePath(`/dashboard/${empresaId}/calendar`);
