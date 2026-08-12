@@ -9,8 +9,7 @@ services:
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     image: voibi-agenda:latest
     container_name: voibi-agenda
-    ports:
-      - "3000:3000"
+    network_mode: "host"
     restart: always
     environment:
       - PORT=3000
@@ -18,12 +17,3 @@ services:
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - CRON_SECRET=${CRON_SECRET}
-    networks:
-      - custom_net
-
-networks:
-  custom_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.123.0.0/16
