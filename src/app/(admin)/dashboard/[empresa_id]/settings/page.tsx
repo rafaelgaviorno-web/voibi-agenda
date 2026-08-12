@@ -425,7 +425,7 @@ export default async function SettingsPage(props: {
                     </div>
                   </div>
                   {empresa_id && (
-                    <CopyLinkButton link={`http://localhost:3000/agendar/${empresa_id}/${agenda.id}`} />
+                    <CopyLinkButton link={`/agendar/${empresa_id}/${agenda.id}`} />
                   )}
                 </div>
                 <Link 
