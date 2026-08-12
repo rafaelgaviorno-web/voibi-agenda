@@ -36,7 +36,7 @@ export default async function LoginPage({
          id: authData.user.id,
          isSuperadmin: true,
          empresa_id: null
-      }), { secure: true, httpOnly: true, path: '/' });
+      }), { secure: process.env.NODE_ENV === 'production', httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 30 });
       redirect('/superadmin');
     }
 
@@ -53,7 +53,7 @@ export default async function LoginPage({
          id: authData.user.id,
          isSuperadmin: false,
          empresa_id: userData.empresa_id
-      }), { secure: true, httpOnly: true, path: '/' });
+      }), { secure: process.env.NODE_ENV === 'production', httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 30 });
       redirect(`/dashboard/${userData.empresa_id}/calendar`);
     } else {
       // Falha ao achar a empresa
