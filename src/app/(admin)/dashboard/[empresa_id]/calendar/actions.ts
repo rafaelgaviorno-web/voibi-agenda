@@ -71,6 +71,7 @@ export async function saveAppointment(data: any, empresaId: string) {
         cliente_id: clienteId,
         inicio: inicioIso,
         fim: fimIso,
+        status: data.status,
         observacao: data.observacao,
         is_encaixe: data.is_encaixe
       }).eq('id', data.id);
