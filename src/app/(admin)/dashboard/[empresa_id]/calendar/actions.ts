@@ -79,7 +79,6 @@ export async function saveAppointment(data: any, empresaId: string) {
     } else {
       // Criar novo
       const { error: insertErr2 } = await supabase.from('agend_agendamentos').insert({
-        empresa_id: empresaId,
         profissional_id: data.agendaId,
         tipo_evento_id: data.procedimentoId || null,
         cliente_id: clienteId,
