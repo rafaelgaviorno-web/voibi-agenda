@@ -64,8 +64,13 @@ export default function BookingWizard({ empresa, profissional }: any) {
       // 1. Achar o dia da semana (0=Domingo, 1=Segunda, etc). No BD, 0=Domingo.
       let dayOfWeek = dayjs(selectedDate).day(); 
       // Se no BD a segunda é 1 e domingo é 0, bate certinho.
-      const regras = (profissional.disponibilidade || []).filter((d:any) => Number(d.dia_semana) === dayOfWeek);
+      let regras = (profissional.disponibilidade || []).filter((d:any) => Number(d.dia_semana) === dayOfWeek);
       
+      // Fallback: se o profissional não tem NENHUMA regra cadastrada, libera seg-sex 08h-18h
+      if ((!profissional.disponibilidade || profissional.disponibilidade.length === 0) && dayOfWeek >= 1 && dayOfWeek <= 5) {
+         regras = [{ dia_semana: dayOfWeek, hora_inicio: '08:00:00', hora_fim: '18:00:00' }];
+      }
+
       if (regras.length === 0) {
         setAvailableSlots([]);
         return;
