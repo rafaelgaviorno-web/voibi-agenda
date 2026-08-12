@@ -85,43 +85,46 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   // (Removido toggleAgenda pois agora está na Sidebar Global)
 
   const handleSaveEvent = async (formData: any) => {
-    if (empresaId === 'mock-clinic') {
-      if (formData.id) {
-         const updated = localEvents.map((e: any) => e.id === formData.id ? {
-           ...e,
-           cliente: { nome: formData.nome, whatsapp: formData.whatsapp },
-           profissional: agendas.find((a: any) => a.id === formData.agendaId),
-           evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId),
-           inicio: `${formData.data}T${formData.horaInicio}:00`,
-           fim: `${formData.data}T${formData.horaFim}:00`,
-           observacao: formData.observacao,
-           status: formData.status,
-           is_encaixe: formData.is_encaixe
-         } : e);
-         setLocalEvents(updated);
-         // Atualiza localStorage só com os que vieram do storage local
+    // Atualização otimista no front-end para evitar que o card volte à posição original (snap back)
+    if (formData.id) {
+       const updated = localEvents.map((e: any) => e.id === formData.id ? {
+         ...e,
+         cliente: { nome: formData.nome, whatsapp: formData.whatsapp, telefone: formData.whatsapp },
+         profissional: agendas.find((a: any) => a.id === formData.agendaId) || e.profissional,
+         evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId) || e.evento,
+         inicio: `${formData.data}T${formData.horaInicio}:00`,
+         fim: `${formData.data}T${formData.horaFim}:00`,
+         observacao: formData.observacao,
+         status: formData.status,
+         is_encaixe: formData.is_encaixe
+       } : e);
+       setLocalEvents(updated);
+       
+       if (empresaId === 'mock-clinic') {
          const stored = JSON.parse(localStorage.getItem('voibi_mock_events') || '[]');
          const updatedStored = stored.map((e: any) => e.id === formData.id ? updated.find((u: any) => u.id === formData.id) : e);
          localStorage.setItem('voibi_mock_events', JSON.stringify(updatedStored));
-      } else {
-         const newEvent = {
-           id: 'mock-' + Date.now(),
-           cliente: { nome: formData.nome, whatsapp: formData.whatsapp },
-           profissional: agendas.find((a: any) => a.id === formData.agendaId),
-           evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId),
-           inicio: `${formData.data}T${formData.horaInicio}:00`,
-           fim: `${formData.data}T${formData.horaFim}:00`,
-           status: formData.status || 'confirmado',
-           observacao: formData.observacao,
-           is_encaixe: formData.is_encaixe
-         };
-         setLocalEvents((prev: any) => [...prev, newEvent]);
-         
-         const stored = JSON.parse(localStorage.getItem('voibi_mock_events') || '[]');
-         stored.push(newEvent);
-         localStorage.setItem('voibi_mock_events', JSON.stringify(stored));
-      }
-    } else {
+       }
+    } else if (empresaId === 'mock-clinic') {
+       const newEvent = {
+         id: 'mock-' + Date.now(),
+         cliente: { nome: formData.nome, whatsapp: formData.whatsapp },
+         profissional: agendas.find((a: any) => a.id === formData.agendaId),
+         evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId),
+         inicio: `${formData.data}T${formData.horaInicio}:00`,
+         fim: `${formData.data}T${formData.horaFim}:00`,
+         status: formData.status || 'confirmado',
+         observacao: formData.observacao,
+         is_encaixe: formData.is_encaixe
+       };
+       setLocalEvents((prev: any) => [...prev, newEvent]);
+       
+       const stored = JSON.parse(localStorage.getItem('voibi_mock_events') || '[]');
+       stored.push(newEvent);
+       localStorage.setItem('voibi_mock_events', JSON.stringify(stored));
+    }
+
+    if (empresaId !== 'mock-clinic') {
       const res = await saveAppointment(formData, empresaId);
       if (!res.success) {
         const err = res.error as any;
