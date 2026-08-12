@@ -62,7 +62,8 @@ export default async function AgendamentoPublicoPage({
     empresa = eData;
     
     // 2. Pegar profissional
-    const { data: pData } = await supabase.from('agend_profissionais').select('id, nome, cor, webhook_url, permitir_sobreposicao, campos_personalizados').eq('id', agenda_id).eq('empresa_id', empresa_id).single();
+    const { data: pData, error: pErr } = await supabase.from('agend_profissionais').select('id, nome, cor').eq('id', agenda_id).eq('empresa_id', empresa_id).single();
+    if (pErr) console.error("Error fetching profissional:", pErr);
     if (!pData) notFound();
     
     // Pegar disponibilidade do profissional
