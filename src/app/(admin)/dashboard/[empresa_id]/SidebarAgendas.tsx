@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CalendarDays, ChevronDown, ChevronRight, ArrowRightLeft, Search, CheckSquare, Square } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronRight, ArrowRightLeft, Search } from 'lucide-react';
 import TransferModal from './calendar/TransferModal';
 import { transferAppointments } from './calendar/actions';
 
@@ -116,27 +116,26 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
           </div>
 
           <div className="flex items-center justify-between px-1">
-            <button onClick={handleSelectAll} className="flex items-center gap-1.5 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
-              <CheckSquare className="w-3.5 h-3.5" /> Marcar todas
+            <button onClick={handleSelectAll} className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+              Marcar todas
             </button>
-            <button onClick={handleDeselectAll} className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-500 hover:text-red-600 transition-colors">
-              <Square className="w-3.5 h-3.5" /> Desmarcar todas
+            <button onClick={handleDeselectAll} className="text-[11px] font-medium text-zinc-500 hover:text-red-600 transition-colors">
+              Desmarcar todas
             </button>
           </div>
 
           <div className="max-h-56 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {filteredAgendas.map(agenda => (
               <div key={agenda.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-zinc-50 dark:bg-zinc-950 rounded-lg group transition-colors">
-                <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
-                  <input 
-                    type="checkbox"
-                    checked={selectedAgendas.includes(agenda.id)}
-                    onChange={() => toggleAgenda(agenda.id)}
-                    className="w-4 h-4 rounded text-indigo-600 border-zinc-300 dark:border-zinc-600 focus:ring-indigo-500/20"
-                  />
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: agenda.cor }}></div>
-                  <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:text-zinc-100 truncate">{agenda.nome}</span>
-                </label>
+                <button 
+                  onClick={() => toggleAgenda(agenda.id)}
+                  className={`flex items-center gap-3 cursor-pointer flex-1 min-w-0 text-left transition-opacity ${selectedAgendas.includes(agenda.id) ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                >
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: agenda.cor }}></div>
+                  <span className={`text-sm truncate ${selectedAgendas.includes(agenda.id) ? 'font-semibold text-zinc-800 dark:text-zinc-100' : 'font-medium text-zinc-500 dark:text-zinc-400'}`}>
+                    {agenda.nome}
+                  </span>
+                </button>
                 <button
                   onClick={() => { setTransferSourceId(agenda.id); setIsTransferModalOpen(true); }}
                   title="Transferir Agendamentos"
