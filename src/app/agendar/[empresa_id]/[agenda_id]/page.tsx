@@ -2,6 +2,8 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 import { notFound } from 'next/navigation';
 import BookingWizard from './BookingWizard';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AgendamentoPublicoPage({ 
   params 
 }: { 
@@ -70,7 +72,7 @@ export default async function AgendamentoPublicoPage({
     profissional = pData;
     
     // 3. Pegar procedimentos
-    const { data: procData } = await supabase.from('agend_tipos_evento').select('*').eq('profissional_id', agenda_id);
+    const { data: procData } = await supabase.from('agend_tipos_evento').select('*').eq('empresa_id', empresa_id);
     procedimentos = procData || [];
   }
 
