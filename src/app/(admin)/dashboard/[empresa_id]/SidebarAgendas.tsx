@@ -26,6 +26,9 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
     return agendas.filter(a => a.nome.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [agendas, searchQuery]);
 
+  const isAllSelected = agendas.length > 0 && selectedAgendas.length === agendas.length;
+  const isNoneSelected = selectedAgendas.length === 0;
+
   const updateUrl = (newSelected: string[]) => {
     const newUrl = new URL(window.location.href);
     if (newSelected.length === 0) {
@@ -116,10 +119,16 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
           </div>
 
           <div className="flex items-center justify-between px-1">
-            <button onClick={handleSelectAll} className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+            <button 
+              onClick={handleSelectAll} 
+              className={`text-[11px] font-medium transition-colors ${isAllSelected ? 'text-indigo-600' : 'text-zinc-500 hover:text-indigo-600'}`}
+            >
               Marcar todas
             </button>
-            <button onClick={handleDeselectAll} className="text-[11px] font-medium text-zinc-500 hover:text-red-600 transition-colors">
+            <button 
+              onClick={handleDeselectAll} 
+              className={`text-[11px] font-medium transition-colors ${isNoneSelected ? 'text-red-600' : 'text-zinc-500 hover:text-red-600'}`}
+            >
               Desmarcar todas
             </button>
           </div>
