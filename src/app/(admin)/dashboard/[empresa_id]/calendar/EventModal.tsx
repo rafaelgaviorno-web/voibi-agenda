@@ -202,8 +202,8 @@ export default function EventModal({
     try {
       await onSave(formData);
       onClose(); // Só fecha se salvar com sucesso
-    } catch (err) {
-      alert("Erro ao salvar agendamento! Verifique se há conflitos de horário.");
+    } catch (err: any) {
+      alert("Erro ao salvar agendamento! Detalhe: " + err.message);
     } finally {
       setIsSaving(false);
     }
