@@ -411,7 +411,7 @@ export default function AutomationsClient({
                       Consulta os slots livres no dia para a IA oferecer ao paciente:
                     </div>
                     <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded">
-                      GET /api/v1/availability?date=2026-09-08&event_type_id={'<ID>'}
+                      GET https://agenda.voibi.com.br/api/v1/availability?date=2026-09-08&event_type_id={'<ID>'}
                     </div>
                     <div className="text-zinc-400 font-sans text-[11px]">
                       Retorna: <code className="text-amber-300 font-mono">available_times: ["09:00", "09:30", "10:00"]</code>
@@ -425,7 +425,7 @@ export default function AutomationsClient({
                       <span className="text-[10px] text-zinc-400 font-sans">Fazer Agendamento</span>
                     </div>
                     <div className="text-zinc-400 font-sans text-xs">
-                      Cria o agendamento (o término é calculado automaticamente pela duração):
+                      Cria o agendamento em <code className="text-zinc-300">https://agenda.voibi.com.br/api/v1/bookings</code>:
                     </div>
                     <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded whitespace-pre">
 {`{
@@ -448,7 +448,7 @@ export default function AutomationsClient({
                       Encontra as consultas do paciente antes de cancelar ou reagendar:
                     </div>
                     <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded">
-                      GET /api/v1/bookings?telefone=11999999999&status=confirmado
+                      GET https://agenda.voibi.com.br/api/v1/bookings?telefone=11999999999&status=confirmado
                     </div>
                   </div>
 
@@ -459,10 +459,10 @@ export default function AutomationsClient({
                       <span className="text-[10px] text-zinc-400 font-sans">Cancelar</span>
                     </div>
                     <div className="text-zinc-400 font-sans text-xs">
-                      Cancela a consulta (também aceita <code className="text-amber-300 font-mono">POST /api/v1/bookings/{'{id}'}/cancel</code>):
+                      Cancela a consulta (também aceita POST com final /cancel):
                     </div>
                     <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded">
-                      POST /api/v1/bookings/uuid-do-agendamento/cancel
+                      POST https://agenda.voibi.com.br/api/v1/bookings/uuid-do-agendamento/cancel
                     </div>
                   </div>
 
@@ -473,7 +473,7 @@ export default function AutomationsClient({
                       <span className="text-[10px] text-zinc-400 font-sans">Catálogo</span>
                     </div>
                     <div className="text-zinc-400 font-sans text-xs">
-                      Lista os procedimentos com duração e regras. Use também <code className="text-amber-300 font-mono">GET /api/v1/agendas</code> para listar os profissionais.
+                      https://agenda.voibi.com.br/api/v1/event-types e https://agenda.voibi.com.br/api/v1/agendas
                     </div>
                   </div>
 
@@ -496,24 +496,36 @@ export default function AutomationsClient({
               {apiSubTab === 'prompt' && (
                 <div className="space-y-3 text-xs font-sans text-zinc-300 overflow-y-auto max-h-[480px]">
                   <p className="text-zinc-400">
-                    Instrução recomendada para colocar no <strong>System Prompt</strong> do seu robô:
+                    Instrução com o formato de disparo <code className="text-amber-300 font-mono">[HTTP_REQUEST:...]</code> pronto para o robô:
                   </p>
                   <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-200 whitespace-pre-wrap leading-relaxed select-all">
-{`Você é a atendente virtual da clínica. Seu papel é tirar dúvidas, agendar e cancelar consultas com empatia e agilidade.
+{`Você é a atendente virtual da clínica. Seu papel é consultar horários, agendar e cancelar consultas.
+Sempre que precisar executar uma ação no sistema, responda EXATAMENTE com a tag [HTTP_REQUEST:{...}] correspondente.
 
-DIRETRIZES DE AGENDAMENTO:
-1. Quando o paciente quiser agendar:
-   - Se ele não disse o procedimento, chame a tool "consultar_servicos".
-   - Pergunte o dia de preferência.
-   - Chame "consultar_horarios_disponiveis" para aquela data e apresente até 3 opções de horário amigáveis.
-   - Peça o nome completo e confirme o número de WhatsApp.
-   - Chame "criar_agendamento" com os dados confirmados.
+REGRAS DE COMUNICAÇÃO HTTP:
+Domínio base: https://agenda.voibi.com.br
+Headers padrão: {"Authorization": "Bearer ${apiKey}", "Content-Type": "application/json"}
 
-DIRETRIZES DE CANCELAMENTO / REAGENDAMENTO:
-1. Quando o paciente disser que quer cancelar ou remarcar:
-   - Chame "consultar_agendamentos_cliente" usando o telefone dele para encontrar o ID da consulta.
-   - Peça confirmação antes de executar.
-   - Ao confirmar, chame "cancelar_agendamento" com o ID da consulta.`}
+COMO DISPARAR CADA AÇÃO:
+
+1. CONSULTAR HORÁRIOS LIVRES DE UM DIA:
+Quando o paciente quiser saber horários para uma data (ex: 2026-09-08):
+[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/availability?date=2026-09-08","headers":{"Authorization":"Bearer ${apiKey}"}}]
+
+2. CRIAR NOVO AGENDAMENTO:
+Quando o paciente confirmar o horário (ex: 09:00), nome e telefone:
+[HTTP_REQUEST:{"method":"POST","url":"https://agenda.voibi.com.br/api/v1/bookings","headers":{"Authorization":"Bearer ${apiKey}","Content-Type":"application/json"},"body":{"inicio":"2026-09-08T09:00:00Z","nome":"Nome do Paciente","telefone":"11999999999","observacao":"Agendado pela IA"}}]
+
+3. BUSCAR CONSULTAS DO PACIENTE (PARA CANCELAR OU REMARCAR):
+Quando o paciente disser que quer cancelar ou consultar:
+[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/bookings?telefone=11999999999&status=confirmado","headers":{"Authorization":"Bearer ${apiKey}"}}]
+
+4. CANCELAR O AGENDAMENTO:
+Após localizar o ID da consulta e o paciente confirmar o cancelamento:
+[HTTP_REQUEST:{"method":"POST","url":"https://agenda.voibi.com.br/api/v1/bookings/ID_DO_AGENDAMENTO/cancel","headers":{"Authorization":"Bearer ${apiKey}","Content-Type":"application/json"},"body":{"motivo":"Pedido do cliente"}}]
+
+5. LISTAR PROCEDIMENTOS/SERVIÇOS:
+[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/event-types","headers":{"Authorization":"Bearer ${apiKey}"}}]`}
                   </div>
                 </div>
               )}
