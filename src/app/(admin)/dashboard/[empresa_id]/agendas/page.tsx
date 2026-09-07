@@ -1,6 +1,7 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
+import CopyAgendaId from './CopyAgendaId';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,7 +128,13 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Agendas Cadastradas</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Agendas Cadastradas</h2>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full">
+            💡 <strong>Dica IA:</strong> Você pode passar o <strong>ID</strong> ou o próprio <strong>Nome</strong> da agenda nas requisições.
+          </span>
+        </div>
+
         {agendas.length === 0 ? (
           <div className="text-center py-10 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-700 border-dashed">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Nenhuma agenda cadastrada ainda.</p>
@@ -145,6 +152,9 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
                     <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: agenda.cor || '#ccc' }}></span>
                     Configurar horários
                   </p>
+                  <div className="mt-2.5">
+                    <CopyAgendaId id={agenda.id} />
+                  </div>
                 </div>
                 <div className="flex items-center text-zinc-400 group-hover:text-blue-500 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>

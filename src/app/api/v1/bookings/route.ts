@@ -50,9 +50,27 @@ export async function GET(request: NextRequest) {
       .lte('inicio', endOfDay(targetDate).toISOString());
   }
 
-  // Filtro por Profissional
-  if (profissionalId) {
-    query = query.eq('profissional_id', profissionalId);
+  // Filtro por Profissional / Agenda
+  const rawProf = profissionalId || 
+                  searchParams.get('agenda_id') || 
+                  searchParams.get('agenda') || 
+                  searchParams.get('profissional') ||
+                  searchParams.get('agenda_nome');
+  if (rawProf) {
+    const cleanProf = rawProf.trim();
+    const isProfUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanProf);
+    if (isProfUuid) {
+      query = query.eq('profissional_id', cleanProf);
+    } else {
+      const { data: p } = await supabase
+        .from('agend_profissionais')
+        .select('id')
+        .eq('empresa_id', auth.empresa.id)
+        .ilike('nome', `%${cleanProf}%`)
+        .limit(1)
+        .maybeSingle();
+      if (p) query = query.eq('profissional_id', p.id);
+    }
   }
 
   // Filtro por Telefone ou Email do Cliente
@@ -98,6 +116,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const { event_type_id, profissional_id, inicio, fim, nome, email, telefone, observacao } = body;
+  const rawProf = profissional_id || body.agenda_id || body.agenda || body.profissional || body.agenda_nome || body.profissional_nome;
 
   if (!inicio || !nome || (!telefone && !email)) {
     return NextResponse.json({ 
@@ -107,31 +126,63 @@ export async function POST(request: NextRequest) {
 
   const supabase = getServiceSupabase();
 
-  // 1. Obter Event Type (se informado)
-  let eventType: { duracao_minutos?: number; profissional_id?: string | null } | null = null;
-  if (event_type_id) {
-    const { data: ev } = await supabase
-      .from('agend_tipos_evento')
-      .select('*')
-      .eq('id', event_type_id)
-      .eq('empresa_id', auth.empresa.id)
-      .maybeSingle();
+  // 1. Obter Event Type (por ID ou por Nome)
+  let eventType: { id: string; duracao_minutos?: number; profissional_id?: string | null } | null = null;
+  const rawEvent = event_type_id || body.procedimento || body.servico || body.servico_id;
+  if (rawEvent) {
+    const cleanEv = String(rawEvent).trim();
+    const isEvUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanEv);
+    let evQuery = supabase.from('agend_tipos_evento').select('*').eq('empresa_id', auth.empresa.id);
+    if (isEvUuid) {
+      evQuery = evQuery.eq('id', cleanEv);
+    } else {
+      evQuery = evQuery.ilike('nome', `%${cleanEv}%`);
+    }
 
+    const { data: ev } = await evQuery.limit(1).maybeSingle();
     eventType = ev;
   }
 
-  // 2. Determinar Profissional
-  let resolvedProfId = profissional_id;
+  // 2. Determinar Profissional / Agenda (por ID ou Nome)
+  let resolvedProfId: string | null = null;
+  if (rawProf) {
+    const cleanProf = String(rawProf).trim();
+    const isProfUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanProf);
+
+    if (isProfUuid) {
+      const { data: p } = await supabase
+        .from('agend_profissionais')
+        .select('id')
+        .eq('id', cleanProf)
+        .eq('empresa_id', auth.empresa.id)
+        .maybeSingle();
+
+      if (p) resolvedProfId = p.id;
+    } else {
+      const { data: p } = await supabase
+        .from('agend_profissionais')
+        .select('id')
+        .eq('empresa_id', auth.empresa.id)
+        .ilike('nome', `%${cleanProf}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (p) resolvedProfId = p.id;
+    }
+  }
+
+  // Fallback 1: se o procedimento possui um profissional fixo
   if (!resolvedProfId && eventType?.profissional_id) {
     resolvedProfId = eventType.profissional_id;
   }
 
-  // Se ainda não temos profissional, pegar o primeiro da empresa
+  // Fallback 2: pegar a primeira agenda da empresa
   if (!resolvedProfId) {
     const { data: firstProf } = await supabase
       .from('agend_profissionais')
       .select('id')
       .eq('empresa_id', auth.empresa.id)
+      .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
@@ -141,7 +192,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!resolvedProfId) {
-    return NextResponse.json({ error: 'Nenhum profissional/agenda disponível para realizar o agendamento' }, { status: 400 });
+    return NextResponse.json({ error: 'Nenhuma agenda ou profissional disponível para realizar o agendamento' }, { status: 400 });
   }
 
   // 3. Calcular Horário de Término (se não enviado)

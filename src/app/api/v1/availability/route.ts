@@ -10,7 +10,12 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const eventTypeId = searchParams.get('event_type_id');
-  const profissionalParam = searchParams.get('profissional_id');
+  const profissionalParam = searchParams.get('profissional_id') || 
+                            searchParams.get('agenda_id') || 
+                            searchParams.get('profissional') || 
+                            searchParams.get('agenda') || 
+                            searchParams.get('profissional_nome') || 
+                            searchParams.get('agenda_nome');
   const dateStr = searchParams.get('date');
 
   if (!dateStr) {
@@ -22,50 +27,88 @@ export async function GET(request: NextRequest) {
   const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
 
   let eventType: { duracao_minutos?: number; buffer_antes_minutos?: number; buffer_depois_minutos?: number; antecedencia_min_horas?: number; profissional_id?: string | null } | null = null;
-  let profId: string | null = profissionalParam;
+  let resolvedProf: { id: string; nome: string } | null = null;
 
   // 1. Obter Event Type se informado
   if (eventTypeId) {
-    const { data: ev, error: errEvent } = await supabase
-      .from('agend_tipos_evento')
-      .select('*')
-      .eq('id', eventTypeId)
-      .eq('empresa_id', auth.empresa.id)
-      .maybeSingle();
-
-    if (errEvent || !ev) {
-      return NextResponse.json({ error: 'Tipo de evento não encontrado' }, { status: 404 });
+    const isEventUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventTypeId.trim());
+    let evQuery = supabase.from('agend_tipos_evento').select('*').eq('empresa_id', auth.empresa.id);
+    if (isEventUuid) {
+      evQuery = evQuery.eq('id', eventTypeId.trim());
+    } else {
+      evQuery = evQuery.ilike('nome', `%${eventTypeId.trim()}%`);
     }
-    eventType = ev;
 
-    if (!profId && ev.profissional_id) {
-      profId = ev.profissional_id;
+    const { data: ev } = await evQuery.limit(1).maybeSingle();
+    if (ev) {
+      eventType = ev;
     }
   }
 
-  // 2. Se ainda não temos profId, buscar o primeiro profissional da empresa
-  if (!profId) {
-    const { data: firstProf } = await supabase
+  // 2. Resolver o Profissional / Agenda
+  if (profissionalParam) {
+    const cleanProf = profissionalParam.trim();
+    const isProfUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanProf);
+
+    if (isProfUuid) {
+      const { data: p } = await supabase
+        .from('agend_profissionais')
+        .select('id, nome')
+        .eq('id', cleanProf)
+        .eq('empresa_id', auth.empresa.id)
+        .maybeSingle();
+
+      if (p) resolvedProf = p;
+    } else {
+      // Busca pelo NOME da agenda (ex: "Robson", "Dr. Teste 1")
+      const { data: p } = await supabase
+        .from('agend_profissionais')
+        .select('id, nome')
+        .eq('empresa_id', auth.empresa.id)
+        .ilike('nome', `%${cleanProf}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (p) resolvedProf = p;
+    }
+  }
+
+  // Fallback 1: se o procedimento possui um profissional fixo associado
+  if (!resolvedProf && eventType?.profissional_id) {
+    const { data: p } = await supabase
       .from('agend_profissionais')
-      .select('id')
+      .select('id, nome')
+      .eq('id', eventType.profissional_id)
       .eq('empresa_id', auth.empresa.id)
+      .maybeSingle();
+
+    if (p) resolvedProf = p;
+  }
+
+  // Fallback 2: seleciona a primeira agenda cadastrada da clínica
+  if (!resolvedProf) {
+    const { data: p } = await supabase
+      .from('agend_profissionais')
+      .select('id, nome')
+      .eq('empresa_id', auth.empresa.id)
+      .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
-    if (firstProf) {
-      profId = firstProf.id;
-    }
+    if (p) resolvedProf = p;
   }
 
-  if (!profId) {
+  if (!resolvedProf) {
     return NextResponse.json({ 
       data: [], 
       available_times: [],
-      message: 'Nenhum profissional encontrado para esta empresa' 
+      message: 'Nenhuma agenda ou profissional encontrado para esta clínica' 
     });
   }
 
-  // 3. Obter Regras de Disponibilidade do Profissional
+  const profId = resolvedProf.id;
+
+  // 3. Obter Regras de Disponibilidade da Agenda
   const { data: regrasData } = await supabase
     .from('agend_disponibilidade')
     .select('hora_inicio, hora_fim')
@@ -83,6 +126,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       data: [], 
       available_times: [],
+      agenda: { id: resolvedProf.id, nome: resolvedProf.nome },
       message: 'Sem expediente para esta data' 
     });
   }
@@ -111,6 +155,11 @@ export async function GET(request: NextRequest) {
   const parsedBlocks = (blocks || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
   const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));
 
+  // Por padrão não bloqueamos artificialmente 24h na consulta em tempo real da IA, a não ser que pedido explicitamente
+  const minNotice = searchParams.get('respeitar_antecedencia') === 'true' 
+    ? (eventType?.antecedencia_min_horas ?? 0) 
+    : 0;
+
   const slots = getAvailableSlots(
     date,
     mappedRegras,
@@ -118,7 +167,7 @@ export async function GET(request: NextRequest) {
       durationMinutes: eventType?.duracao_minutos || 30,
       bufferBeforeMinutes: eventType?.buffer_antes_minutos || 0,
       bufferAfterMinutes: eventType?.buffer_depois_minutos || 0,
-      minNoticeHours: eventType?.antecedencia_min_horas ?? 0
+      minNoticeHours: minNotice
     },
     parsedBookings,
     parsedBlocks
@@ -133,7 +182,12 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ 
     data: formattedSlots,
     available_times: formattedSlots.map(s => s.time),
-    profissional_id: profId,
-    event_type_id: eventTypeId || null
+    agenda: {
+      id: resolvedProf.id,
+      nome: resolvedProf.nome
+    },
+    profissional_id: resolvedProf.id,
+    event_type_id: eventType ? (eventType as any).id : null,
+    date: dateStr
   });
 }
