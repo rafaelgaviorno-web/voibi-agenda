@@ -10,9 +10,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const supabase = getServiceSupabase();
   const { data, error } = await supabase
     .from('agend_agendamentos')
-    .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais(*)')
+    .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais!inner(id, nome, cor, empresa_id)')
     .eq('id', id)
-    .eq('empresa_id', auth.empresa.id)
+    .eq('agend_profissionais.empresa_id', auth.empresa.id)
     .single();
 
   if (error || !data) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
@@ -27,11 +27,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const body = await request.json();
   const supabase = getServiceSupabase();
 
+  // Valida se o agendamento pertence à empresa
+  const { data: existing } = await supabase
+    .from('agend_agendamentos')
+    .select('id, profissional_id, agend_profissionais!inner(empresa_id)')
+    .eq('id', id)
+    .eq('agend_profissionais.empresa_id', auth.empresa.id)
+    .maybeSingle();
+
+  if (!existing) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
+
   const { data, error } = await supabase
     .from('agend_agendamentos')
-    .update(body) // { inicio, fim, status, observacao, etc }
+    .update(body)
     .eq('id', id)
-    .eq('empresa_id', auth.empresa.id)
     .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais(*)')
     .single();
 
@@ -60,6 +69,16 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   const supabase = getServiceSupabase();
 
+  // Valida se o agendamento pertence à empresa
+  const { data: existing } = await supabase
+    .from('agend_agendamentos')
+    .select('id, profissional_id, agend_profissionais!inner(empresa_id)')
+    .eq('id', id)
+    .eq('agend_profissionais.empresa_id', auth.empresa.id)
+    .maybeSingle();
+
+  if (!existing) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
+
   // Tenta ler motivo caso enviado no body ou query param
   let motivo = '';
   try {
@@ -78,7 +97,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     .from('agend_agendamentos')
     .update(updatePayload)
     .eq('id', id)
-    .eq('empresa_id', auth.empresa.id)
     .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais(*)')
     .single();
 

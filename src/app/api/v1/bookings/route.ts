@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
       created_at,
       agend_clientes_finais(id, nome, email, telefone),
       agend_tipos_evento(id, nome, duracao_minutos),
-      agend_profissionais(id, nome, cor)
+      agend_profissionais!inner(id, nome, cor, empresa_id)
     `)
-    .eq('empresa_id', auth.empresa.id)
+    .eq('agend_profissionais.empresa_id', auth.empresa.id)
     .order('inicio', { ascending: true })
     .limit(limitParam);
 
@@ -245,7 +245,6 @@ export async function POST(request: NextRequest) {
   const { data: booking, error: errBooking } = await supabase
     .from('agend_agendamentos')
     .insert({
-      empresa_id: auth.empresa.id,
       profissional_id: resolvedProfId,
       tipo_evento_id: event_type_id || null,
       cliente_id: clienteId,

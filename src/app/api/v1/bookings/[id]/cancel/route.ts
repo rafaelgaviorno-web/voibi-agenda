@@ -9,6 +9,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const supabase = getServiceSupabase();
 
+  // Valida se o agendamento pertence à empresa
+  const { data: existing } = await supabase
+    .from('agend_agendamentos')
+    .select('id, profissional_id, agend_profissionais!inner(empresa_id)')
+    .eq('id', id)
+    .eq('agend_profissionais.empresa_id', auth.empresa.id)
+    .maybeSingle();
+
+  if (!existing) {
+    return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
+  }
+
   let motivo = '';
   try {
     const body = await request.json();
@@ -26,7 +38,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .from('agend_agendamentos')
     .update(updatePayload)
     .eq('id', id)
-    .eq('empresa_id', auth.empresa.id)
     .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais(*)')
     .single();
 
