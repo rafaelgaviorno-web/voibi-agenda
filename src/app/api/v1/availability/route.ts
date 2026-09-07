@@ -3,8 +3,9 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
 import { getAvailableSlots } from '@/lib/availability/engine';
 import { parseISO, startOfDay, endOfDay, format } from 'date-fns';
+import { withApiLogger } from '@/lib/api-logger';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -272,4 +273,4 @@ export async function GET(request: NextRequest) {
     event_type_id: eventType ? (eventType as any).id : null,
     date: dateStr
   });
-}
+});

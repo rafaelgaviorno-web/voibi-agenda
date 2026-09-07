@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
+import { withApiLogger } from '@/lib/api-logger';
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withApiLogger(async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -58,4 +59,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     message: 'Agendamento cancelado com sucesso',
     data
   });
-}
+});

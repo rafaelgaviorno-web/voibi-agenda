@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
 import { parseISO, addMinutes, startOfDay, endOfDay } from 'date-fns';
+import { withApiLogger } from '@/lib/api-logger';
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -69,7 +70,11 @@ export async function GET(request: NextRequest) {
         .ilike('nome', `%${cleanProf}%`)
         .limit(1)
         .maybeSingle();
-      if (p) query = query.eq('profissional_id', p.id);
+      if (p) {
+        query = query.eq('profissional_id', p.id);
+      } else {
+        return NextResponse.json({ data: [] });
+      }
     }
   }
 
@@ -108,9 +113,9 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ data: bookings || [] });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withApiLogger(async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -283,4 +288,4 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ data: booking }, { status: 201 });
-}
+});

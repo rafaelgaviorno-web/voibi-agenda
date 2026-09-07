@@ -42,6 +42,9 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
       return { error: 'Unauthorized: Invalid API Key', status: 401 };
     }
 
+    const { cacheApiKeyEmpresa } = await import('./api-logger');
+    cacheApiKeyEmpresa(apiKey, empresa.id);
+
     return { empresa };
   } catch {
     return { error: 'Unauthorized: Invalid API Key format', status: 401 };

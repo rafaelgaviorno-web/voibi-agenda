@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Blocks, Zap, Bell, Code, ChevronDown, ChevronRight } from 'lucide-react';
+import { Blocks, Zap, Bell, Code, ChevronDown, ChevronRight, Activity } from 'lucide-react';
 
 export default function AutomationsDropdown({ baseUrl }: { baseUrl: string }) {
   const pathname = usePathname();
@@ -32,25 +32,32 @@ export default function AutomationsDropdown({ baseUrl }: { baseUrl: string }) {
       {isOpen && (
         <div className="pl-10 pr-3 py-1 space-y-1">
           <Link 
+            href={`${baseUrl}/automations?tab=logs`}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-md transition-colors"
+          >
+            <Activity className="w-3.5 h-3.5 text-emerald-500" />
+            Logs de Execução (API)
+          </Link>
+          <Link 
+            href={`${baseUrl}/automations?tab=api`}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md transition-colors"
+          >
+            <Code className="w-3.5 h-3.5" />
+            API Geral & IA
+          </Link>
+          <Link 
             href={`${baseUrl}/automations?tab=n8n`}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/40 rounded-md transition-colors"
           >
             <Zap className="w-3.5 h-3.5" />
             N8N Nativo
           </Link>
           <Link 
             href={`${baseUrl}/automations?tab=reminders`}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/40 rounded-md transition-colors"
           >
             <Bell className="w-3.5 h-3.5" />
             Lembretes
-          </Link>
-          <Link 
-            href={`${baseUrl}/automations?tab=api`}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-          >
-            <Code className="w-3.5 h-3.5" />
-            API Geral
           </Link>
         </div>
       )}

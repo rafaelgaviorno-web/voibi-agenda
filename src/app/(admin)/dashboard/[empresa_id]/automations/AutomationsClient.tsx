@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Key, Copy, Check, Link2, Code, Zap, Bell, Plus, Trash2, Edit2, MessageSquare, Clock, ArrowRight } from 'lucide-react';
+import { Key, Copy, Check, Link2, Code, Zap, Bell, Plus, Trash2, Edit2, MessageSquare, Clock, ArrowRight, Activity } from 'lucide-react';
+import LogsViewer from './LogsViewer';
 
 export default function AutomationsClient({ 
   apiKey, 
@@ -249,10 +250,21 @@ export default function AutomationsClient({
     <div className="space-y-6">
 
       {/* Navegação de Abas Interna */}
-      <div className="flex border-b border-zinc-200 dark:border-zinc-800 gap-2">
+      <div className="flex border-b border-zinc-200 dark:border-zinc-800 gap-2 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 flex items-center gap-2 ${
+            activeTab === 'logs'
+              ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600'
+              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+          }`}
+        >
+          <Activity className={`w-4 h-4 ${activeTab === 'logs' ? 'animate-pulse' : ''}`} />
+          Logs de Execução (API)
+        </button>
         <button
           onClick={() => setActiveTab('api')}
-          className={`pb-3 px-4 text-sm font-semibold transition-all relative ${
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 ${
             activeTab === 'api'
               ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
@@ -262,7 +274,7 @@ export default function AutomationsClient({
         </button>
         <button
           onClick={() => setActiveTab('n8n')}
-          className={`pb-3 px-4 text-sm font-semibold transition-all relative ${
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 ${
             activeTab === 'n8n'
               ? 'text-orange-600 dark:text-orange-400 border-b-2 border-orange-600'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
@@ -272,7 +284,7 @@ export default function AutomationsClient({
         </button>
         <button
           onClick={() => setActiveTab('reminders')}
-          className={`pb-3 px-4 text-sm font-semibold transition-all relative ${
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 ${
             activeTab === 'reminders'
               ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
@@ -785,6 +797,11 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
             </div>
           </div>
         </div>
+      )}
+
+      {/* Conteúdo: Logs da API */}
+      {activeTab === 'logs' && (
+        <LogsViewer empresa_id={empresa_id} />
       )}
 
     </div>

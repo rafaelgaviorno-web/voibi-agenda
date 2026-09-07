@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
+import { withApiLogger } from '@/lib/api-logger';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withApiLogger(async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -17,9 +18,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (error || !data) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
   return NextResponse.json({ data });
-}
+});
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withApiLogger(async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -60,9 +61,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   return NextResponse.json({ data });
-}
+});
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withApiLogger(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -115,4 +116,4 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     message: 'Agendamento cancelado com sucesso', 
     data 
   });
-}
+});
