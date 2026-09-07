@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { ArrowLeft, Clock, CalendarX, User, FormInput, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
+import CopyAgendaId from '../CopyAgendaId';
+
 export default function AgendaConfigClient({ 
   agenda, 
   disponibilidadeInicial, 
@@ -76,7 +78,8 @@ export default function AgendaConfigClient({
     setIsSaving(false);
   };
 
-  const handleSaveDisponibilidade = async () => {
+  const handleSaveDisponibilidade = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSaving(true);
     // Filtrar apenas dias ativos e limpar campos temporários
     const dadosLimpos = disponibilidade
@@ -100,7 +103,10 @@ export default function AgendaConfigClient({
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{agenda.nome}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{agenda.nome}</h1>
+              <CopyAgendaId id={agenda.id} />
+            </div>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Configurações da agenda</p>
           </div>
         </div>
@@ -141,6 +147,16 @@ export default function AgendaConfigClient({
       {activeTab === 'basico' && (
         <form onSubmit={handleSaveBasico} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm max-w-2xl">
           <div className="space-y-4">
+            <div>
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">ID da Agenda (API & IA)</label>
+               <div className="flex items-center gap-2">
+                 <input readOnly value={agenda.id} className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 font-mono select-all focus:outline-none cursor-text" />
+                 <CopyAgendaId id={agenda.id} />
+               </div>
+               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                 Você pode usar este ID ou simplesmente o nome <strong>"{nome}"</strong> nas requisições da sua IA.
+               </p>
+            </div>
             <div>
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nome da Agenda</label>
                <input value={nome} onChange={e => setNome(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
