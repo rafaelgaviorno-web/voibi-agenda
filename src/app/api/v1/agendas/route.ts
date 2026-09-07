@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const { data: profissionais, error } = await supabase
     .from('agend_profissionais')
-    .select('id, nome, slug, cor, unidade_id, created_at')
+    .select('id, nome, cor, unidade_id, created_at')
     .eq('empresa_id', auth.empresa.id)
     .order('nome', { ascending: true });
 
