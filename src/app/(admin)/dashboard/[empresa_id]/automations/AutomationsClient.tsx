@@ -111,25 +111,194 @@ export default function AutomationsClient({
     setLembretes(lembretes.map(l => l.id === id ? { ...l, ativo: !l.ativo } : l));
   };
 
-  return (
-    <div>
+  const [apiSubTab, setApiSubTab] = useState<'endpoints' | 'tools' | 'prompt'>('endpoints');
+  const [copiedTools, setCopiedTools] = useState(false);
 
-      {/* Conteúdo: API */}
+  const aiToolsJson = JSON.stringify([
+    {
+      "name": "consultar_servicos",
+      "description": "Retorna os procedimentos e serviços oferecidos pela clínica, duração e regras.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "profissional_id": {
+            "type": "string",
+            "description": "UUID opcional do profissional para filtrar apenas seus serviços."
+          }
+        }
+      }
+    },
+    {
+      "name": "consultar_profissionais",
+      "description": "Retorna a lista de médicos, especialistas ou agendas da clínica.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "consultar_horarios_disponiveis",
+      "description": "Consulta os horários livres disponíveis para atendimento em uma data específica.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Data no formato AAAA-MM-DD (ex: 2026-09-08)"
+          },
+          "event_type_id": {
+            "type": "string",
+            "description": "UUID do procedimento/serviço desejado"
+          },
+          "profissional_id": {
+            "type": "string",
+            "description": "UUID opcional do profissional preferido"
+          }
+        },
+        "required": ["date"]
+      }
+    },
+    {
+      "name": "criar_agendamento",
+      "description": "Cria e confirma uma nova consulta/agendamento na agenda da clínica.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "inicio": {
+            "type": "string",
+            "description": "Data e hora ISO 8601 de início (ex: 2026-09-08T09:00:00Z)"
+          },
+          "nome": {
+            "type": "string",
+            "description": "Nome completo do paciente"
+          },
+          "telefone": {
+            "type": "string",
+            "description": "WhatsApp ou telefone com DDD do paciente (ex: 11999998888)"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-mail do paciente (opcional)"
+          },
+          "event_type_id": {
+            "type": "string",
+            "description": "UUID do procedimento selecionado"
+          },
+          "profissional_id": {
+            "type": "string",
+            "description": "UUID do profissional (opcional, caso o serviço seja de um profissional específico)"
+          },
+          "observacao": {
+            "type": "string",
+            "description": "Observações do agendamento ou sintomas relatados"
+          }
+        },
+        "required": ["inicio", "nome", "telefone"]
+      }
+    },
+    {
+      "name": "consultar_agendamentos_cliente",
+      "description": "Busca consultas ativas do paciente pelo número de telefone ou e-mail. Essencial para verificar horários antes de cancelar ou reagendar.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "telefone": {
+            "type": "string",
+            "description": "Telefone ou WhatsApp do paciente (ex: 11999998888)"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-mail do paciente (opcional)"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status dos agendamentos (padrão: 'confirmado')",
+            "enum": ["confirmado", "cancelado", "all"]
+          }
+        },
+        "required": ["telefone"]
+      }
+    },
+    {
+      "name": "cancelar_agendamento",
+      "description": "Cancela um agendamento existente pelo seu ID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "booking_id": {
+            "type": "string",
+            "description": "UUID do agendamento a ser cancelado"
+          },
+          "motivo": {
+            "type": "string",
+            "description": "Motivo informado pelo paciente para o cancelamento"
+          }
+        },
+        "required": ["booking_id"]
+      }
+    }
+  ], null, 2);
+
+  const handleCopyTools = () => {
+    navigator.clipboard.writeText(aiToolsJson);
+    setCopiedTools(true);
+    setTimeout(() => setCopiedTools(false), 2500);
+  };
+
+  return (
+    <div className="space-y-6">
+
+      {/* Navegação de Abas Interna */}
+      <div className="flex border-b border-zinc-200 dark:border-zinc-800 gap-2">
+        <button
+          onClick={() => setActiveTab('api')}
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative ${
+            activeTab === 'api'
+              ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600'
+              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+          }`}
+        >
+          API REST & IA Externa
+        </button>
+        <button
+          onClick={() => setActiveTab('n8n')}
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative ${
+            activeTab === 'n8n'
+              ? 'text-orange-600 dark:text-orange-400 border-b-2 border-orange-600'
+              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+          }`}
+        >
+          Conexão N8N
+        </button>
+        <button
+          onClick={() => setActiveTab('reminders')}
+          className={`pb-3 px-4 text-sm font-semibold transition-all relative ${
+            activeTab === 'reminders'
+              ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600'
+              : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+          }`}
+        >
+          Regras de Lembretes
+        </button>
+      </div>
+
+      {/* Conteúdo: API & IA Externa */}
       {activeTab === 'api' && (
         <div className="space-y-8">
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
+            {/* Coluna Esquerda: Credenciais */}
             <div className="space-y-6">
               {/* API Key */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
                     <Key className="w-4 h-4" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Chave de API (API Key)</h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Sua credencial única para autenticação</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Passe no cabeçalho Authorization: Bearer &lt;API_KEY&gt;</p>
                   </div>
                 </div>
                 
@@ -143,20 +312,20 @@ export default function AutomationsClient({
                     {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-amber-600 mt-3 font-medium bg-amber-50 p-2 rounded border border-amber-100">
-                  Mantenha esta chave em segredo. Nunca compartilhe ou exponha no lado do cliente (navegador).
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-3 font-medium bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded border border-amber-200 dark:border-amber-800/60">
+                  Esta chave dá acesso aos agendamentos e horários desta clínica. Mantenha em segurança na sua IA/Servidor.
                 </p>
               </div>
 
               {/* Webhook */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center text-purple-600 dark:text-purple-400">
                     <Link2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Webhook (Eventos em tempo real)</h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Para onde devemos enviar atualizações?</p>
+                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Webhook de Saída (Eventos em tempo real)</h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Para onde a Voibi avisa quando houver mudanças</p>
                   </div>
                 </div>
                 
@@ -166,8 +335,8 @@ export default function AutomationsClient({
                     name="webhook_url" 
                     value={webhookUrl}
                     onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://seu-sistema.com/webhook"
-                    className="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                    placeholder="https://sua-ia-ou-n8n.com/webhook"
+                    className="w-full border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:bg-zinc-800 dark:text-zinc-100"
                   />
                   <div className="flex justify-end">
                     <button 
@@ -179,47 +348,175 @@ export default function AutomationsClient({
                     </button>
                   </div>
                 </form>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-4 leading-relaxed">
-                  Enviaremos requisições POST para esta URL sempre que um agendamento for **Criado**, **Atualizado** ou **Cancelado**.
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 leading-relaxed">
+                  Disparamos requisições POST com os eventos: <code className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">booking.created</code>, <code className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">booking.updated</code> e <code className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">booking.cancelled</code>.
                 </p>
               </div>
             </div>
 
-            {/* Quickstart Guide */}
-            <div className="bg-zinc-900 rounded-xl p-5 shadow-sm text-zinc-300">
-              <div className="flex items-center gap-2 mb-4 text-white">
-                <Code className="w-5 h-5 text-blue-400" />
-                <h3 className="font-semibold">Guia Rápido: Como criar um evento</h3>
-              </div>
+            {/* Coluna Direita: Guia de Integração e Schemas para IA */}
+            <div className="bg-zinc-900 rounded-xl p-5 shadow-sm text-zinc-300 flex flex-col">
               
-              <p className="text-sm mb-4 leading-relaxed">
-                Você pode automatizar a criação de consultas a partir do N8N, Typebot ou do seu próprio código fazendo uma requisição simples:
-              </p>
-
-              <div className="bg-zinc-950 rounded-lg p-4 border border-zinc-800 font-mono text-xs overflow-x-auto">
-                <div className="text-emerald-400 mb-1">POST <span className="text-zinc-300">https://api.voibi.com/v1/events</span></div>
-                <div className="text-blue-300 mb-3">Authorization: Bearer <span className="text-zinc-400">{'{SUA_API_KEY}'}</span></div>
-                
-                <div className="text-zinc-500 dark:text-zinc-400">{"{"}</div>
-                <div className="pl-4">
-                  <div><span className="text-blue-300">"agenda_id"</span>: <span className="text-amber-300">"uuid-do-profissional"</span>,</div>
-                  <div><span className="text-blue-300">"data_hora"</span>: <span className="text-amber-300">"2024-01-20T14:30:00Z"</span>,</div>
-                  <div><span className="text-blue-300">"cliente_nome"</span>: <span className="text-amber-300">"João Silva"</span>,</div>
-                  <div><span className="text-blue-300">"cliente_whatsapp"</span>: <span className="text-amber-300">"11999999999"</span></div>
+              {/* Seletor de Sub-aba */}
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
+                <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs font-medium">
+                  <button
+                    onClick={() => setApiSubTab('endpoints')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      apiSubTab === 'endpoints' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Rotas HTTP (REST)
+                  </button>
+                  <button
+                    onClick={() => setApiSubTab('tools')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      apiSubTab === 'tools' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Tools / Functions para IA
+                  </button>
+                  <button
+                    onClick={() => setApiSubTab('prompt')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      apiSubTab === 'prompt' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Prompt Sugerido
+                  </button>
                 </div>
-                <div className="text-zinc-500 dark:text-zinc-400">{"}"}</div>
+
+                {apiSubTab === 'tools' && (
+                  <button
+                    onClick={handleCopyTools}
+                    className="flex items-center gap-1.5 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 px-2.5 py-1.5 rounded-md transition-colors font-mono"
+                  >
+                    {copiedTools ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedTools ? 'Copiado!' : 'Copiar JSON'}
+                  </button>
+                )}
               </div>
 
-              <div className="mt-5 space-y-2">
-                <div className="flex items-start gap-2 text-sm">
-                  <div className="mt-0.5 text-blue-400"><Zap className="w-4 h-4" /></div>
-                  <p><strong>N8N / Make:</strong> Use o nó "HTTP Request" configurado para POST, passe a API Key no Header de "Authorization".</p>
+              {/* Sub-aba 1: Endpoints HTTP */}
+              {apiSubTab === 'endpoints' && (
+                <div className="space-y-4 text-xs font-mono overflow-y-auto max-h-[500px] pr-1">
+                  
+                  {/* 1. Disponibilidade */}
+                  <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-400">GET /api/v1/availability</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Checar Horários</span>
+                    </div>
+                    <div className="text-zinc-400 font-sans text-xs">
+                      Consulta os slots livres no dia para a IA oferecer ao paciente:
+                    </div>
+                    <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded">
+                      GET /api/v1/availability?date=2026-09-08&event_type_id={'<ID>'}
+                    </div>
+                    <div className="text-zinc-400 font-sans text-[11px]">
+                      Retorna: <code className="text-amber-300 font-mono">available_times: ["09:00", "09:30", "10:00"]</code>
+                    </div>
+                  </div>
+
+                  {/* 2. Criar Agendamento */}
+                  <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-blue-400">POST /api/v1/bookings</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Fazer Agendamento</span>
+                    </div>
+                    <div className="text-zinc-400 font-sans text-xs">
+                      Cria o agendamento (o término é calculado automaticamente pela duração):
+                    </div>
+                    <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded whitespace-pre">
+{`{
+  "event_type_id": "uuid-do-servico",
+  "inicio": "2026-09-08T09:00:00Z",
+  "nome": "João Silva",
+  "telefone": "11999999999",
+  "observacao": "Agendado via IA WhatsApp"
+}`}
+                    </div>
+                  </div>
+
+                  {/* 3. Buscar Consultas do Paciente */}
+                  <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-400">GET /api/v1/bookings</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Localizar Consulta</span>
+                    </div>
+                    <div className="text-zinc-400 font-sans text-xs">
+                      Encontra as consultas do paciente antes de cancelar ou reagendar:
+                    </div>
+                    <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded">
+                      GET /api/v1/bookings?telefone=11999999999&status=confirmado
+                    </div>
+                  </div>
+
+                  {/* 4. Cancelar Agendamento */}
+                  <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-red-400">DELETE /api/v1/bookings/{'{id}'}</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Cancelar</span>
+                    </div>
+                    <div className="text-zinc-400 font-sans text-xs">
+                      Cancela a consulta (também aceita <code className="text-amber-300 font-mono">POST /api/v1/bookings/{'{id}'}/cancel</code>):
+                    </div>
+                    <div className="text-zinc-300 select-all bg-zinc-900 p-2 rounded">
+                      POST /api/v1/bookings/uuid-do-agendamento/cancel
+                    </div>
+                  </div>
+
+                  {/* 5. Serviços e Profissionais */}
+                  <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-purple-400">GET /api/v1/event-types</span>
+                      <span className="text-[10px] text-zinc-400 font-sans">Catálogo</span>
+                    </div>
+                    <div className="text-zinc-400 font-sans text-xs">
+                      Lista os procedimentos com duração e regras. Use também <code className="text-amber-300 font-mono">GET /api/v1/agendas</code> para listar os profissionais.
+                    </div>
+                  </div>
+
                 </div>
-                <div className="flex items-start gap-2 text-sm">
-                  <div className="mt-0.5 text-blue-400"><Zap className="w-4 h-4" /></div>
-                  <p><strong>Typebot:</strong> Crie um bloco de "Webhook" enviando os dados capturados do cliente nas variáveis JSON acima.</p>
+              )}
+
+              {/* Sub-aba 2: Tools JSON para IA */}
+              {apiSubTab === 'tools' && (
+                <div className="space-y-3 flex-1 flex flex-col">
+                  <p className="text-xs text-zinc-400 font-sans">
+                    Cole este JSON diretamente no seu nó de <strong>Agent no N8N</strong>, <strong>OpenAI Assistants</strong>, <strong>Claude Tools</strong> ou <strong>Flowise/Typebot</strong>:
+                  </p>
+                  <pre className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-[11px] font-mono text-blue-300 overflow-y-auto max-h-[420px] flex-1 select-all leading-relaxed">
+                    {aiToolsJson}
+                  </pre>
                 </div>
-              </div>
+              )}
+
+              {/* Sub-aba 3: Prompt Sugerido */}
+              {apiSubTab === 'prompt' && (
+                <div className="space-y-3 text-xs font-sans text-zinc-300 overflow-y-auto max-h-[480px]">
+                  <p className="text-zinc-400">
+                    Instrução recomendada para colocar no <strong>System Prompt</strong> do seu robô:
+                  </p>
+                  <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-200 whitespace-pre-wrap leading-relaxed select-all">
+{`Você é a atendente virtual da clínica. Seu papel é tirar dúvidas, agendar e cancelar consultas com empatia e agilidade.
+
+DIRETRIZES DE AGENDAMENTO:
+1. Quando o paciente quiser agendar:
+   - Se ele não disse o procedimento, chame a tool "consultar_servicos".
+   - Pergunte o dia de preferência.
+   - Chame "consultar_horarios_disponiveis" para aquela data e apresente até 3 opções de horário amigáveis.
+   - Peça o nome completo e confirme o número de WhatsApp.
+   - Chame "criar_agendamento" com os dados confirmados.
+
+DIRETRIZES DE CANCELAMENTO / REAGENDAMENTO:
+1. Quando o paciente disser que quer cancelar ou remarcar:
+   - Chame "consultar_agendamentos_cliente" usando o telefone dele para encontrar o ID da consulta.
+   - Peça confirmação antes de executar.
+   - Ao confirmar, chame "cancelar_agendamento" com o ID da consulta.`}
+                  </div>
+                </div>
+              )}
 
             </div>
 
