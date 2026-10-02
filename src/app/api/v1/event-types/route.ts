@@ -12,15 +12,10 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
 
   const supabase = getServiceSupabase();
   let query = supabase.from('agend_tipos_evento').select(`
-    id, nome, slug, duracao_minutos, buffer_antes_minutos, buffer_depois_minutos, antecedencia_min_horas, is_recorrente, profissional_id, unidade_id,
-    agend_profissionais(id, nome, cor)
+    id, nome, slug, duracao_minutos, buffer_antes_minutos, buffer_depois_minutos, antecedencia_min_horas, is_recorrente, unidade_id
   `);
 
   query = query.eq('empresa_id', auth.empresa.id);
-
-  if (profissionalId) {
-    query = query.or(`profissional_id.eq.${profissionalId},profissional_id.is.null`);
-  }
 
   const { data, error } = await query.order('nome', { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
