@@ -5,7 +5,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-const BASE_URL = process.env.VOIBI_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.VOIBI_API_URL || 'https://agenda.voibi.com.br';
 const API_KEY = process.env.VOIBI_API_KEY || 'd5ab153d-3ea8-4a6e-a18e-5ad315b64ccf';
 
 async function requestVoibi(endpoint, options = {}) {

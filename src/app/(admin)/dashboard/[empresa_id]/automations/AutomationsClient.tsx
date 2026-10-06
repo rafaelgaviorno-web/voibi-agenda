@@ -137,7 +137,7 @@ export default function AutomationsClient({
           "c:/Users/Rafael Gaviorno/Voibi Agenda/mcp/voibi-server.mjs"
         ],
         env: {
-          VOIBI_API_URL: "http://localhost:3000",
+          VOIBI_API_URL: "https://agenda.voibi.com.br",
           VOIBI_API_KEY: currentApiKey
         }
       }
