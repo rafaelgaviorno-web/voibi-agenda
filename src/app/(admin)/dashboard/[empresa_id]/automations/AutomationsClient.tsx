@@ -132,9 +132,10 @@ export default function AutomationsClient({
   const mcpConfigSnippet = JSON.stringify({
     mcpServers: {
       voibi_agenda: {
-        command: "node",
+        command: "npx",
         args: [
-          "c:/Users/Rafael Gaviorno/Voibi Agenda/mcp/voibi-server.mjs"
+          "-y",
+          "@voibi/agenda-mcp"
         ],
         env: {
           VOIBI_API_URL: "https://agenda.voibi.com.br",
@@ -458,7 +459,7 @@ export default function AutomationsClient({
                       </span>
                     </div>
                     <p className="text-zinc-300 text-xs leading-relaxed">
-                      Conecte sua agenda diretamente ao <strong>Google Antigravity</strong>, <strong>Claude Desktop</strong>, <strong>Cursor</strong>, <strong>Cline</strong> ou qualquer agente de IA compatível com MCP. O robô passa a gerenciar horários, listar consultas e agendar pacientes de forma autônoma.
+                      Conecte sua agenda diretamente ao <strong>Claude Desktop</strong>, ao <strong>ChatGPT (Custom GPTs / Actions)</strong> ou ao seu assistente de IA preferido. O robô passa a gerenciar horários, listar consultas e agendar pacientes de forma autônoma.
                     </p>
                   </div>
 
@@ -467,7 +468,7 @@ export default function AutomationsClient({
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
                         <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-                        Configuração JSON (<code className="text-indigo-300 font-mono">mcp_config.json</code>)
+                        Configuração para Claude Desktop (<code className="text-indigo-300 font-mono">claude_desktop_config.json</code>)
                       </label>
                       <button
                         onClick={handleCopyMcp}
@@ -484,37 +485,27 @@ export default function AutomationsClient({
                   {/* Como Instalar em cada Plataforma */}
                   <div className="space-y-2 pt-2">
                     <h5 className="text-xs font-semibold uppercase tracking-wider text-[11px] text-zinc-400">
-                      Onde colar essa configuração:
+                      Como conectar seu assistente:
                     </h5>
                     
                     <div className="grid grid-cols-1 gap-2.5">
-                      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-1">
-                        <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                          Google Antigravity / Gemini CLI:
-                        </div>
-                        <p className="text-zinc-400 text-[11px]">
-                          Abra o arquivo <code className="text-blue-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">~/.gemini/config/mcp_config.json</code> e adicione o bloco <code className="text-blue-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">voibi_agenda</code>.
-                        </p>
-                      </div>
-
-                      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-1">
+                      <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-1.5">
                         <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-                          Claude Desktop:
+                          Claude Desktop (MCP):
                         </div>
-                        <p className="text-zinc-400 text-[11px]">
-                          No menu do app, acesse <strong>Settings ➔ Developer ➔ Edit Config</strong> (<code className="text-orange-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">claude_desktop_config.json</code>) e cole o trecho acima.
+                        <p className="text-zinc-400 text-[11px] leading-relaxed">
+                          No menu do aplicativo Claude Desktop, acesse <strong>Settings ➔ Developer ➔ Edit Config</strong> (arquivo <code className="text-orange-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">claude_desktop_config.json</code>) e cole o trecho acima. Ao reiniciar o Claude, o símbolo de ferramentas da Voibi aparecerá pronto para uso.
                         </p>
                       </div>
 
-                      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-1">
+                      <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-1.5">
                         <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                          Cursor / Cline / Roo Code:
+                          ChatGPT (Custom GPTs / Actions):
                         </div>
-                        <p className="text-zinc-400 text-[11px]">
-                          Adicione nas configurações de MCP Tools do seu editor com comando <code className="text-emerald-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">node</code> e o caminho do arquivo do servidor.
+                        <p className="text-zinc-400 text-[11px] leading-relaxed">
+                          No painel de criação do seu GPT (ChatGPT Plus/Team), vá em <strong>Configure ➔ Actions ➔ Create new action</strong>. Configure a autenticação como <strong>Bearer Token</strong> com a sua Chave de API e utilize as rotas e schemas disponíveis nas abas <strong>Rotas HTTP (REST)</strong> e <strong>Tools / Functions</strong>.
                         </p>
                       </div>
                     </div>
