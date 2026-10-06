@@ -41,6 +41,16 @@ export function getCachedEmpresaId(apiKey: string): string | undefined {
   return globalThis.__VOIBI_API_KEY_CACHE__?.get(apiKey);
 }
 
+export function invalidateApiKeyCache(oldApiKey?: string) {
+  if (globalThis.__VOIBI_API_KEY_CACHE__) {
+    if (oldApiKey) {
+      globalThis.__VOIBI_API_KEY_CACHE__.delete(oldApiKey);
+    } else {
+      globalThis.__VOIBI_API_KEY_CACHE__.clear();
+    }
+  }
+}
+
 // Mascara tokens de autorização para não expor a chave inteira nos logs
 function maskHeaderValue(key: string, value: string): string {
   if (key.toLowerCase() === 'authorization' && value.startsWith('Bearer ')) {

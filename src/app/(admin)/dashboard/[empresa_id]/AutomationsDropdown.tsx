@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Blocks, Zap, Bell, Code, ChevronDown, ChevronRight, Activity } from 'lucide-react';
+import { Blocks, Zap, Bell, Code, ChevronDown, ChevronRight, Activity, Bot } from 'lucide-react';
 
 export default function AutomationsDropdown({ baseUrl }: { baseUrl: string }) {
   const pathname = usePathname();
@@ -37,6 +37,13 @@ export default function AutomationsDropdown({ baseUrl }: { baseUrl: string }) {
           >
             <Activity className="w-3.5 h-3.5 text-emerald-500" />
             Logs de Execução (API)
+          </Link>
+          <Link 
+            href={`${baseUrl}/automations?tab=api&sub=mcp`}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-md transition-colors"
+          >
+            <Bot className="w-3.5 h-3.5 text-indigo-500" />
+            Servidor MCP (IA)
           </Link>
           <Link 
             href={`${baseUrl}/automations?tab=api`}

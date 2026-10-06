@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Settings, Stethoscope, Users, CalendarDays, ChevronDown, ChevronRight, CalendarX, Building2 } from 'lucide-react';
+import { Settings, Stethoscope, Users, CalendarDays, ChevronDown, ChevronRight, CalendarX, Building2, Key } from 'lucide-react';
 
 export default function SettingsDropdown({ baseUrl }: { baseUrl: string }) {
   const pathname = usePathname();
@@ -66,6 +66,13 @@ export default function SettingsDropdown({ baseUrl }: { baseUrl: string }) {
           >
             <CalendarX className="w-3.5 h-3.5" />
             Bloqueios e Exceções
+          </Link>
+          <Link 
+            href={`${baseUrl}/automations?tab=api`}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30"
+          >
+            <Key className="w-3.5 h-3.5 text-blue-500" />
+            Chave de API & Integrações
           </Link>
         </div>
       )}

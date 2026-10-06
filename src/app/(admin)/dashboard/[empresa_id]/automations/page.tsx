@@ -29,6 +29,42 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
     revalidatePath(`/dashboard/${empresa_id}/automations`);
   }
 
+  async function regenerateApiKey(): Promise<{ success: boolean; newApiKey?: string; error?: string }> {
+    'use server';
+    if (empresa_id === 'mock-clinic') {
+      const newMockKey = `sk_test_voibi_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+      return { success: true, newApiKey: newMockKey };
+    }
+
+    try {
+      const newApiKey = crypto.randomUUID();
+      const supabase = getServiceSupabase();
+
+      const { data: current } = await supabase
+        .from('agend_empresas')
+        .select('api_key')
+        .eq('id', empresa_id)
+        .maybeSingle();
+
+      const { error } = await supabase
+        .from('agend_empresas')
+        .update({ api_key: newApiKey })
+        .eq('id', empresa_id);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const { invalidateApiKeyCache } = await import('@/lib/api-logger');
+      invalidateApiKeyCache(current?.api_key);
+
+      revalidatePath(`/dashboard/${empresa_id}/automations`);
+      return { success: true, newApiKey };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Erro ao gerar nova chave de API' };
+    }
+  }
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto p-8 lg:p-12">
       <div>
@@ -40,6 +76,7 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
         apiKey={apiKey} 
         webhookUrl={webhookUrl} 
         updateWebhook={updateWebhook} 
+        regenerateApiKey={regenerateApiKey}
         empresa_id={empresa_id}
       />
     </div>

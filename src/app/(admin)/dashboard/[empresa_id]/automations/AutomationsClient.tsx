@@ -2,28 +2,42 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Key, Copy, Check, Link2, Code, Zap, Bell, Plus, Trash2, Edit2, MessageSquare, Clock, ArrowRight, Activity } from 'lucide-react';
+import { Key, Copy, Check, Link2, Code, Zap, Bell, Plus, Trash2, Edit2, MessageSquare, Clock, ArrowRight, Activity, Bot, Cpu, Layers, ExternalLink } from 'lucide-react';
 import LogsViewer from './LogsViewer';
+import ApiKeyManager from './ApiKeyManager';
 
 export default function AutomationsClient({ 
-  apiKey, 
+  apiKey: initialApiKey, 
   webhookUrl: initialWebhookUrl, 
   updateWebhook,
+  regenerateApiKey,
   empresa_id 
 }: { 
   apiKey: string, 
   webhookUrl: string, 
   updateWebhook: (data: FormData) => Promise<void>,
+  regenerateApiKey?: () => Promise<{ success: boolean; newApiKey?: string; error?: string }>,
   empresa_id: string
 }) {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'n8n';
+  const initialSubTab = (searchParams.get('sub') as any) || 'mcp';
   
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [currentApiKey, setCurrentApiKey] = useState(initialApiKey);
+  const [apiSubTab, setApiSubTab] = useState<'mcp' | 'endpoints' | 'tools' | 'prompt'>(initialSubTab);
+
+  useEffect(() => {
+    setCurrentApiKey(initialApiKey);
+  }, [initialApiKey]);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab) setActiveTab(tab);
+    const sub = searchParams.get('sub');
+    if (sub && ['mcp', 'endpoints', 'tools', 'prompt'].includes(sub)) {
+      setApiSubTab(sub as any);
+    }
   }, [searchParams]);
 
   const [copied, setCopied] = useState(false);
@@ -47,7 +61,7 @@ export default function AutomationsClient({
   const [showLembreteForm, setShowLembreteForm] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(apiKey);
+    navigator.clipboard.writeText(currentApiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -112,8 +126,29 @@ export default function AutomationsClient({
     setLembretes(lembretes.map(l => l.id === id ? { ...l, ativo: !l.ativo } : l));
   };
 
-  const [apiSubTab, setApiSubTab] = useState<'endpoints' | 'tools' | 'prompt'>('endpoints');
   const [copiedTools, setCopiedTools] = useState(false);
+  const [copiedMcp, setCopiedMcp] = useState(false);
+
+  const mcpConfigSnippet = JSON.stringify({
+    mcpServers: {
+      voibi_agenda: {
+        command: "node",
+        args: [
+          "c:/Users/Rafael Gaviorno/Voibi Agenda/mcp/voibi-server.mjs"
+        ],
+        env: {
+          VOIBI_API_URL: "http://localhost:3000",
+          VOIBI_API_KEY: currentApiKey
+        }
+      }
+    }
+  }, null, 2);
+
+  const handleCopyMcp = () => {
+    navigator.clipboard.writeText(mcpConfigSnippet);
+    setCopiedMcp(true);
+    setTimeout(() => setCopiedMcp(false), 2500);
+  };
 
   const aiToolsJson = JSON.stringify([
     {
@@ -302,32 +337,13 @@ export default function AutomationsClient({
             
             {/* Coluna Esquerda: Credenciais */}
             <div className="space-y-6">
-              {/* API Key */}
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <Key className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">Chave de API (API Key)</h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Passe no cabeçalho Authorization: Bearer &lt;API_KEY&gt;</p>
-                  </div>
-                </div>
-                
-                <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 flex items-center justify-between">
-                  <code className="text-sm text-zinc-800 dark:text-zinc-200 font-mono select-all overflow-hidden text-ellipsis">{apiKey}</code>
-                  <button 
-                    onClick={handleCopy}
-                    className="ml-3 p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:bg-zinc-800 rounded-md transition-colors flex-shrink-0"
-                    title="Copiar chave"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-                <p className="text-xs text-amber-700 dark:text-amber-400 mt-3 font-medium bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded border border-amber-200 dark:border-amber-800/60">
-                  Esta chave dá acesso aos agendamentos e horários desta clínica. Mantenha em segurança na sua IA/Servidor.
-                </p>
-              </div>
+              {/* Gerenciador de API Key com Reset/Regenerate */}
+              <ApiKeyManager 
+                initialApiKey={currentApiKey}
+                empresa_id={empresa_id}
+                onApiKeyRegenerated={(newKey) => setCurrentApiKey(newKey)}
+                onRegenerateKeyAction={regenerateApiKey || (async () => ({ success: false, error: 'Ação não disponível' }))}
+              />
 
               {/* Webhook */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm">
@@ -373,6 +389,15 @@ export default function AutomationsClient({
               <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
                 <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs font-medium">
                   <button
+                    onClick={() => setApiSubTab('mcp')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+                      apiSubTab === 'mcp' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <Bot className="w-3.5 h-3.5" />
+                    Servidor MCP
+                  </button>
+                  <button
                     onClick={() => setApiSubTab('endpoints')}
                     className={`px-3 py-1.5 rounded-md transition-colors ${
                       apiSubTab === 'endpoints' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
@@ -386,7 +411,7 @@ export default function AutomationsClient({
                       apiSubTab === 'tools' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
-                    Tools / Functions para IA
+                    Tools / Functions
                   </button>
                   <button
                     onClick={() => setApiSubTab('prompt')}
@@ -398,6 +423,16 @@ export default function AutomationsClient({
                   </button>
                 </div>
 
+                {apiSubTab === 'mcp' && (
+                  <button
+                    onClick={handleCopyMcp}
+                    className="flex items-center gap-1.5 text-xs bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 px-2.5 py-1.5 rounded-md transition-colors font-mono cursor-pointer"
+                  >
+                    {copiedMcp ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedMcp ? 'Copiado!' : 'Copiar Config MCP'}
+                  </button>
+                )}
+
                 {apiSubTab === 'tools' && (
                   <button
                     onClick={handleCopyTools}
@@ -408,6 +443,119 @@ export default function AutomationsClient({
                   </button>
                 )}
               </div>
+
+              {/* Sub-aba 0: Servidor MCP */}
+              {apiSubTab === 'mcp' && (
+                <div className="space-y-4 text-xs font-sans text-zinc-300 overflow-y-auto max-h-[520px] pr-1">
+                  
+                  {/* Banner explicativo */}
+                  <div className="bg-gradient-to-r from-indigo-950/60 to-purple-950/40 p-4 rounded-xl border border-indigo-800/60 space-y-2">
+                    <div className="flex items-center gap-2 text-indigo-300 font-semibold text-sm">
+                      <Bot className="w-4 h-4 text-indigo-400" />
+                      <span>Model Context Protocol (MCP) Oficial</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono border border-indigo-500/30">
+                        Plug & Play
+                      </span>
+                    </div>
+                    <p className="text-zinc-300 text-xs leading-relaxed">
+                      Conecte sua agenda diretamente ao <strong>Google Antigravity</strong>, <strong>Claude Desktop</strong>, <strong>Cursor</strong>, <strong>Cline</strong> ou qualquer agente de IA compatível com MCP. O robô passa a gerenciar horários, listar consultas e agendar pacientes de forma autônoma.
+                    </p>
+                  </div>
+
+                  {/* Configuração JSON pronta */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+                        Configuração JSON (<code className="text-indigo-300 font-mono">mcp_config.json</code>)
+                      </label>
+                      <button
+                        onClick={handleCopyMcp}
+                        className="text-[11px] text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
+                      >
+                        {copiedMcp ? 'Copiado!' : 'Copiar código'}
+                      </button>
+                    </div>
+                    <pre className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-[11px] font-mono text-indigo-200 select-all overflow-x-auto leading-relaxed">
+                      {mcpConfigSnippet}
+                    </pre>
+                  </div>
+
+                  {/* Como Instalar em cada Plataforma */}
+                  <div className="space-y-2 pt-2">
+                    <h5 className="text-xs font-semibold uppercase tracking-wider text-[11px] text-zinc-400">
+                      Onde colar essa configuração:
+                    </h5>
+                    
+                    <div className="grid grid-cols-1 gap-2.5">
+                      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-1">
+                        <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                          Google Antigravity / Gemini CLI:
+                        </div>
+                        <p className="text-zinc-400 text-[11px]">
+                          Abra o arquivo <code className="text-blue-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">~/.gemini/config/mcp_config.json</code> e adicione o bloco <code className="text-blue-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">voibi_agenda</code>.
+                        </p>
+                      </div>
+
+                      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-1">
+                        <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+                          Claude Desktop:
+                        </div>
+                        <p className="text-zinc-400 text-[11px]">
+                          No menu do app, acesse <strong>Settings ➔ Developer ➔ Edit Config</strong> (<code className="text-orange-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">claude_desktop_config.json</code>) e cole o trecho acima.
+                        </p>
+                      </div>
+
+                      <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800 space-y-1">
+                        <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                          Cursor / Cline / Roo Code:
+                        </div>
+                        <p className="text-zinc-400 text-[11px]">
+                          Adicione nas configurações de MCP Tools do seu editor com comando <code className="text-emerald-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">node</code> e o caminho do arquivo do servidor.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Catálogo de Ferramentas Nativas */}
+                  <div className="space-y-2 pt-2">
+                    <h5 className="text-xs font-semibold uppercase tracking-wider text-[11px] text-zinc-400">
+                      Ferramentas que o agente ganha automaticamente:
+                    </h5>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-indigo-400 font-bold">voibi_check_availability</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Consulta horários livres em datas específicas</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-emerald-400 font-bold">voibi_list_bookings</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Lista consultas para envio de confirmações</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-blue-400 font-bold">voibi_create_booking</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Cria novos agendamentos na clínica</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-amber-400 font-bold">voibi_update_booking</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Atualiza status, observação ou horário</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-rose-400 font-bold">voibi_cancel_booking</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Cancela consultas e notifica via Webhook</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-purple-400 font-bold">voibi_list_agendas</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Lista profissionais e consultórios</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              )}
 
               {/* Sub-aba 1: Endpoints HTTP */}
               {apiSubTab === 'endpoints' && (
@@ -516,28 +664,28 @@ Sempre que precisar executar uma ação no sistema, responda EXATAMENTE com a ta
 
 REGRAS DE COMUNICAÇÃO HTTP:
 Domínio base: https://agenda.voibi.com.br
-Headers padrão: {"Authorization": "Bearer ${apiKey}", "Content-Type": "application/json"}
+Headers padrão: {"Authorization": "Bearer ${currentApiKey}", "Content-Type": "application/json"}
 
 COMO DISPARAR CADA AÇÃO:
 
 1. CONSULTAR HORÁRIOS LIVRES DE UM DIA:
 Quando o paciente quiser saber horários para uma data (ex: 2026-09-08):
-[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/availability?date=2026-09-08","headers":{"Authorization":"Bearer ${apiKey}"}}]
+[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/availability?date=2026-09-08","headers":{"Authorization":"Bearer ${currentApiKey}"}}]
 
 2. CRIAR NOVO AGENDAMENTO:
 Quando o paciente confirmar o horário (ex: 09:00), nome e telefone:
-[HTTP_REQUEST:{"method":"POST","url":"https://agenda.voibi.com.br/api/v1/bookings","headers":{"Authorization":"Bearer ${apiKey}","Content-Type":"application/json"},"body":{"inicio":"2026-09-08T09:00:00Z","nome":"Nome do Paciente","telefone":"11999999999","observacao":"Agendado pela IA"}}]
+[HTTP_REQUEST:{"method":"POST","url":"https://agenda.voibi.com.br/api/v1/bookings","headers":{"Authorization":"Bearer ${currentApiKey}","Content-Type":"application/json"},"body":{"inicio":"2026-09-08T09:00:00Z","nome":"Nome do Paciente","telefone":"11999999999","observacao":"Agendado pela IA"}}]
 
 3. BUSCAR CONSULTAS DO PACIENTE (PARA CANCELAR OU REMARCAR):
 Quando o paciente disser que quer cancelar ou consultar:
-[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/bookings?telefone=11999999999&status=confirmado","headers":{"Authorization":"Bearer ${apiKey}"}}]
+[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/bookings?telefone=11999999999&status=confirmado","headers":{"Authorization":"Bearer ${currentApiKey}"}}]
 
 4. CANCELAR O AGENDAMENTO:
 Após localizar o ID da consulta e o paciente confirmar o cancelamento:
-[HTTP_REQUEST:{"method":"POST","url":"https://agenda.voibi.com.br/api/v1/bookings/ID_DO_AGENDAMENTO/cancel","headers":{"Authorization":"Bearer ${apiKey}","Content-Type":"application/json"},"body":{"motivo":"Pedido do cliente"}}]
+[HTTP_REQUEST:{"method":"POST","url":"https://agenda.voibi.com.br/api/v1/bookings/ID_DO_AGENDAMENTO/cancel","headers":{"Authorization":"Bearer ${currentApiKey}","Content-Type":"application/json"},"body":{"motivo":"Pedido do cliente"}}]
 
 5. LISTAR PROCEDIMENTOS/SERVIÇOS:
-[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/event-types","headers":{"Authorization":"Bearer ${apiKey}"}}]`}
+[HTTP_REQUEST:{"method":"GET","url":"https://agenda.voibi.com.br/api/v1/event-types","headers":{"Authorization":"Bearer ${currentApiKey}"}}]`}
                   </div>
                 </div>
               )}
@@ -588,7 +736,7 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
                             "parameters": [
                               {
                                 "name": "Authorization",
-                                "value": `Bearer ${apiKey}`
+                                "value": `Bearer ${currentApiKey}`
                               }
                             ]
                           },
