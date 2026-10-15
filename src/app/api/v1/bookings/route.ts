@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
-import { parseISO, addMinutes, startOfDay, endOfDay } from 'date-fns';
+import { parseISO, addMinutes, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
@@ -283,5 +283,16 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   const { triggerBookingWebhook } = await import('@/lib/webhook');
   triggerBookingWebhook('booking.created', booking, auth.empresa.id).catch(console.error);
 
-  return NextResponse.json({ data: booking }, { status: 201 });
+  const dataFormatada = format(startDate, "dd/MM/yyyy 'às' HH:mm");
+  const confirmMsg = `Agendamento confirmado com sucesso com ${resolvedProf.nome} para ${dataFormatada}!`;
+
+  return NextResponse.json({ 
+    data: booking,
+    text: confirmMsg,
+    message: confirmMsg,
+    content: confirmMsg,
+    result: confirmMsg,
+    response: confirmMsg,
+    resposta: confirmMsg
+  }, { status: 201 });
 });

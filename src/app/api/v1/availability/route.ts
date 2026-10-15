@@ -20,6 +20,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
                             searchParams.get('doutor') ||
                             searchParams.get('medico');
 
+  const periodoParam = searchParams.get('periodo') || searchParams.get('turno') || searchParams.get('horario');
   let rawDateStr = searchParams.get('date') || searchParams.get('data') || searchParams.get('dia');
 
   if (!rawDateStr) {
@@ -45,7 +46,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   const safeDate = new Date(y, m - 1, d, 12, 0, 0);
   const dayOfWeek = safeDate.getDay(); // 0 = Domingo, 6 = Sábado
 
-  let eventType: { duracao_minutos?: number; buffer_antes_minutos?: number; buffer_depois_minutos?: number; antecedencia_min_horas?: number; profissional_id?: string | null } | null = null;
+  let eventType: { id?: string; duracao_minutos?: number; buffer_antes_minutos?: number; buffer_depois_minutos?: number; antecedencia_min_horas?: number; profissional_id?: string | null } | null = null;
   let resolvedProf: { id: string; nome: string } | null = null;
 
   // 1. Obter Event Type se informado
@@ -85,11 +86,19 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       .order('nome', { ascending: true });
 
     if (!allProfs || allProfs.length === 0) {
+      const semAgendaMsg = 'Nenhuma agenda encontrada para esta clínica';
       return NextResponse.json({ 
+        text: semAgendaMsg,
+        message: semAgendaMsg,
+        content: semAgendaMsg,
+        result: semAgendaMsg,
+        response: semAgendaMsg,
+        resposta: semAgendaMsg,
+        horarios: semAgendaMsg,
         data: [], 
         available_times: [],
         agendas_disponiveis: [],
-        message: 'Nenhuma agenda encontrada para esta clínica' 
+        date: dateStr 
       });
     }
 
@@ -169,9 +178,27 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     }
 
     const sortedTimes = Array.from(allTimesSet).sort();
-    const sugestoes = pickThreeSuggestions(sortedTimes);
+    const sugestoes = pickThreeSuggestions(sortedTimes, periodoParam);
+    const sugestoesTexto = formatSuggestionsText(sugestoes);
+    const inlineTexto = formatSuggestionsInline(sugestoes);
+
+    if (searchParams.get('format') === 'text' || request.headers.get('accept')?.includes('text/plain')) {
+      return new NextResponse(sugestoesTexto, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      });
+    }
 
     return NextResponse.json({
+      text: sugestoesTexto,
+      message: sugestoesTexto,
+      content: sugestoesTexto,
+      result: sugestoesTexto,
+      response: sugestoesTexto,
+      resposta: sugestoesTexto,
+      horarios: sugestoesTexto,
+      horarios_inline: inlineTexto,
+      sugestoes_texto: inlineTexto,
       data: allFormattedSlots,
       available_times: sortedTimes,
       horarios_disponiveis: sortedTimes,
@@ -204,13 +231,21 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   }
 
   if (regras.length === 0) {
+    const semExpedienteMsg = 'Sem expediente para esta data. Por favor, escolha outro dia.';
     return NextResponse.json({ 
+      text: semExpedienteMsg,
+      message: semExpedienteMsg,
+      content: semExpedienteMsg,
+      result: semExpedienteMsg,
+      response: semExpedienteMsg,
+      resposta: semExpedienteMsg,
+      horarios: semExpedienteMsg,
       data: [], 
       available_times: [],
       horarios_disponiveis: [],
       sugestoes: [],
       agenda: { id: resolvedProf.id, nome: resolvedProf.nome },
-      message: 'Sem expediente para esta data' 
+      date: dateStr
     });
   }
 
@@ -263,9 +298,27 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   }));
 
   const sortedTimes = formattedSlots.map(s => s.time);
-  const sugestoes = pickThreeSuggestions(sortedTimes);
+  const sugestoes = pickThreeSuggestions(sortedTimes, periodoParam);
+  const sugestoesTexto = formatSuggestionsText(sugestoes);
+  const inlineTexto = formatSuggestionsInline(sugestoes);
+
+  if (searchParams.get('format') === 'text' || request.headers.get('accept')?.includes('text/plain')) {
+    return new NextResponse(sugestoesTexto, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
+  }
 
   return NextResponse.json({ 
+    text: sugestoesTexto,
+    message: sugestoesTexto,
+    content: sugestoesTexto,
+    result: sugestoesTexto,
+    response: sugestoesTexto,
+    resposta: sugestoesTexto,
+    horarios: sugestoesTexto,
+    horarios_inline: inlineTexto,
+    sugestoes_texto: inlineTexto,
     data: formattedSlots,
     available_times: sortedTimes,
     horarios_disponiveis: sortedTimes,
@@ -280,10 +333,50 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   });
 });
 
-function pickThreeSuggestions(times: string[]): string[] {
-  if (times.length <= 3) return times;
-  const first = times[0];
-  const mid = times[Math.floor(times.length / 2)];
-  const last = times[times.length - 1];
+function pickThreeSuggestions(times: string[], periodo?: string | null): string[] {
+  let filtered = times;
+  if (periodo) {
+    const p = periodo.toLowerCase().trim();
+    if (p.includes('tarde')) {
+      const tardeTimes = times.filter(t => {
+        const hour = parseInt(t.split(':')[0], 10);
+        return hour >= 12 && hour < 19;
+      });
+      if (tardeTimes.length > 0) filtered = tardeTimes;
+    } else if (p.includes('manha') || p.includes('manhã')) {
+      const manhaTimes = times.filter(t => {
+        const hour = parseInt(t.split(':')[0], 10);
+        return hour < 12;
+      });
+      if (manhaTimes.length > 0) filtered = manhaTimes;
+    } else if (p.includes('noite')) {
+      const noiteTimes = times.filter(t => {
+        const hour = parseInt(t.split(':')[0], 10);
+        return hour >= 18;
+      });
+      if (noiteTimes.length > 0) filtered = noiteTimes;
+    }
+  }
+
+  if (filtered.length <= 3) return filtered;
+  const first = filtered[0];
+  const mid = filtered[Math.floor(filtered.length / 2)];
+  const last = filtered[filtered.length - 1];
   return Array.from(new Set([first, mid, last]));
+}
+
+function formatSuggestionsText(sugestoes: string[]): string {
+  if (!sugestoes || sugestoes.length === 0) {
+    return 'Não encontramos horários livres para este dia. Que tal tentarmos outro dia?';
+  }
+  return sugestoes.map(t => `• ${t}`).join('\n');
+}
+
+function formatSuggestionsInline(sugestoes: string[]): string {
+  if (!sugestoes || sugestoes.length === 0) {
+    return 'Nenhum horário disponível';
+  }
+  if (sugestoes.length === 1) return sugestoes[0];
+  if (sugestoes.length === 2) return `${sugestoes[0]} ou ${sugestoes[1]}`;
+  return `${sugestoes.slice(0, -1).join(', ')} ou ${sugestoes[sugestoes.length - 1]}`;
 }

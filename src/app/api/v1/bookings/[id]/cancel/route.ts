@@ -51,9 +51,15 @@ export const POST = withApiLogger(async function POST(request: NextRequest, { pa
     triggerBookingWebhook('booking.cancelled', { ...data, motivo: motivo || null }, auth.empresa.id).catch(console.error);
   }
 
+  const cancelMsg = 'Agendamento cancelado com sucesso.';
   return NextResponse.json({
     success: true,
-    message: 'Agendamento cancelado com sucesso',
+    message: cancelMsg,
+    text: cancelMsg,
+    content: cancelMsg,
+    result: cancelMsg,
+    response: cancelMsg,
+    resposta: cancelMsg,
     data
   });
 });
