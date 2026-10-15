@@ -203,11 +203,19 @@ export function withApiLogger<T extends (...args: any[]) => Promise<NextResponse
       }
     }
 
-    // Tenta identificar empresa_id pela API Key informada no Authorization
+    // Tenta identificar empresa_id pela API Key informada no Authorization ou headers alternativos
     let empresaId: string | null = null;
+    let token: string | null = null;
     const authHeader = request.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.slice(7).trim();
+    if (authHeader) {
+      const trimmed = authHeader.trim();
+      token = /^bearer\s+/i.test(trimmed) ? trimmed.replace(/^bearer\s+/i, '').trim() : trimmed;
+    }
+    if (!token) {
+      token = request.headers.get('x-api-key') || request.headers.get('apikey') || url.searchParams.get('api_key') || url.searchParams.get('apiKey');
+    }
+
+    if (token) {
       const cached = getCachedEmpresaId(token);
       if (cached) {
         empresaId = cached;

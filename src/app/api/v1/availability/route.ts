@@ -10,22 +10,40 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(request.url);
-  const eventTypeId = searchParams.get('event_type_id');
+  const eventTypeId = searchParams.get('event_type_id') || searchParams.get('tipo_evento_id') || searchParams.get('procedimento_id');
   const profissionalParam = searchParams.get('profissional_id') || 
                             searchParams.get('agenda_id') || 
                             searchParams.get('profissional') || 
                             searchParams.get('agenda') || 
                             searchParams.get('profissional_nome') || 
-                            searchParams.get('agenda_nome');
-  const dateStr = searchParams.get('date');
+                            searchParams.get('agenda_nome') ||
+                            searchParams.get('doutor') ||
+                            searchParams.get('medico');
 
-  if (!dateStr) {
-    return NextResponse.json({ error: 'date (YYYY-MM-DD) é obrigatório' }, { status: 400 });
+  let rawDateStr = searchParams.get('date') || searchParams.get('data') || searchParams.get('dia');
+
+  if (!rawDateStr) {
+    return NextResponse.json({ error: 'date (YYYY-MM-DD) ou data (DD/MM/YYYY) é obrigatório' }, { status: 400 });
   }
 
+  // Se vier no formato brasileiro DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(rawDateStr.trim())) {
+    const [d, m, y] = rawDateStr.trim().split('/');
+    rawDateStr = `${y}-${m}-${d}`;
+  }
+
+  const dateStr = rawDateStr.trim().split('T')[0];
   const supabase = getServiceSupabase();
   const date = parseISO(dateStr);
-  const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
+
+  if (isNaN(date.getTime())) {
+    return NextResponse.json({ error: 'Data inválida. Use o formato YYYY-MM-DD ou DD/MM/YYYY.' }, { status: 400 });
+  }
+
+  // Evita drift de fuso horário pegando dia da semana local de forma segura
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const safeDate = new Date(y, m - 1, d, 12, 0, 0);
+  const dayOfWeek = safeDate.getDay(); // 0 = Domingo, 6 = Sábado
 
   let eventType: { duracao_minutos?: number; buffer_antes_minutos?: number; buffer_depois_minutos?: number; antecedencia_min_horas?: number; profissional_id?: string | null } | null = null;
   let resolvedProf: { id: string; nome: string } | null = null;
@@ -48,42 +66,14 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
 
   // 2. Resolver o Profissional / Agenda
   if (profissionalParam) {
-    const cleanProf = profissionalParam.trim();
-    const isProfUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanProf);
-
-    if (isProfUuid) {
-      const { data: p } = await supabase
-        .from('agend_profissionais')
-        .select('id, nome')
-        .eq('id', cleanProf)
-        .eq('empresa_id', auth.empresa.id)
-        .maybeSingle();
-
-      if (p) resolvedProf = p;
-    } else {
-      // Busca pelo NOME da agenda (ex: "Robson", "Dr. Teste 1")
-      const { data: p } = await supabase
-        .from('agend_profissionais')
-        .select('id, nome')
-        .eq('empresa_id', auth.empresa.id)
-        .ilike('nome', `%${cleanProf}%`)
-        .limit(1)
-        .maybeSingle();
-
-      if (p) resolvedProf = p;
-    }
+    const { resolveProfissional } = await import('@/lib/agenda-resolver');
+    resolvedProf = await resolveProfissional(supabase, auth.empresa.id, profissionalParam);
   }
 
   // Fallback 1: se o procedimento possui um profissional fixo associado
   if (!resolvedProf && eventType?.profissional_id) {
-    const { data: p } = await supabase
-      .from('agend_profissionais')
-      .select('id, nome')
-      .eq('id', eventType.profissional_id)
-      .eq('empresa_id', auth.empresa.id)
-      .maybeSingle();
-
-    if (p) resolvedProf = p;
+    const { resolveProfissional } = await import('@/lib/agenda-resolver');
+    resolvedProf = await resolveProfissional(supabase, auth.empresa.id, eventType.profissional_id);
   }
 
   // Se nenhum profissional específico foi solicitado, buscamos horários em TODAS as agendas da clínica

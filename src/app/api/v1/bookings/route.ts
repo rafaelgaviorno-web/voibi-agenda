@@ -56,25 +56,17 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
                   searchParams.get('agenda_id') || 
                   searchParams.get('agenda') || 
                   searchParams.get('profissional') ||
-                  searchParams.get('agenda_nome');
+                  searchParams.get('agenda_nome') ||
+                  searchParams.get('profissional_nome') ||
+                  searchParams.get('doutor') ||
+                  searchParams.get('medico');
   if (rawProf) {
-    const cleanProf = rawProf.trim();
-    const isProfUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanProf);
-    if (isProfUuid) {
-      query = query.eq('profissional_id', cleanProf);
+    const { resolveProfissional } = await import('@/lib/agenda-resolver');
+    const p = await resolveProfissional(supabase, auth.empresa.id, rawProf);
+    if (p) {
+      query = query.eq('profissional_id', p.id);
     } else {
-      const { data: p } = await supabase
-        .from('agend_profissionais')
-        .select('id')
-        .eq('empresa_id', auth.empresa.id)
-        .ilike('nome', `%${cleanProf}%`)
-        .limit(1)
-        .maybeSingle();
-      if (p) {
-        query = query.eq('profissional_id', p.id);
-      } else {
-        return NextResponse.json({ data: [] });
-      }
+      return NextResponse.json({ data: [] });
     }
   }
 
@@ -119,13 +111,42 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await request.json();
-  const { event_type_id, profissional_id, inicio, fim, nome, email, telefone, observacao } = body;
-  const rawProf = profissional_id || body.agenda_id || body.agenda || body.profissional || body.agenda_nome || body.profissional_nome;
+  const body = await request.json().catch(() => ({}));
+  
+  // Suporte flexível a nomes de campos alternativos comumente enviados por IAs
+  const rawProf = body.profissional_id || 
+                  body.agenda_id || 
+                  body.agenda || 
+                  body.profissional || 
+                  body.agenda_nome || 
+                  body.profissional_nome ||
+                  body.doutor ||
+                  body.medico;
 
-  if (!inicio || !nome || (!telefone && !email)) {
+  const nome = body.nome || body.name || body.paciente_nome || body.cliente_nome || body.paciente || body.cliente;
+  const telefone = body.telefone || body.phone || body.whatsapp || body.celular || body.tel;
+  const email = body.email || body.e_mail;
+  const observacao = body.observacao || body.notes || body.motivo || body.descricao;
+  const event_type_id = body.event_type_id || body.tipo_evento_id || body.procedimento || body.procedimento_id || body.servico || body.servico_id;
+
+  // Resolução flexível de data/hora (unificados ou separados)
+  let rawInicio = body.inicio || body.start || body.start_time || body.datetime || body.data_hora;
+  if (!rawInicio && (body.data || body.date) && (body.hora || body.time || body.horario)) {
+    const rawDate = body.data || body.date;
+    const rawTime = body.hora || body.time || body.horario;
+    let formattedDate = rawDate.trim();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+      const [d, m, y] = formattedDate.split('/');
+      formattedDate = `${y}-${m}-${d}`;
+    }
+    rawInicio = `${formattedDate}T${rawTime.trim().padStart(5, '0')}:00`;
+  }
+
+  let rawFim = body.fim || body.end || body.end_time;
+
+  if (!rawInicio || !nome || (!telefone && !email)) {
     return NextResponse.json({ 
-      error: 'Campos obrigatórios ausentes: inicio, nome e (telefone ou email) são obrigatórios.' 
+      error: 'Campos obrigatórios ausentes: inicio (data e hora), nome e (telefone ou email) são obrigatórios.' 
     }, { status: 400 });
   }
 
@@ -133,9 +154,8 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
 
   // 1. Obter Event Type (por ID ou por Nome)
   let eventType: { id: string; duracao_minutos?: number; profissional_id?: string | null } | null = null;
-  const rawEvent = event_type_id || body.procedimento || body.servico || body.servico_id;
-  if (rawEvent) {
-    const cleanEv = String(rawEvent).trim();
+  if (event_type_id) {
+    const cleanEv = String(event_type_id).trim();
     const isEvUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanEv);
     let evQuery = supabase.from('agend_tipos_evento').select('*').eq('empresa_id', auth.empresa.id);
     if (isEvUuid) {
@@ -148,64 +168,45 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     eventType = ev;
   }
 
-  // 2. Determinar Profissional / Agenda (por ID ou Nome)
-  let resolvedProfId: string | null = null;
-  if (rawProf) {
-    const cleanProf = String(rawProf).trim();
-    const isProfUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanProf);
-
-    if (isProfUuid) {
-      const { data: p } = await supabase
-        .from('agend_profissionais')
-        .select('id')
-        .eq('id', cleanProf)
-        .eq('empresa_id', auth.empresa.id)
-        .maybeSingle();
-
-      if (p) resolvedProfId = p.id;
-    } else {
-      const { data: p } = await supabase
-        .from('agend_profissionais')
-        .select('id')
-        .eq('empresa_id', auth.empresa.id)
-        .ilike('nome', `%${cleanProf}%`)
-        .limit(1)
-        .maybeSingle();
-
-      if (p) resolvedProfId = p.id;
-    }
-  }
+  // 2. Determinar Profissional / Agenda de forma resiliente
+  const { resolveProfissional } = await import('@/lib/agenda-resolver');
+  let resolvedProf = await resolveProfissional(supabase, auth.empresa.id, rawProf);
 
   // Fallback 1: se o procedimento possui um profissional fixo
-  if (!resolvedProfId && eventType?.profissional_id) {
-    resolvedProfId = eventType.profissional_id;
+  if (!resolvedProf && eventType?.profissional_id) {
+    resolvedProf = await resolveProfissional(supabase, auth.empresa.id, eventType.profissional_id);
   }
 
   // Fallback 2: pegar a primeira agenda da empresa
-  if (!resolvedProfId) {
+  if (!resolvedProf) {
     const { data: firstProf } = await supabase
       .from('agend_profissionais')
-      .select('id')
+      .select('id, nome, cor, webhook_url, permitir_sobreposicao')
       .eq('empresa_id', auth.empresa.id)
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
     if (firstProf) {
-      resolvedProfId = firstProf.id;
+      resolvedProf = firstProf;
     }
   }
 
-  if (!resolvedProfId) {
+  if (!resolvedProf) {
     return NextResponse.json({ error: 'Nenhuma agenda ou profissional disponível para realizar o agendamento' }, { status: 400 });
   }
 
-  // 3. Calcular Horário de Término (se não enviado)
-  const startDate = parseISO(inicio);
-  let endDate: Date;
+  const resolvedProfId = resolvedProf.id;
 
-  if (fim) {
-    endDate = parseISO(fim);
+  // 3. Calcular Horário de Término (se não enviado)
+  const startDate = parseISO(rawInicio);
+  if (isNaN(startDate.getTime())) {
+    return NextResponse.json({ error: 'Formato de data/hora inválido para o campo inicio. Use o formato ISO: YYYY-MM-DDTHH:mm:ss' }, { status: 400 });
+  }
+
+  let endDate: Date;
+  if (rawFim) {
+    endDate = parseISO(rawFim);
   } else {
     const duracao = eventType?.duracao_minutos || 30;
     endDate = addMinutes(startDate, duracao);
@@ -251,7 +252,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     .from('agend_agendamentos')
     .insert({
       profissional_id: resolvedProfId,
-      tipo_evento_id: event_type_id || null,
+      tipo_evento_id: eventType?.id || null,
       cliente_id: clienteId,
       inicio: inicioIso,
       fim: fimIso,
@@ -267,7 +268,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       created_at,
       agend_clientes_finais(id, nome, email, telefone),
       agend_tipos_evento(id, nome, duracao_minutos),
-      agend_profissionais(id, nome, cor)
+      agend_profissionais(id, nome, cor, webhook_url)
     `)
     .single();
 
@@ -278,14 +279,9 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     return NextResponse.json({ error: errBooking.message }, { status: 400 });
   }
 
-  // 6. Disparar Webhook assincronamente (best effort)
-  if (auth.empresa.webhook_url) {
-    fetch(auth.empresa.webhook_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'booking.created', data: booking })
-    }).catch(console.error);
-  }
+  // 6. Disparar Webhook assincronamente (prioriza webhook da agenda, fallback para empresa)
+  const { triggerBookingWebhook } = await import('@/lib/webhook');
+  triggerBookingWebhook('booking.created', booking, auth.empresa.id).catch(console.error);
 
   return NextResponse.json({ data: booking }, { status: 201 });
 });

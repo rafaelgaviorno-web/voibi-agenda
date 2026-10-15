@@ -129,5 +129,9 @@ export async function createBookingAction(formData: FormData) {
     return { error: errB.message };
   }
 
+  // Disparar Webhook
+  const { triggerBookingWebhook } = await import('@/lib/webhook');
+  triggerBookingWebhook('booking.created', booking, empresaId).catch(console.error);
+
   return { success: true, booking };
 }

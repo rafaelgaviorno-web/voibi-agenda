@@ -52,12 +52,9 @@ export const PATCH = withApiLogger(async function PATCH(request: NextRequest, { 
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  if (auth.empresa.webhook_url && data) {
-    fetch(auth.empresa.webhook_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'booking.updated', data })
-    }).catch(console.error);
+  if (data) {
+    const { triggerBookingWebhook } = await import('@/lib/webhook');
+    triggerBookingWebhook('booking.updated', data, auth.empresa.id).catch(console.error);
   }
 
   return NextResponse.json({ data });
@@ -103,12 +100,9 @@ export const DELETE = withApiLogger(async function DELETE(request: NextRequest, 
 
   if (error || !data) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
 
-  if (auth.empresa.webhook_url && data) {
-    fetch(auth.empresa.webhook_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: 'booking.cancelled', data, motivo: motivo || null })
-    }).catch(console.error);
+  if (data) {
+    const { triggerBookingWebhook } = await import('@/lib/webhook');
+    triggerBookingWebhook('booking.cancelled', { ...data, motivo: motivo || null }, auth.empresa.id).catch(console.error);
   }
 
   return NextResponse.json({ 

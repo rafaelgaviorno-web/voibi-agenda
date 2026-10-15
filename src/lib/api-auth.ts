@@ -6,14 +6,32 @@ export type AuthResult =
   | { error?: never; status?: never; empresa: any };
 
 export async function authenticateApiKey(request: NextRequest): Promise<AuthResult> {
+  let apiKey: string | null = null;
+
+  // 1. Header Authorization (Bearer <token> ou <token> direto)
   const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { error: 'Unauthorized: Missing or invalid token format', status: 401 };
+  if (authHeader) {
+    const trimmed = authHeader.trim();
+    if (/^bearer\s+/i.test(trimmed)) {
+      apiKey = trimmed.replace(/^bearer\s+/i, '').trim();
+    } else {
+      apiKey = trimmed;
+    }
   }
 
-  const apiKey = authHeader.split(' ')[1];
+  // 2. Header x-api-key ou apikey
   if (!apiKey) {
-    return { error: 'Unauthorized: Invalid token', status: 401 };
+    apiKey = request.headers.get('x-api-key') || request.headers.get('apikey');
+  }
+
+  // 3. Query params ?api_key=... ou ?apiKey=...
+  if (!apiKey) {
+    const { searchParams } = new URL(request.url);
+    apiKey = searchParams.get('api_key') || searchParams.get('apiKey');
+  }
+
+  if (!apiKey) {
+    return { error: 'Unauthorized: Missing or invalid API Key. Forneça via header Authorization (Bearer <token>) ou x-api-key.', status: 401 };
   }
 
   const supabase = getServiceSupabase();

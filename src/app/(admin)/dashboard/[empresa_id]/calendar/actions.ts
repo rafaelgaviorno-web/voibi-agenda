@@ -63,34 +63,77 @@ export async function saveAppointment(data: any, empresaId: string) {
     const fimIso = new Date(fimStr).toISOString();
 
     // 2. Criar ou Atualizar Agendamento
+    let bookingResult: any = null;
+    let eventType: 'booking.created' | 'booking.updated' = 'booking.created';
+
     if (data.id) {
+      eventType = 'booking.updated';
       // Atualizar
-      const { error: updateErr } = await supabase.from('agend_agendamentos').update({
-        profissional_id: data.agendaId,
-        tipo_evento_id: data.procedimentoId || null,
-        cliente_id: clienteId,
-        inicio: inicioIso,
-        fim: fimIso,
-        status: data.status,
-        observacao: data.observacao,
-        is_encaixe: data.is_encaixe
-      }).eq('id', data.id);
+      const { data: updatedBooking, error: updateErr } = await supabase
+        .from('agend_agendamentos')
+        .update({
+          profissional_id: data.agendaId,
+          tipo_evento_id: data.procedimentoId || null,
+          cliente_id: clienteId,
+          inicio: inicioIso,
+          fim: fimIso,
+          status: data.status,
+          observacao: data.observacao,
+          is_encaixe: data.is_encaixe
+        })
+        .eq('id', data.id)
+        .select(`
+          id,
+          inicio,
+          fim,
+          status,
+          observacao,
+          is_encaixe,
+          created_at,
+          agend_clientes_finais(id, nome, email, telefone),
+          agend_tipos_evento(id, nome, duracao_minutos),
+          agend_profissionais(id, nome, cor, webhook_url)
+        `)
+        .single();
       
       if (updateErr) throw updateErr;
+      bookingResult = updatedBooking;
     } else {
       // Criar novo
-      const { error: insertErr2 } = await supabase.from('agend_agendamentos').insert({
-        profissional_id: data.agendaId,
-        tipo_evento_id: data.procedimentoId || null,
-        cliente_id: clienteId,
-        inicio: inicioIso,
-        fim: fimIso,
-        status: 'confirmado',
-        observacao: data.observacao,
-        is_encaixe: data.is_encaixe
-      });
+      const { data: newBooking, error: insertErr2 } = await supabase
+        .from('agend_agendamentos')
+        .insert({
+          profissional_id: data.agendaId,
+          tipo_evento_id: data.procedimentoId || null,
+          cliente_id: clienteId,
+          inicio: inicioIso,
+          fim: fimIso,
+          status: 'confirmado',
+          observacao: data.observacao,
+          is_encaixe: data.is_encaixe
+        })
+        .select(`
+          id,
+          inicio,
+          fim,
+          status,
+          observacao,
+          is_encaixe,
+          created_at,
+          agend_clientes_finais(id, nome, email, telefone),
+          agend_tipos_evento(id, nome, duracao_minutos),
+          agend_profissionais(id, nome, cor, webhook_url)
+        `)
+        .single();
       
       if (insertErr2) throw insertErr2;
+      bookingResult = newBooking;
+    }
+
+    // 3. Disparar Webhook (da agenda ou da clínica)
+    if (bookingResult) {
+      const { triggerBookingWebhook } = await import('@/lib/webhook');
+      triggerBookingWebhook(eventType, bookingResult, empresaId).catch(console.error);
     }
 
     revalidatePath(`/dashboard/${empresaId}/calendar`);
@@ -106,7 +149,27 @@ export async function deleteAppointment(id: string, empresaId: string) {
   if (empresaId === 'mock-clinic') return { success: true };
   
   const supabase = getServiceSupabase();
+
+  // Busca dados antes de deletar para enviar no webhook
+  const { data: booking } = await supabase
+    .from('agend_agendamentos')
+    .select(`
+      id,
+      inicio,
+      fim,
+      status,
+      agend_clientes_finais(id, nome, email, telefone),
+      agend_profissionais(id, nome, cor, webhook_url)
+    `)
+    .eq('id', id)
+    .single();
+
   await supabase.from('agend_agendamentos').delete().eq('id', id);
+
+  if (booking) {
+    const { triggerBookingWebhook } = await import('@/lib/webhook');
+    triggerBookingWebhook('booking.cancelled', booking, empresaId).catch(console.error);
+  }
   
   revalidatePath(`/dashboard/${empresaId}/calendar`);
   return { success: true };
