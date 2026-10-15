@@ -172,7 +172,14 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: allFormattedSlots,
+    const sortedTimes = Array.from(allTimesSet).sort();
+    const sugestoes = pickThreeSuggestions(sortedTimes);
+
+    return NextResponse.json({
+      data: allFormattedSlots,
       available_times: sortedTimes,
+      horarios_disponiveis: sortedTimes,
+      sugestoes,
       agendas_disponiveis: agendasDisponiveis,
       date: dateStr,
       event_type_id: eventType ? (eventType as any).id : null
@@ -190,15 +197,22 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
 
   let regras = regrasData || [];
 
-  // Fallback padrão se nenhuma regra foi configurada: dias úteis (Seg-Sex) das 08h às 18h
-  if (regras.length === 0 && dayOfWeek >= 1 && dayOfWeek <= 5) {
-    regras = [{ hora_inicio: '08:00:00', hora_fim: '18:00:00' }];
+  // Fallback padrão se nenhuma regra foi configurada:
+  // Seg-Sex: 08h às 18h | Sábado: 08h às 12h
+  if (regras.length === 0) {
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      regras = [{ hora_inicio: '08:00:00', hora_fim: '18:00:00' }];
+    } else if (dayOfWeek === 6) {
+      regras = [{ hora_inicio: '08:00:00', hora_fim: '12:00:00' }];
+    }
   }
 
   if (regras.length === 0) {
     return NextResponse.json({ 
       data: [], 
       available_times: [],
+      horarios_disponiveis: [],
+      sugestoes: [],
       agenda: { id: resolvedProf.id, nome: resolvedProf.nome },
       message: 'Sem expediente para esta data' 
     });
@@ -252,9 +266,14 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     time: format(s.start, 'HH:mm')
   }));
 
+  const sortedTimes = formattedSlots.map(s => s.time);
+  const sugestoes = pickThreeSuggestions(sortedTimes);
+
   return NextResponse.json({ 
     data: formattedSlots,
-    available_times: formattedSlots.map(s => s.time),
+    available_times: sortedTimes,
+    horarios_disponiveis: sortedTimes,
+    sugestoes,
     agenda: {
       id: resolvedProf.id,
       nome: resolvedProf.nome
@@ -264,3 +283,11 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     date: dateStr
   });
 });
+
+function pickThreeSuggestions(times: string[]): string[] {
+  if (times.length <= 3) return times;
+  const first = times[0];
+  const mid = times[Math.floor(times.length / 2)];
+  const last = times[times.length - 1];
+  return Array.from(new Set([first, mid, last]));
+}
