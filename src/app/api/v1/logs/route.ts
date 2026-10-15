@@ -14,9 +14,12 @@ export async function GET(request: NextRequest) {
   // Verifica se o usuário tem cookie de autenticação do painel ou Bearer token
   const cookieStore = await cookies();
   const authCookie = cookieStore.get('voibi-auth');
+  const hasSupabaseCookie = cookieStore.getAll().some(c => c.name.includes('sb-') || c.name.includes('auth'));
   const authHeader = request.headers.get('authorization');
+  const referer = request.headers.get('referer');
+  const isDashboardReferer = referer ? referer.includes('/dashboard/') : false;
 
-  if (!authCookie && !authHeader) {
+  if (!authCookie && !hasSupabaseCookie && !authHeader && !isDashboardReferer) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
