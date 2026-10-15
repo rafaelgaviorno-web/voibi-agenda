@@ -24,7 +24,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   let rawDateStr = searchParams.get('date') || searchParams.get('data') || searchParams.get('dia');
 
   if (!rawDateStr) {
-    return NextResponse.json({ error: 'date (YYYY-MM-DD) ou data (DD/MM/YYYY) é obrigatório' }, { status: 400 });
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1);
+    rawDateStr = format(amanha, 'yyyy-MM-dd');
   }
 
   // Se vier no formato brasileiro DD/MM/YYYY
