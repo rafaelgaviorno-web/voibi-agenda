@@ -16,6 +16,7 @@ export default function AgendaConfigClient({
   const [activeTab, setActiveTab] = useState('basico');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Estados locais
   const [nome, setNome] = useState(agenda.nome);
@@ -67,31 +68,53 @@ export default function AgendaConfigClient({
   const handleSaveBasico = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    await onSaveBasico({ nome, cor, webhook_url: webhookUrl, permitir_sobreposicao: permitirSobreposicao, campos_personalizados: campos });
-    if (empresaId === 'mock-clinic') {
-      localStorage.setItem(`mock_campos_${agenda.id}`, JSON.stringify(campos));
-      localStorage.setItem(`mock_webhook_agenda_${agenda.id}`, webhookUrl);
-      localStorage.setItem(`mock_sobreposicao_agenda_${agenda.id}`, permitirSobreposicao ? 'true' : 'false');
+    setSaveMessage('');
+    setErrorMessage('');
+    try {
+      await onSaveBasico({ 
+        nome, 
+        cor, 
+        webhook_url: webhookUrl, 
+        permitir_sobreposicao: permitirSobreposicao, 
+        campos_personalizados: campos 
+      });
+      if (empresaId === 'mock-clinic') {
+        localStorage.setItem(`mock_campos_${agenda.id}`, JSON.stringify(campos));
+        localStorage.setItem(`mock_webhook_agenda_${agenda.id}`, webhookUrl);
+        localStorage.setItem(`mock_sobreposicao_agenda_${agenda.id}`, permitirSobreposicao ? 'true' : 'false');
+      }
+      setSaveMessage('Dados salvos com sucesso!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Erro ao salvar alterações');
+      setTimeout(() => setErrorMessage(''), 4000);
+    } finally {
+      setIsSaving(false);
     }
-    setSaveMessage('Dados salvos com sucesso!');
-    setTimeout(() => setSaveMessage(''), 3000);
-    setIsSaving(false);
   };
 
   const handleSaveDisponibilidade = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    // Filtrar apenas dias ativos e limpar campos temporários
-    const dadosLimpos = disponibilidade
-      .filter(d => d.ativo)
-      .map(d => ({
-        dia_semana: d.dia_semana,
-        intervalos: d.intervalos
-      }));
-    await onSaveDisponibilidade(dadosLimpos);
-    setSaveMessage('Horários salvos com sucesso!');
-    setTimeout(() => setSaveMessage(''), 3000);
-    setIsSaving(false);
+    setSaveMessage('');
+    setErrorMessage('');
+    try {
+      // Filtrar apenas dias ativos e limpar campos temporários
+      const dadosLimpos = disponibilidade
+        .filter(d => d.ativo)
+        .map(d => ({
+          dia_semana: d.dia_semana,
+          intervalos: d.intervalos
+        }));
+      await onSaveDisponibilidade(dadosLimpos);
+      setSaveMessage('Horários salvos com sucesso!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Erro ao salvar horários');
+      setTimeout(() => setErrorMessage(''), 4000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -104,17 +127,24 @@ export default function AgendaConfigClient({
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{agenda.nome}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{nome}</h1>
               <CopyAgendaId id={agenda.id} />
             </div>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Configurações da agenda</p>
           </div>
         </div>
-        {saveMessage && (
-          <span className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-            {saveMessage}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {saveMessage && (
+            <span className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              {saveMessage}
+            </span>
+          )}
+          {errorMessage && (
+            <span className="text-sm font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+              {errorMessage}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}

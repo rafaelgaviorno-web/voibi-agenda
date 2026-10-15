@@ -56,21 +56,60 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
 
   // === Server Actions ===
 
-  async function saveBasico(data: { nome: string, cor: string, campos_personalizados?: any[] }) {
+  async function saveBasico(data: { 
+    nome: string; 
+    cor: string; 
+    webhook_url?: string; 
+    permitir_sobreposicao?: boolean; 
+    campos_personalizados?: any[]; 
+  }) {
     'use server'
     if (empresa_id !== 'mock-clinic') {
       const supabase = getServiceSupabase();
-      await supabase.from('agend_profissionais').update({ 
+      const { error } = await supabase.from('agend_profissionais').update({ 
         nome: data.nome, 
         cor: data.cor,
-        campos_personalizados: data.campos_personalizados
+        webhook_url: data.webhook_url || null,
+        permitir_sobreposicao: !!data.permitir_sobreposicao,
+        campos_personalizados: data.campos_personalizados || []
       }).eq('id', agenda_id);
+
+      if (error) {
+        console.error("Erro ao atualizar agenda:", error);
+        throw new Error(error.message || "Erro ao salvar agenda");
+      }
+
       revalidatePath(`/dashboard/${empresa_id}/layout`);
       revalidatePath(`/dashboard/${empresa_id}/agendas`);
+      revalidatePath(`/dashboard/${empresa_id}/agendas/${agenda_id}`);
     } else {
-      // Para o mock clinic, apenas fingimos que salva
-      // Idealmente salvaríamos num estado global ou localStorage, mas page.tsx é Server Component
-      // Deixamos a alteração visual para o Client Component
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      const customAgendasStr = cookieStore.get('voibi_mock_agendas')?.value;
+      const customAgendas = customAgendasStr ? JSON.parse(customAgendasStr) : [];
+      
+      const idx = customAgendas.findIndex((a: any) => a.id === agenda_id);
+      if (idx >= 0) {
+        customAgendas[idx] = {
+          ...customAgendas[idx],
+          nome: data.nome,
+          cor: data.cor,
+          webhook_url: data.webhook_url,
+          permitir_sobreposicao: data.permitir_sobreposicao,
+          campos_personalizados: data.campos_personalizados
+        };
+      } else {
+        customAgendas.push({
+          id: agenda_id,
+          nome: data.nome,
+          cor: data.cor,
+          webhook_url: data.webhook_url,
+          permitir_sobreposicao: data.permitir_sobreposicao,
+          campos_personalizados: data.campos_personalizados
+        });
+      }
+      cookieStore.set('voibi_mock_agendas', JSON.stringify(customAgendas));
+      revalidatePath(`/dashboard/${empresa_id}/agendas/${agenda_id}`);
     }
   }
 
@@ -80,7 +119,11 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
       const supabase = getServiceSupabase();
       
       // 1. Deletar tudo existente
-      await supabase.from('agend_disponibilidade').delete().eq('profissional_id', agenda_id);
+      const { error: delErr } = await supabase.from('agend_disponibilidade').delete().eq('profissional_id', agenda_id);
+      if (delErr) {
+        console.error("Erro ao limpar disponibilidade:", delErr);
+        throw new Error(delErr.message || "Erro ao salvar horários");
+      }
       
       // 2. Inserir novos
       const insercoes = [];
@@ -98,7 +141,11 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
       }
       
       if (insercoes.length > 0) {
-        await supabase.from('agend_disponibilidade').insert(insercoes);
+        const { error: insErr } = await supabase.from('agend_disponibilidade').insert(insercoes);
+        if (insErr) {
+          console.error("Erro ao inserir disponibilidade:", insErr);
+          throw new Error(insErr.message || "Erro ao salvar horários");
+        }
       }
       revalidatePath(`/dashboard/${empresa_id}/agendas/${agenda_id}`);
     }
