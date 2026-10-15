@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, CalendarX, User, FormInput, Plus, Trash2 } from 'luci
 import Link from 'next/link';
 
 import CopyAgendaId from '../CopyAgendaId';
+import DeleteAgendaButton from '../DeleteAgendaButton';
 
 export default function AgendaConfigClient({ 
   agenda, 
@@ -175,7 +176,8 @@ export default function AgendaConfigClient({
 
       {/* Content: Dados Básicos */}
       {activeTab === 'basico' && (
-        <form onSubmit={handleSaveBasico} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm max-w-2xl">
+        <div className="max-w-2xl space-y-6">
+        <form onSubmit={handleSaveBasico} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm">
           <div className="space-y-4">
             <div>
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">ID da Agenda (API & IA)</label>
@@ -247,6 +249,25 @@ export default function AgendaConfigClient({
             </button>
           </div>
         </form>
+
+        <div className="mt-8 border border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/20 rounded-xl p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-semibold text-red-900 dark:text-red-400">Zona de Perigo</h3>
+              <p className="text-sm text-red-700/80 dark:text-red-400/80 mt-1">
+                Excluir permanentemente esta agenda, suas configurações de horários e todos os agendamentos vinculados.
+              </p>
+            </div>
+            <DeleteAgendaButton 
+              agendaId={agenda.id} 
+              agendaNome={agenda.nome} 
+              empresaId={empresaId} 
+              variant="danger-zone"
+              redirectAfterDelete={true}
+            />
+          </div>
+        </div>
+      </div>
       )}
 
       {/* Content: Horários */}
