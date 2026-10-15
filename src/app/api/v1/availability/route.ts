@@ -169,10 +169,6 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     }
 
     const sortedTimes = Array.from(allTimesSet).sort();
-
-    return NextResponse.json({
-      data: allFormattedSlots,
-    const sortedTimes = Array.from(allTimesSet).sort();
     const sugestoes = pickThreeSuggestions(sortedTimes);
 
     return NextResponse.json({
