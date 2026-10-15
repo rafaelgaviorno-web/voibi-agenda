@@ -217,28 +217,59 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
 
   // 4. Criar ou buscar cliente final
   let clienteId = null;
-  let query = supabase.from('agend_clientes_finais').select('id').eq('empresa_id', auth.empresa.id);
-  
-  if (email && telefone) {
-    query = query.or(`email.eq.${email},telefone.eq.${telefone}`);
-  } else if (email) {
-    query = query.eq('email', email);
-  } else if (telefone) {
-    query = query.eq('telefone', telefone);
+  const cleanNome = (nome || '').trim();
+  const cleanTelefone = (telefone || '').trim();
+  const cleanEmail = (email || '').trim();
+
+  // Busca se já existem clientes cadastrados com este telefone ou email
+  let clienteQuery = supabase
+    .from('agend_clientes_finais')
+    .select('id, nome, telefone, email')
+    .eq('empresa_id', auth.empresa.id);
+
+  if (cleanTelefone && cleanEmail) {
+    clienteQuery = clienteQuery.or(`telefone.eq.${cleanTelefone},email.eq.${cleanEmail}`);
+  } else if (cleanTelefone) {
+    clienteQuery = clienteQuery.eq('telefone', cleanTelefone);
+  } else if (cleanEmail) {
+    clienteQuery = clienteQuery.eq('email', cleanEmail);
   }
 
-  const { data: clienteEx } = await query.limit(1).maybeSingle();
+  const { data: clientesEncontrados } = await clienteQuery;
 
-  if (clienteEx) {
-    clienteId = clienteEx.id;
+  let clienteMatch: { id: string; nome: string | null } | null = null;
+  if (clientesEncontrados && clientesEncontrados.length > 0) {
+    if (cleanNome) {
+      const nomeLower = cleanNome.toLowerCase();
+      // Verifica se algum cliente existente com o mesmo contato tem o mesmo nome (ou variação dele)
+      clienteMatch = clientesEncontrados.find(c => {
+        const cNome = (c.nome || '').trim().toLowerCase();
+        return cNome === nomeLower || cNome.includes(nomeLower) || nomeLower.includes(cNome);
+      }) || null;
+    } else {
+      // Se não veio nome nenhum informado, usa o primeiro encontrado
+      clienteMatch = clientesEncontrados[0];
+    }
+  }
+
+  if (clienteMatch) {
+    clienteId = clienteMatch.id;
+    // Se o novo nome for mais completo, atualiza o cadastro existente
+    if (cleanNome && cleanNome.length > (clienteMatch.nome || '').length) {
+      await supabase
+        .from('agend_clientes_finais')
+        .update({ nome: cleanNome })
+        .eq('id', clienteId);
+    }
   } else {
+    // Novo paciente (mesmo compartilhando o telefone de um familiar, ex: marido/esposa/filho)
     const { data: novoCliente, error: errCliente } = await supabase
       .from('agend_clientes_finais')
       .insert({ 
         empresa_id: auth.empresa.id, 
-        nome, 
-        email: email || null, 
-        telefone: telefone || null 
+        nome: cleanNome || 'Paciente', 
+        email: cleanEmail || null, 
+        telefone: cleanTelefone || null 
       })
       .select('id')
       .single();
@@ -248,6 +279,10 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   }
 
   // 5. Inserir Agendamento
+  const obsFinal = observacao 
+    ? (cleanNome && !observacao.includes(cleanNome) ? `${observacao} | Paciente: ${cleanNome}` : observacao)
+    : (cleanNome ? `Agendado pela IA | Paciente: ${cleanNome}` : 'Agendado pela IA');
+
   const { data: booking, error: errBooking } = await supabase
     .from('agend_agendamentos')
     .insert({
@@ -257,7 +292,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       inicio: inicioIso,
       fim: fimIso,
       status: 'confirmado',
-      observacao: observacao || 'Agendado via API / IA'
+      observacao: obsFinal
     })
     .select(`
       id,
