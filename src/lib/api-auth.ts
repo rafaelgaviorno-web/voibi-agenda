@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import { getServiceSupabase } from './supabase/client';
 
 export type AuthResult = 
-  | { error: string; status: number; empresa?: never }
-  | { error?: never; status?: never; empresa: any };
+  | { error: string; status: number; empresa?: never; apiKey?: never }
+  | { error?: never; status?: never; empresa: any; apiKey: string };
 
 export async function authenticateApiKey(request: NextRequest): Promise<AuthResult> {
   let apiKey: string | null = null;
@@ -24,10 +24,10 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
     apiKey = request.headers.get('x-api-key') || request.headers.get('apikey');
   }
 
-  // 3. Query params ?api_key=... ou ?apiKey=...
+  // 3. Query params ?api_key=... ou ?apiKey=... ou ?token=... ou ?key=...
   if (!apiKey) {
     const { searchParams } = new URL(request.url);
-    apiKey = searchParams.get('api_key') || searchParams.get('apiKey');
+    apiKey = searchParams.get('api_key') || searchParams.get('apiKey') || searchParams.get('token') || searchParams.get('key');
   }
 
   if (!apiKey) {
@@ -45,7 +45,7 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
       .maybeSingle();
 
     if (firstEmp) {
-      return { empresa: firstEmp };
+      return { empresa: firstEmp, apiKey };
     }
   }
 
@@ -63,7 +63,7 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
     const { cacheApiKeyEmpresa } = await import('./api-logger');
     cacheApiKeyEmpresa(apiKey, empresa.id);
 
-    return { empresa };
+    return { empresa, apiKey };
   } catch {
     return { error: 'Unauthorized: Invalid API Key format', status: 401 };
   }

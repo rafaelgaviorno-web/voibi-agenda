@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Key, Copy, Check, Link2, Code, Zap, Bell, Plus, Trash2, Edit2, MessageSquare, Clock, ArrowRight, Activity, Bot, Cpu, Layers, ExternalLink } from 'lucide-react';
+import { Key, Copy, Check, Link2, Code, Zap, Bell, Plus, Trash2, Edit2, MessageSquare, Clock, ArrowRight, Activity, Bot, Cpu, Layers, ExternalLink, Globe, Terminal, FileCode, Sparkles } from 'lucide-react';
 import LogsViewer from './LogsViewer';
 import ApiKeyManager from './ApiKeyManager';
 
@@ -128,18 +128,29 @@ export default function AutomationsClient({
 
   const [copiedTools, setCopiedTools] = useState(false);
   const [copiedMcp, setCopiedMcp] = useState(false);
+  const [copiedMcpUrlKey, setCopiedMcpUrlKey] = useState(false);
+  const [copiedMcpUrlClean, setCopiedMcpUrlClean] = useState(false);
+  const [copiedMcpCli, setCopiedMcpCli] = useState(false);
+  const [mcpConnectMode, setMcpConnectMode] = useState<'claude_url' | 'claude_json' | 'claude_cli' | 'chatgpt'>('claude_url');
+
+  const [originUrl, setOriginUrl] = useState('https://agenda.voibi.com.br');
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.origin) {
+      setOriginUrl(window.location.origin);
+    }
+  }, []);
+
+  const mcpUrlWithKey = `${originUrl}/api/mcp?apiKey=${currentApiKey}`;
+  const mcpUrlClean = `${originUrl}/api/mcp`;
+  const claudeCodeCliCommand = `claude mcp add --transport http voibi_agenda ${originUrl}/api/mcp --header "Authorization: Bearer ${currentApiKey}"`;
 
   const mcpConfigSnippet = JSON.stringify({
     mcpServers: {
       voibi_agenda: {
-        command: "npx",
-        args: [
-          "-y",
-          "@voibi/agenda-mcp"
-        ],
-        env: {
-          VOIBI_API_URL: "https://agenda.voibi.com.br",
-          VOIBI_API_KEY: currentApiKey
+        type: "http",
+        url: `${originUrl}/api/mcp`,
+        headers: {
+          Authorization: `Bearer ${currentApiKey}`
         }
       }
     }
@@ -149,6 +160,24 @@ export default function AutomationsClient({
     navigator.clipboard.writeText(mcpConfigSnippet);
     setCopiedMcp(true);
     setTimeout(() => setCopiedMcp(false), 2500);
+  };
+
+  const handleCopyMcpUrlKey = () => {
+    navigator.clipboard.writeText(mcpUrlWithKey);
+    setCopiedMcpUrlKey(true);
+    setTimeout(() => setCopiedMcpUrlKey(false), 2500);
+  };
+
+  const handleCopyMcpUrlClean = () => {
+    navigator.clipboard.writeText(mcpUrlClean);
+    setCopiedMcpUrlClean(true);
+    setTimeout(() => setCopiedMcpUrlClean(false), 2500);
+  };
+
+  const handleCopyMcpCli = () => {
+    navigator.clipboard.writeText(claudeCodeCliCommand);
+    setCopiedMcpCli(true);
+    setTimeout(() => setCopiedMcpCli(false), 2500);
   };
 
   const aiToolsJson = JSON.stringify([
@@ -426,11 +455,11 @@ export default function AutomationsClient({
 
                 {apiSubTab === 'mcp' && (
                   <button
-                    onClick={handleCopyMcp}
-                    className="flex items-center gap-1.5 text-xs bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 px-2.5 py-1.5 rounded-md transition-colors font-mono cursor-pointer"
+                    onClick={handleCopyMcpUrlKey}
+                    className="flex items-center gap-1.5 text-xs bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 px-2.5 py-1.5 rounded-md transition-colors font-mono cursor-pointer border border-orange-500/30"
                   >
-                    {copiedMcp ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedMcp ? 'Copiado!' : 'Copiar Config MCP'}
+                    {copiedMcpUrlKey ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedMcpUrlKey ? 'URL Copiada!' : 'Copiar URL Claude (MCP)'}
                   </button>
                 )}
 
@@ -450,71 +479,253 @@ export default function AutomationsClient({
                 <div className="space-y-4 text-xs font-sans text-zinc-300 overflow-y-auto max-h-[520px] pr-1">
                   
                   {/* Banner explicativo */}
-                  <div className="bg-gradient-to-r from-indigo-950/60 to-purple-950/40 p-4 rounded-xl border border-indigo-800/60 space-y-2">
-                    <div className="flex items-center gap-2 text-indigo-300 font-semibold text-sm">
-                      <Bot className="w-4 h-4 text-indigo-400" />
+                  <div className="bg-gradient-to-r from-orange-950/40 via-indigo-950/50 to-purple-950/40 p-4 rounded-xl border border-orange-500/30 space-y-2">
+                    <div className="flex items-center gap-2 text-orange-300 font-semibold text-sm">
+                      <Bot className="w-4 h-4 text-orange-400" />
                       <span>Model Context Protocol (MCP) Oficial</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono border border-indigo-500/30">
-                        Plug & Play
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-mono border border-orange-500/30">
+                        Claude Connectors & Remote MCP
                       </span>
                     </div>
                     <p className="text-zinc-300 text-xs leading-relaxed">
-                      Conecte sua agenda diretamente ao <strong>Claude Desktop</strong>, ao <strong>ChatGPT (Custom GPTs / Actions)</strong> ou ao seu assistente de IA preferido. O robô passa a gerenciar horários, listar consultas e agendar pacientes de forma autônoma.
+                      Conecte sua clínica diretamente ao <strong>Claude (Web ou Desktop)</strong>, ao <strong>Claude Code</strong> ou ao <strong>ChatGPT</strong> via protocolo oficial MCP. A IA passa a consultar horários livres, listar consultas e agendar pacientes de forma 100% autônoma.
                     </p>
                   </div>
 
-                  {/* Configuração JSON pronta */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
-                        <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-                        Configuração para Claude Desktop (<code className="text-indigo-300 font-mono">claude_desktop_config.json</code>)
-                      </label>
-                      <button
-                        onClick={handleCopyMcp}
-                        className="text-[11px] text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
-                      >
-                        {copiedMcp ? 'Copiado!' : 'Copiar código'}
-                      </button>
-                    </div>
-                    <pre className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-[11px] font-mono text-indigo-200 select-all overflow-x-auto leading-relaxed">
-                      {mcpConfigSnippet}
-                    </pre>
+                  {/* Seletor de Modo de Conexão MCP */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-zinc-950 p-1.5 rounded-xl border border-zinc-800 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setMcpConnectMode('claude_url')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg font-medium transition-all cursor-pointer ${
+                        mcpConnectMode === 'claude_url'
+                          ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-sm font-semibold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                      }`}
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      <span>Claude (URL)</span>
+                      <span className="text-[9px] bg-white/20 text-white px-1 py-0.2 rounded font-mono">Recomendado</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMcpConnectMode('claude_json')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg font-medium transition-all cursor-pointer ${
+                        mcpConnectMode === 'claude_json'
+                          ? 'bg-indigo-600 text-white shadow-sm font-semibold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                      }`}
+                    >
+                      <FileCode className="w-3.5 h-3.5" />
+                      <span>Claude Desktop (JSON)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMcpConnectMode('claude_cli')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg font-medium transition-all cursor-pointer ${
+                        mcpConnectMode === 'claude_cli'
+                          ? 'bg-zinc-800 text-white shadow-sm font-semibold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                      }`}
+                    >
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>Claude Code (CLI)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMcpConnectMode('chatgpt')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg font-medium transition-all cursor-pointer ${
+                        mcpConnectMode === 'chatgpt'
+                          ? 'bg-emerald-600 text-white shadow-sm font-semibold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                      }`}
+                    >
+                      <Bot className="w-3.5 h-3.5" />
+                      <span>ChatGPT Actions</span>
+                    </button>
                   </div>
 
-                  {/* Como Instalar em cada Plataforma */}
-                  <div className="space-y-2 pt-2">
-                    <h5 className="text-xs font-semibold uppercase tracking-wider text-[11px] text-zinc-400">
-                      Como conectar seu assistente:
-                    </h5>
-                    
-                    <div className="grid grid-cols-1 gap-2.5">
-                      <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-1.5">
-                        <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-                          Claude Desktop (MCP):
+                  {/* MODO 1: Claude via URL (Conectores Nativos) */}
+                  {mcpConnectMode === 'claude_url' && (
+                    <div className="space-y-3 bg-zinc-950 p-4 rounded-xl border border-orange-500/30">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <h4 className="font-semibold text-zinc-100 flex items-center gap-1.5 text-sm">
+                            <Sparkles className="w-4 h-4 text-orange-400" />
+                            Conexão Direta no Claude via URL
+                          </h4>
+                          <p className="text-zinc-400 text-[11px]">
+                            No Claude (Claude.ai Web ou Claude Desktop), a integração é feita através de um <strong>Conector Remoto (URL)</strong>.
+                          </p>
                         </div>
-                        <p className="text-zinc-400 text-[11px] leading-relaxed">
-                          No menu do aplicativo Claude Desktop, acesse <strong>Settings ➔ Developer ➔ Edit Config</strong> (arquivo <code className="text-orange-300 font-mono bg-zinc-900 px-1 py-0.5 rounded">claude_desktop_config.json</code>) e cole o trecho acima. Ao reiniciar o Claude, o símbolo de ferramentas da Voibi aparecerá pronto para uso.
-                        </p>
                       </div>
 
-                      <div className="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 space-y-1.5">
-                        <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                          ChatGPT (Custom GPTs / Actions):
+                      {/* URL com Chave Embutida */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-semibold text-orange-300">
+                            URL do Conector MCP (Pronta com Chave de Autenticação):
+                          </label>
+                          <span className="text-[10px] text-zinc-500 font-mono">Streamable HTTP / SSE</span>
                         </div>
-                        <p className="text-zinc-400 text-[11px] leading-relaxed">
-                          No painel de criação do seu GPT (ChatGPT Plus/Team), vá em <strong>Configure ➔ Actions ➔ Create new action</strong>. Configure a autenticação como <strong>Bearer Token</strong> com a sua Chave de API e utilize as rotas e schemas disponíveis nas abas <strong>Rotas HTTP (REST)</strong> e <strong>Tools / Functions</strong>.
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={mcpUrlWithKey}
+                            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-mono text-orange-200 focus:outline-none select-all"
+                          />
+                          <button
+                            onClick={handleCopyMcpUrlKey}
+                            className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shadow-sm cursor-pointer"
+                          >
+                            {copiedMcpUrlKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedMcpUrlKey ? 'Copiado!' : 'Copiar URL'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Opção Avançada: URL Limpa e Header separado */}
+                      <div className="p-3 bg-zinc-900/70 rounded-lg border border-zinc-800/80 space-y-2 mt-2">
+                        <div className="text-[11px] font-medium text-zinc-300">
+                          Caso o Claude solicite URL e Chave/Token em campos separados:
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                          <div className="space-y-1">
+                            <span className="text-zinc-500 text-[10px] uppercase font-mono">URL Limpa:</span>
+                            <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded border border-zinc-800">
+                              <span className="font-mono text-zinc-300 truncate flex-1 text-[10px]">{mcpUrlClean}</span>
+                              <button
+                                onClick={handleCopyMcpUrlClean}
+                                className="text-orange-400 hover:text-orange-300 text-[10px] underline cursor-pointer px-1"
+                              >
+                                {copiedMcpUrlClean ? 'Copiado' : 'Copiar'}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-zinc-500 text-[10px] uppercase font-mono">Chave de API (Bearer Token):</span>
+                            <div className="flex items-center gap-1.5 bg-zinc-950 p-1.5 rounded border border-zinc-800">
+                              <span className="font-mono text-zinc-300 truncate flex-1 text-[10px]">
+                                {currentApiKey.slice(0, 8)}...{currentApiKey.slice(-6)}
+                              </span>
+                              <button
+                                onClick={handleCopy}
+                                className="text-orange-400 hover:text-orange-300 text-[10px] underline cursor-pointer px-1"
+                              >
+                                {copied ? 'Copiado' : 'Copiar'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Passo a Passo Ilustrado */}
+                      <div className="space-y-2 pt-2 border-t border-zinc-800/80">
+                        <h5 className="text-[11px] font-semibold uppercase tracking-wider text-orange-400">
+                          Passo a passo para conectar no Claude:
+                        </h5>
+                        <ol className="space-y-2 text-[11px] text-zinc-300 list-decimal list-inside leading-relaxed">
+                          <li>
+                            Acesse o <strong>Claude</strong> no navegador (<a href="https://claude.ai" target="_blank" rel="noreferrer" className="text-orange-400 underline hover:text-orange-300">claude.ai</a>) ou abra o Claude Desktop.
+                          </li>
+                          <li>
+                            Acesse o menu de <strong>Settings (Configurações) ➔ Connectors (Conectores)</strong> ou <strong>Customize ➔ Connectors</strong>.
+                          </li>
+                          <li>
+                            Clique no botão <strong>"+"</strong> ou <strong>"Add custom connector"</strong> (Adicionar conector).
+                          </li>
+                          <li>
+                            No campo <strong>URL</strong>, cole a URL copiada acima.
+                          </li>
+                          <li>
+                            Clique em <strong>Add / Salvar</strong>. O Claude testará o endpoint e registrará o conector <strong>voibi_agenda</strong>.
+                          </li>
+                          <li>
+                            <strong>Pronto!</strong> Ao conversar com o Claude, ele acionará os horários e consultas da sua clínica automaticamente.
+                          </li>
+                        </ol>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MODO 2: Claude Desktop (Arquivo JSON) */}
+                  {mcpConnectMode === 'claude_json' && (
+                    <div className="space-y-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                          <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+                          Configuração para Claude Desktop (<code className="text-indigo-300 font-mono">claude_desktop_config.json</code>)
+                        </label>
+                        <button
+                          onClick={handleCopyMcp}
+                          className="text-[11px] text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
+                        >
+                          {copiedMcp ? 'Copiado!' : 'Copiar JSON'}
+                        </button>
+                      </div>
+                      <pre className="bg-zinc-900 p-3.5 rounded-xl border border-zinc-800 text-[11px] font-mono text-indigo-200 select-all overflow-x-auto leading-relaxed">
+                        {mcpConfigSnippet}
+                      </pre>
+                      <div className="bg-zinc-900/60 p-3 rounded-lg border border-zinc-800 text-[11px] text-zinc-400 space-y-1">
+                        <div className="font-semibold text-zinc-200">Como aplicar no Claude Desktop:</div>
+                        <p>
+                          No menu do Claude Desktop, abra <strong>Settings ➔ Developer ➔ Edit Config</strong> para abrir o arquivo <code className="text-indigo-300 font-mono">claude_desktop_config.json</code>. Cole o bloco acima dentro da chave <code className="text-indigo-300 font-mono">mcpServers</code> e reinicie o Claude.
                         </p>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* MODO 3: Claude Code CLI (Terminal) */}
+                  {mcpConnectMode === 'claude_cli' && (
+                    <div className="space-y-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                          <Terminal className="w-3.5 h-3.5 text-zinc-300" />
+                          Comando para Terminal Claude Code CLI
+                        </label>
+                        <button
+                          onClick={handleCopyMcpCli}
+                          className="text-[11px] text-zinc-300 hover:text-white underline cursor-pointer"
+                        >
+                          {copiedMcpCli ? 'Copiado!' : 'Copiar comando'}
+                        </button>
+                      </div>
+                      <pre className="bg-zinc-900 p-3.5 rounded-xl border border-zinc-800 text-[11px] font-mono text-zinc-200 select-all overflow-x-auto leading-relaxed">
+                        {claudeCodeCliCommand}
+                      </pre>
+                      <p className="text-[11px] text-zinc-400">
+                        Execute o comando acima no terminal onde você usa o <strong>Claude Code</strong>. Ele registrará o servidor MCP como transporte HTTP automaticamente.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* MODO 4: ChatGPT (Actions / Custom GPTs) */}
+                  {mcpConnectMode === 'chatgpt' && (
+                    <div className="space-y-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                      <div className="font-semibold text-zinc-200 flex items-center gap-1.5 text-sm">
+                        <Bot className="w-4 h-4 text-emerald-400" />
+                        Conectar ao ChatGPT (Custom GPTs / Actions)
+                      </div>
+                      <p className="text-zinc-400 text-[11px] leading-relaxed">
+                        No painel de criação do seu GPT (ChatGPT Plus/Team/Enterprise), vá em <strong>Configure ➔ Actions ➔ Create new action</strong>.
+                      </p>
+                      <div className="space-y-2 text-[11px] text-zinc-300 bg-zinc-900/60 p-3 rounded-lg border border-zinc-800">
+                        <div>
+                          <strong>1. Autenticação:</strong> Selecione <strong>Authentication ➔ Bearer</strong> e cole sua Chave de API.
+                        </div>
+                        <div>
+                          <strong>2. Schema OpenAPI:</strong> Você pode utilizar os schemas e parâmetros prontos disponíveis na sub-aba <strong>Tools / Functions</strong> ou importar as rotas da sub-aba <strong>Rotas HTTP (REST)</strong>.
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Catálogo de Ferramentas Nativas */}
                   <div className="space-y-2 pt-2">
-                    <h5 className="text-xs font-semibold uppercase tracking-wider text-[11px] text-zinc-400">
-                      Ferramentas que o agente ganha automaticamente:
+                    <h5 className="text-xs font-semibold uppercase tracking-wider text-[11px] text-zinc-400 flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                      Ferramentas nativas ativas no Servidor MCP (8 ferramentas):
                     </h5>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
@@ -541,6 +752,14 @@ export default function AutomationsClient({
                       <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
                         <div className="text-purple-400 font-bold">voibi_list_agendas</div>
                         <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Lista profissionais e consultórios</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-teal-400 font-bold">voibi_list_event_types</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Lista procedimentos, durações e regras</div>
+                      </div>
+                      <div className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-cyan-400 font-bold">voibi_get_booking</div>
+                        <div className="text-zinc-400 font-sans text-[10px] mt-0.5">Obtém detalhes de um agendamento por ID</div>
                       </div>
                     </div>
                   </div>
