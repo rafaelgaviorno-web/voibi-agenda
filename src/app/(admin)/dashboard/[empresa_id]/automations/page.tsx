@@ -7,10 +7,20 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
   
   let apiKey = '';
   let webhookUrl = '';
+  let initialLembretes: any[] = [];
 
   if (empresa_id === 'mock-clinic') {
     apiKey = 'sk_test_voibi_1234567890abcdef';
     webhookUrl = 'https://n8n.minhaclinica.com/webhook/agendamento';
+    initialLembretes = [
+      {
+        id: 'mock_1',
+        nome: 'Lembrete Padrão (1 Dia antes)',
+        minutos_antes: 1440,
+        mensagem_template: 'Olá {{cliente_nome}}, confirmando seu agendamento para o dia {{data_hora}} com {{profissional_nome}}.',
+        ativo: true
+      }
+    ];
   } else {
     const supabase = getServiceSupabase();
     const { data } = await supabase.from('agend_empresas').select('api_key, webhook_url').eq('id', empresa_id).single();
@@ -18,6 +28,14 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
       apiKey = data.api_key;
       webhookUrl = data.webhook_url || '';
     }
+
+    const { data: regras } = await supabase
+      .from('agend_regras_lembretes')
+      .select('*')
+      .eq('empresa_id', empresa_id)
+      .order('minutos_antes', { ascending: false });
+    
+    initialLembretes = regras || [];
   }
 
   async function updateWebhook(formData: FormData) {
@@ -65,6 +83,89 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
     }
   }
 
+  async function saveLembreteAction(regra: { id?: string; nome: string; minutos_antes: number; mensagem_template: string; ativo?: boolean }): Promise<{ success: boolean; data?: any; error?: string }> {
+    'use server';
+    if (empresa_id === 'mock-clinic') {
+      return { success: true, data: { ...regra, id: regra.id || Date.now().toString() } };
+    }
+
+    try {
+      const supabase = getServiceSupabase();
+      if (regra.id) {
+        const { data, error } = await supabase
+          .from('agend_regras_lembretes')
+          .update({
+            nome: regra.nome,
+            minutos_antes: regra.minutos_antes,
+            mensagem_template: regra.mensagem_template,
+            ativo: regra.ativo ?? true
+          })
+          .eq('id', regra.id)
+          .eq('empresa_id', empresa_id)
+          .select()
+          .maybeSingle();
+
+        if (error) return { success: false, error: error.message };
+        revalidatePath(`/dashboard/${empresa_id}/automations`);
+        return { success: true, data };
+      } else {
+        const { data, error } = await supabase
+          .from('agend_regras_lembretes')
+          .insert({
+            empresa_id,
+            nome: regra.nome,
+            minutos_antes: regra.minutos_antes,
+            mensagem_template: regra.mensagem_template,
+            ativo: regra.ativo ?? true
+          })
+          .select()
+          .maybeSingle();
+
+        if (error) return { success: false, error: error.message };
+        revalidatePath(`/dashboard/${empresa_id}/automations`);
+        return { success: true, data };
+      }
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Erro ao salvar regra' };
+    }
+  }
+
+  async function deleteLembreteAction(id: string): Promise<{ success: boolean; error?: string }> {
+    'use server';
+    if (empresa_id === 'mock-clinic') return { success: true };
+    try {
+      const supabase = getServiceSupabase();
+      const { error } = await supabase
+        .from('agend_regras_lembretes')
+        .delete()
+        .eq('id', id)
+        .eq('empresa_id', empresa_id);
+      if (error) return { success: false, error: error.message };
+      revalidatePath(`/dashboard/${empresa_id}/automations`);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Erro ao excluir regra' };
+    }
+  }
+
+  async function toggleLembreteAction(id: string, ativo: boolean): Promise<{ success: boolean; error?: string }> {
+    'use server';
+    if (empresa_id === 'mock-clinic') return { success: true };
+    try {
+      const supabase = getServiceSupabase();
+      const { error } = await supabase
+        .from('agend_regras_lembretes')
+        .update({ ativo })
+        .eq('id', id)
+        .eq('empresa_id', empresa_id);
+      if (error) return { success: false, error: error.message };
+      revalidatePath(`/dashboard/${empresa_id}/automations`);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Erro ao alternar status da regra' };
+    }
+  }
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto p-8 lg:p-12">
       <div>
@@ -78,6 +179,10 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
         updateWebhook={updateWebhook} 
         regenerateApiKey={regenerateApiKey}
         empresa_id={empresa_id}
+        initialLembretes={initialLembretes}
+        saveLembreteAction={saveLembreteAction}
+        deleteLembreteAction={deleteLembreteAction}
+        toggleLembreteAction={toggleLembreteAction}
       />
     </div>
   );
