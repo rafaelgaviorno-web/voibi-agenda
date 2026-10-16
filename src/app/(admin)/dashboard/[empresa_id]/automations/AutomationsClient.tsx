@@ -1516,34 +1516,45 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
 
                 {/* Mapeamento de Campos no N8N */}
                 <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-2.5">
-                  <h5 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <Code className="w-3.5 h-3.5 text-purple-400" />
-                    Como mapear as variáveis no nó do WhatsApp no N8N:
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs font-mono">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <Code className="w-3.5 h-3.5 text-purple-400" />
+                      Variáveis retornadas para usar no nó HTTP do ChatVoibi / WhatsApp no N8N:
+                    </h5>
+                    <span className="text-[10px] text-zinc-500 font-mono">Prontas para o nó seguinte</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
                     <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
-                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Telefone do Paciente:</div>
-                      <div className="text-emerald-400 font-bold select-all">{'{{ $json.cliente.telefone }}'}</div>
+                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Telefone Limpo (só números):</div>
+                      <div className="text-emerald-400 font-bold select-all">{'{{ $json.cliente.telefone_limpo }}'}</div>
                     </div>
                     <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
-                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Mensagem Formatada:</div>
-                      <div className="text-purple-400 font-bold select-all">{'{{ $json.mensagem }}'}</div>
+                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Nome do Paciente:</div>
+                      <div className="text-amber-400 font-bold select-all">{'{{ $json.cliente.nome }}'}</div>
                     </div>
                     <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
                       <div className="text-zinc-500 text-[10px] uppercase font-sans">Data e Hora:</div>
                       <div className="text-blue-400 font-bold select-all">{'{{ $json.data_hora }}'}</div>
                     </div>
                     <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
-                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Primeiro Nome:</div>
-                      <div className="text-amber-400 font-bold select-all">{'{{ $json.cliente.primeiro_nome }}'}</div>
-                    </div>
-                    <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
-                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Nome do Profissional:</div>
+                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Profissional:</div>
                       <div className="text-teal-400 font-bold select-all">{'{{ $json.profissional.nome }}'}</div>
                     </div>
                     <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
                       <div className="text-zinc-500 text-[10px] uppercase font-sans">Procedimento:</div>
-                      <div className="text-rose-400 font-bold select-all">{'{{ $json.procedimento }}'}</div>
+                      <div className="text-rose-400 font-bold select-all">{'{{ $json.procedimento_nome }}'}</div>
+                    </div>
+                    <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
+                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Primeiro Nome:</div>
+                      <div className="text-amber-300 font-bold select-all">{'{{ $json.cliente.primeiro_nome }}'}</div>
+                    </div>
+                    <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
+                      <div className="text-zinc-500 text-[10px] uppercase font-sans">Mensagem Pronta (Opcional):</div>
+                      <div className="text-purple-400 font-bold select-all">{'{{ $json.mensagem }}'}</div>
+                    </div>
+                    <div className="bg-zinc-900 p-2.5 rounded-lg border border-zinc-800">
+                      <div className="text-zinc-500 text-[10px] uppercase font-sans">ID do Agendamento:</div>
+                      <div className="text-zinc-300 font-bold select-all">{'{{ $json.booking_id }}'}</div>
                     </div>
                   </div>
                 </div>

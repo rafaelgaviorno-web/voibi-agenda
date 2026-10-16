@@ -130,6 +130,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
           .replace(/\{\{\s*procedimento\s*\}\}/gi, procNome)
           .replace(/\{\{\s*servico\s*\}\}/gi, procNome);
 
+        const telefoneRaw = cliente.telefone || '';
+        const telefoneLimpo = telefoneRaw.replace(/\D/g, '');
+
         const item = {
           id: `lembrete_${b.id}_${r.id}`,
           booking_id: b.id,
@@ -142,18 +145,25 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
           data: dataFmt,
           hora: horaFmt,
           data_hora: dataHoraFmt,
+          observacao: b.observacao || '',
           cliente: {
             id: cliente.id,
             nome: clienteNome,
             primeiro_nome: primeiroNome,
-            telefone: cliente.telefone,
-            email: cliente.email
+            telefone: telefoneRaw,
+            telefone_limpo: telefoneLimpo,
+            email: cliente.email || ''
           },
           profissional: {
             id: profissional.id,
             nome: profNome
           },
-          procedimento: procNome,
+          procedimento: {
+            id: procedimento.id,
+            nome: procNome,
+            duracao_minutos: procedimento.duracao_minutos || 30
+          },
+          procedimento_nome: procNome,
           mensagem: mensagem
         };
 
