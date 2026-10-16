@@ -371,10 +371,10 @@ export default function AutomationsClient({
   ], null, 2);
 
   // cURLs Dinâmicos Prontos para o N8N
-  const curlLembretesAuto = `curl -X GET "${originUrl}/api/v1/lembretes/pendentes?marcar_enviado=true" \\
+  const curlLembretesAuto = `curl -X GET "${originUrl}/api/v1/lembretes/pendentes?marcar_enviado=true&formato=array" \\
   -H "Authorization: Bearer ${currentApiKey}"`;
 
-  const curlLembretesManualGet = `curl -X GET "${originUrl}/api/v1/lembretes/pendentes" \\
+  const curlLembretesManualGet = `curl -X GET "${originUrl}/api/v1/lembretes/pendentes?formato=array" \\
   -H "Authorization: Bearer ${currentApiKey}"`;
 
   const curlLembretesManualConfirm = `curl -X POST "${originUrl}/api/v1/lembretes/confirmar" \\
@@ -395,10 +395,10 @@ export default function AutomationsClient({
       category: 'lembretes',
       badgeColor: 'text-purple-400 bg-purple-950/60 border-purple-800',
       description: 'Retorna todas as mensagens de lembrete que devem ser enviadas neste momento com base nas regras ativas. Com ?marcar_enviado=true, já registra o envio para não duplicar.',
-      params: '?marcar_enviado=true (recomendado no n8n) ou ?horas_futuras=72',
-      curl: `curl -X GET "${originUrl}/api/v1/lembretes/pendentes?marcar_enviado=true" \\
+      params: '?marcar_enviado=true (recomendado no n8n) &formato=array (divide em itens no N8N)',
+      curl: `curl -X GET "${originUrl}/api/v1/lembretes/pendentes?marcar_enviado=true&formato=array" \\
   -H "Authorization: Bearer ${currentApiKey}"`,
-      n8nTip: 'Use no nó HTTP Request ("Import cURL"). Conecte ao WhatsApp usando {{ $json.cliente.telefone }} e {{ $json.mensagem }}.'
+      n8nTip: 'Com &formato=array, o N8N desmembra cada paciente automaticamente em um item separado, executando o nó seguinte para cada um!'
     },
     {
       id: 'lembretes_confirmar',
@@ -1098,7 +1098,7 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
                       {
                         "parameters": {
                           "method": "GET",
-                          "url": `${originUrl}/api/v1/lembretes/pendentes?marcar_enviado=true`,
+                          "url": `${originUrl}/api/v1/lembretes/pendentes?marcar_enviado=true&formato=array`,
                           "sendHeaders": true,
                           "headerParameters": {
                             "parameters": [

@@ -196,6 +196,15 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     }
   }
 
+  // Se o N8N solicitar em formato de array direto para desmembrar em múltiplos itens automaticamente
+  const querArray = searchParams.get('formato') === 'array' || 
+                    searchParams.get('array') === 'true' || 
+                    searchParams.get('n8n') === 'true';
+
+  if (querArray) {
+    return NextResponse.json(pendentes);
+  }
+
   return NextResponse.json({
     success: true,
     count: pendentes.length,
