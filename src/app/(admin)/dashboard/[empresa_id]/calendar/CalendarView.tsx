@@ -232,6 +232,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       slotMaxTime: '20:00:00',
       slotLabelInterval: '01:00:00',
       slotDuration: minInterval <= 15 ? '00:15:00' : (minInterval <= 20 ? '00:20:00' : '00:30:00'),
+      eventMinHeight: 48,
+      eventShortHeight: 40,
       allDaySlot: false,
       nowIndicator: true,
       dayHeaderFormat: { weekday: 'short', day: 'numeric', omitCommas: true },
@@ -283,43 +285,58 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const isPendente = statusAgendamento === 'pendente';
         const textStyle = isCancelado ? 'line-through opacity-75' : '';
 
+        // Visualização limpa em visualização de mês
+        if (arg.view.type === 'dayGridMonth') {
+          return {
+            html: `
+              <div title="${tooltipText}" class="px-1.5 py-0.5 text-white truncate text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
+                <span>${arg.timeText}</span>
+                <span class="truncate ${textStyle}">${arg.event.title}</span>
+              </div>
+            `
+          };
+        }
+
         const badges: string[] = [];
         if (arg.event.extendedProps.is_encaixe) {
-          badges.push('<span class="bg-yellow-400 text-yellow-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Encaixe</span>');
+          badges.push('<span class="bg-yellow-400 text-yellow-950 text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Encaixe</span>');
         }
         if (isPendente) {
-          badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Pendente</span>');
+          badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Pendente</span>');
         } else if (isCancelado) {
-          badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Cancelado</span>');
+          badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Cancelado</span>');
         } else {
-          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Confirmado</span>');
+          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Confirmado</span>');
         }
 
         // Exibe SEMPRE a badge do status de atendimento
         if (statusAtendimento === 'aguardando') {
-          badges.push('<span class="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30 animate-pulse">Aguardando</span>');
+          badges.push('<span class="bg-purple-600 text-white text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30 animate-pulse">Aguardando</span>');
         } else if (statusAtendimento === 'atendido') {
-          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Atendido</span>');
+          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Atendido</span>');
         } else if (statusAtendimento === 'faltou') {
-          badges.push('<span class="bg-red-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Faltou</span>');
+          badges.push('<span class="bg-red-700 text-white text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Faltou</span>');
         } else if (statusAtendimento === 'reagendou') {
-          badges.push('<span class="bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Reagendou</span>');
+          badges.push('<span class="bg-orange-600 text-white text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Reagendou</span>');
         } else {
-          badges.push('<span class="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Agendado</span>');
+          badges.push('<span class="bg-blue-600 text-white text-[8px] font-black px-1 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Agendado</span>');
         }
 
         const badgesHtml = badges.length > 0 
-          ? `<div class="flex flex-wrap items-center gap-1 mb-1">${badges.join('')}</div>` 
+          ? `<div class="flex items-center gap-1 flex-wrap mb-0.5 shrink-0">${badges.join('')}</div>` 
           : '';
 
         if (durationMins <= 30) {
           return {
             html: `
-              <div title="${tooltipText}" class="px-1 py-0.5 leading-none text-white h-full flex flex-col justify-center overflow-hidden cursor-pointer relative">
+              <div title="${tooltipText}" class="px-1.5 py-1 text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative select-none">
                 ${badgesHtml}
-                <div class="font-semibold text-[11px] truncate w-full mb-[2px] ${textStyle}">${arg.event.title} &bull; ${arg.event.extendedProps.whatsapp || 'S/Wpp'}</div>
-                <div class="text-[10px] opacity-80 truncate w-full">
-                  ${arg.event.extendedProps.servico || 'Agendamento'}
+                <div class="font-bold text-[11px] leading-tight truncate text-white drop-shadow-sm mt-0.5 ${textStyle}">
+                  ${arg.event.title}
+                </div>
+                <div class="text-[10px] text-white/95 font-medium leading-tight truncate flex items-center gap-1 mt-0.5">
+                  <span>📞 ${arg.event.extendedProps.whatsapp || 'S/ Telefone'}</span>
+                  ${arg.event.extendedProps.servico ? `<span class="opacity-75 font-normal">&bull; ${arg.event.extendedProps.servico}</span>` : ''}
                 </div>
               </div>
             `
@@ -328,14 +345,16 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
         return {
           html: `
-            <div title="${tooltipText}" class="p-1 leading-tight text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative">
+            <div title="${tooltipText}" class="p-1.5 text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative select-none">
               ${badgesHtml}
-              <div class="font-semibold text-[13px] truncate ${textStyle}">${arg.event.title}</div>
-              <div class="text-[11px] opacity-90 truncate flex items-center gap-1 mt-0.5">
-                ${arg.event.extendedProps.whatsapp || 'S/ WhatsApp'}
+              <div class="font-bold text-[13px] leading-snug truncate text-white drop-shadow-sm mt-0.5 ${textStyle}">
+                ${arg.event.title}
               </div>
-              <div class="text-[11px] opacity-75 truncate mt-0.5">
-                ${arg.event.extendedProps.servico || 'Agendamento'}
+              <div class="text-[11px] text-white/95 font-medium truncate flex items-center gap-1 mt-0.5">
+                📞 ${arg.event.extendedProps.whatsapp || 'S/ Telefone'}
+              </div>
+              <div class="text-[10px] text-white/80 truncate mt-0.5 flex items-center gap-1">
+                🩺 ${arg.event.extendedProps.servico || 'Agendamento'}
               </div>
             </div>
           `
