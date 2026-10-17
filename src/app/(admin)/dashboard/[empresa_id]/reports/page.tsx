@@ -72,7 +72,7 @@ export default async function ReportsPage({ params }: { params: Promise<{ empres
     unidades = uns || [];
 
     const { data: agendamentosData } = await supabase.from('agend_agendamentos').select(`
-      id, inicio, fim, status, is_encaixe,
+      id, inicio, fim, status, status_atendimento, is_encaixe,
       cliente:agend_clientes_finais(nome, telefone),
       profissional:agend_profissionais!inner(id, nome, cor, empresa_id),
       evento:agend_tipos_evento(id, nome)

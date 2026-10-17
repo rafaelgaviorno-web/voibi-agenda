@@ -25,6 +25,7 @@ export default function ReportsClient({
   const [filtroUnidade, setFiltroUnidade] = useState('');
   const [filtroAgenda, setFiltroAgenda] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('');
+  const [filtroAtendimento, setFiltroAtendimento] = useState('');
   const [filtroProcedimento, setFiltroProcedimento] = useState('');
   
   // Dates
@@ -81,8 +82,11 @@ export default function ReportsClient({
     // 4. Agenda (Profissional)
     if (filtroAgenda && ev.profissional?.id !== filtroAgenda) return false;
 
-    // 5. Status
+    // 5. Status do Agendamento
     if (filtroStatus && ev.status !== filtroStatus) return false;
+
+    // 5.1 Status do Atendimento
+    if (filtroAtendimento && (ev.status_atendimento || 'agendado') !== filtroAtendimento) return false;
 
     // 6. Procedimento
     if (filtroProcedimento && ev.evento?.id !== filtroProcedimento) return false;
@@ -93,18 +97,27 @@ export default function ReportsClient({
   // Sort by date/time
   filteredEvents.sort((a, b) => new Date(a.inicio || a.start).getTime() - new Date(b.inicio || b.start).getTime());
 
-  const getStatusColor = (status: string) => {
+  const getStatusAgendamentoColor = (status: string) => {
     switch (status) {
-      case 'confirmado': return 'bg-green-100 text-green-700';
-      case 'pendente': return 'bg-yellow-100 text-yellow-700';
-      case 'cancelado': return 'bg-red-100 text-red-700';
-      case 'atendido': return 'bg-blue-100 text-blue-700';
-      case 'faltou': return 'bg-gray-100 text-gray-700';
+      case 'confirmado': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300';
+      case 'pendente': return 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
+      case 'cancelado': return 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300';
       default: return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300';
     }
   };
 
-  const statusOptions = ['confirmado', 'pendente', 'cancelado', 'atendido', 'faltou', 'reagendou'];
+  const getStatusAtendimentoColor = (status: string) => {
+    switch (status) {
+      case 'agendado': return 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300';
+      case 'atendido': return 'bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300';
+      case 'faltou': return 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300';
+      case 'reagendou': return 'bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300';
+      default: return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300';
+    }
+  };
+
+  const statusAgendamentoOptions = ['confirmado', 'pendente', 'cancelado'];
+  const statusAtendimentoOptions = ['agendado', 'atendido', 'faltou', 'reagendou'];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -213,14 +226,27 @@ export default function ReportsClient({
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                <Filter className="w-3.5 h-3.5" /> Status
+                <Filter className="w-3.5 h-3.5" /> Agendamento
               </label>
               <select 
                 value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}
                 className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize"
               >
-                <option value="">Todos os Status</option>
-                {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                <option value="">Todos</option>
+                {statusAgendamentoOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5" /> Atendimento
+              </label>
+              <select 
+                value={filtroAtendimento} onChange={e => setFiltroAtendimento(e.target.value)}
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize"
+              >
+                <option value="">Todos</option>
+                {statusAtendimentoOptions.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
@@ -235,13 +261,14 @@ export default function ReportsClient({
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Paciente</th>
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Agenda</th>
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Procedimento</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Status</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Agendamento</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Atendimento</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {filteredEvents.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                    <td colSpan={6} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
                       <FileText className="w-8 h-8 text-zinc-300 mx-auto mb-3" />
                       <p>Nenhum agendamento encontrado para os filtros selecionados.</p>
                     </td>
@@ -278,8 +305,13 @@ export default function ReportsClient({
                           )}
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(ev.status)}`}>
-                            {ev.status || 'pendente'}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${getStatusAgendamentoColor(ev.status || 'confirmado')}`}>
+                            {ev.status || 'confirmado'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${getStatusAtendimentoColor(ev.status_atendimento || 'agendado')}`}>
+                            {ev.status_atendimento || 'agendado'}
                           </span>
                         </td>
                       </tr>

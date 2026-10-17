@@ -25,6 +25,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       inicio,
       fim,
       status,
+      status_atendimento,
       observacao,
       is_encaixe,
       created_at,
@@ -41,6 +42,12 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     query = query.eq('status', statusParam);
   } else if (!statusParam) {
     query = query.in('status', ['confirmado', 'remarcado']);
+  }
+
+  // Filtro por Status de Atendimento (ex: agendado, atendido, faltou, reagendou)
+  const statusAtendimentoParam = searchParams.get('status_atendimento');
+  if (statusAtendimentoParam && statusAtendimentoParam !== 'all') {
+    query = query.eq('status_atendimento', statusAtendimentoParam);
   }
 
   // Filtro por Data
@@ -291,7 +298,8 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       cliente_id: clienteId,
       inicio: inicioIso,
       fim: fimIso,
-      status: 'confirmado',
+      status: body.status || 'confirmado',
+      status_atendimento: body.status_atendimento || 'agendado',
       observacao: obsFinal
     })
     .select(`
@@ -299,6 +307,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       inicio,
       fim,
       status,
+      status_atendimento,
       observacao,
       created_at,
       agend_clientes_finais(id, nome, email, telefone),

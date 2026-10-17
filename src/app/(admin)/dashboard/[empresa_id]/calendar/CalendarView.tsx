@@ -96,6 +96,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          fim: `${formData.data}T${formData.horaFim}:00`,
          observacao: formData.observacao,
          status: formData.status,
+         status_atendimento: formData.status_atendimento,
          is_encaixe: formData.is_encaixe
        } : e);
        setLocalEvents(updated);
@@ -114,6 +115,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          inicio: `${formData.data}T${formData.horaInicio}:00`,
          fim: `${formData.data}T${formData.horaFim}:00`,
          status: formData.status || 'confirmado',
+         status_atendimento: formData.status_atendimento || 'agendado',
          observacao: formData.observacao,
          is_encaixe: formData.is_encaixe
        };
@@ -171,12 +173,18 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const isBlock = e.status === 'bloqueio';
         const isGlobalBlock = isBlock && !e.profissional;
 
+        const isCancelado = e.status === 'cancelado';
+        const isPendente = e.status === 'pendente';
+        const statusAtendimento = e.status_atendimento || 'agendado';
+
         const backgroundColor = 
           isGlobalBlock ? '#fee2e2' : // Fundo vermelho claro para bloqueio geral
           isBlock ? '#64748b' : // Cinza/grafite para bloqueio especifico
-          e.status === 'atendido' ? '#16a34a' :
-          e.status === 'faltou' ? '#dc2626' :
-          e.status === 'reagendou' ? '#f97316' :
+          isCancelado ? '#64748b' : // Cinza escuro para cancelado
+          statusAtendimento === 'atendido' ? '#16a34a' :
+          statusAtendimento === 'faltou' ? '#dc2626' :
+          statusAtendimento === 'reagendou' ? '#ea580c' :
+          isPendente ? '#d97706' : // Âmbar para pendente
           e.profissional?.cor || e.agendaCor || '#4285f4';
 
         return {
@@ -190,7 +198,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           extendedProps: {
             whatsapp: e.cliente?.whatsapp || e.cliente?.telefone || '',
             servico: e.evento?.nome || e.servico || '',
-            status: e.status,
+            status: e.status || 'confirmado',
+            status_atendimento: statusAtendimento,
             is_encaixe: e.is_encaixe || false
           }
         };
@@ -257,15 +266,44 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const end = arg.event.end;
         const durationMins = (end && start) ? (end.valueOf() - start.valueOf()) / 60000 : 60;
         
-        const tooltipText = `Paciente: ${arg.event.title}\nWhatsApp: ${arg.event.extendedProps.whatsapp || 'Não informado'}\nProcedimento: ${arg.event.extendedProps.servico || 'Agendamento'}\nHorário: ${arg.timeText}`;
+        const statusAgendamento = arg.event.extendedProps.status || 'confirmado';
+        const statusAtendimento = arg.event.extendedProps.status_atendimento || 'agendado';
+        
+        const tooltipText = `Paciente: ${arg.event.title}\nAgendamento: ${statusAgendamento.toUpperCase()}\nAtendimento: ${statusAtendimento.toUpperCase()}\nWhatsApp: ${arg.event.extendedProps.whatsapp || 'Não informado'}\nProcedimento: ${arg.event.extendedProps.servico || 'Agendamento'}\nHorário: ${arg.timeText}`;
+
+        const isCancelado = statusAgendamento === 'cancelado';
+        const isPendente = statusAgendamento === 'pendente';
+        const textStyle = isCancelado ? 'line-through opacity-75' : '';
+
+        const badges: string[] = [];
+        if (arg.event.extendedProps.is_encaixe) {
+          badges.push('<span class="bg-yellow-400 text-yellow-950 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Encaixe</span>');
+        }
+        if (isPendente) {
+          badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Pendente</span>');
+        } else if (isCancelado) {
+          badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Cancelado</span>');
+        }
+
+        if (statusAtendimento === 'atendido') {
+          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Atendido</span>');
+        } else if (statusAtendimento === 'faltou') {
+          badges.push('<span class="bg-red-700 text-white text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Faltou</span>');
+        } else if (statusAtendimento === 'reagendou') {
+          badges.push('<span class="bg-orange-600 text-white text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Reagendou</span>');
+        }
+
+        const badgesHtml = badges.length > 0 
+          ? `<div class="flex flex-wrap items-center gap-1 mb-1">${badges.join('')}</div>` 
+          : '';
 
         if (durationMins <= 30) {
           return {
             html: `
               <div title="${tooltipText}" class="px-1 py-0.5 leading-none text-white h-full flex flex-col justify-center overflow-hidden cursor-pointer relative">
-                ${arg.event.extendedProps.is_encaixe ? '<div class="absolute top-0 left-0 bg-yellow-400 text-yellow-900 text-[8px] font-bold px-1 rounded-br-sm z-10" style="padding: 1px 3px;">ENCAIXE</div>' : ''}
-                <div class="font-semibold text-[11px] truncate w-full mb-[2px] pl-${arg.event.extendedProps.is_encaixe ? '10' : '0'}">${arg.event.title} &bull; ${arg.event.extendedProps.whatsapp || 'S/Wpp'}</div>
-                <div class="text-[10px] opacity-80 truncate w-full pl-${arg.event.extendedProps.is_encaixe ? '10' : '0'}">
+                ${badgesHtml}
+                <div class="font-semibold text-[11px] truncate w-full mb-[2px] ${textStyle}">${arg.event.title} &bull; ${arg.event.extendedProps.whatsapp || 'S/Wpp'}</div>
+                <div class="text-[10px] opacity-80 truncate w-full">
                   ${arg.event.extendedProps.servico || 'Agendamento'}
                 </div>
               </div>
@@ -276,8 +314,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         return {
           html: `
             <div title="${tooltipText}" class="p-1 leading-tight text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative">
-              ${arg.event.extendedProps.is_encaixe ? '<div class="absolute top-0 left-0 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1.5 py-0.5 rounded-br z-10">ENCAIXE</div>' : ''}
-              <div class="font-semibold text-[13px] truncate pt-${arg.event.extendedProps.is_encaixe ? '3' : '0'}">${arg.event.title}</div>
+              ${badgesHtml}
+              <div class="font-semibold text-[13px] truncate ${textStyle}">${arg.event.title}</div>
               <div class="text-[11px] opacity-90 truncate flex items-center gap-1 mt-0.5">
                 ${arg.event.extendedProps.whatsapp || 'S/ WhatsApp'}
               </div>
@@ -362,7 +400,10 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
              horaFim: adjustedHoraFim,
              agendaId: original.profissional?.id,
              procedimentoId: original.evento?.id,
-             observacao: original.observacao
+             observacao: original.observacao,
+             status: original.status,
+             status_atendimento: original.status_atendimento,
+             is_encaixe: original.is_encaixe
            };
            await handleSaveEvent(formData);
         }
@@ -385,7 +426,10 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
              horaFim: adjustedHoraFim,
              agendaId: original.profissional?.id,
              procedimentoId: original.evento?.id,
-             observacao: original.observacao
+             observacao: original.observacao,
+             status: original.status,
+             status_atendimento: original.status_atendimento,
+             is_encaixe: original.is_encaixe
            };
            await handleSaveEvent(formData);
         }

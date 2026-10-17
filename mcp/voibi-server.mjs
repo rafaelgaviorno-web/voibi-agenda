@@ -108,7 +108,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             status: {
               type: 'string',
-              description: 'Filtrar por status (ex: "confirmado", "remarcado", "cancelado", "atendido" ou "all"). Padrão: confirmados e remarcados.',
+              description: 'Filtrar por status de agendamento (ex: "confirmado", "pendente", "cancelado" ou "all"). Padrão: confirmados.',
+            },
+            status_atendimento: {
+              type: 'string',
+              description: 'Filtrar por status de atendimento (ex: "agendado", "atendido", "faltou", "reagendou" ou "all").',
             },
             agenda: {
               type: 'string',
@@ -193,7 +197,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             status: {
               type: 'string',
-              description: 'Novo status do agendamento (ex: "confirmado", "remarcado", "atendido").',
+              description: 'Novo status de agendamento (ex: "confirmado", "pendente", "cancelado").',
+            },
+            status_atendimento: {
+              type: 'string',
+              description: 'Novo status de atendimento (ex: "agendado", "atendido", "faltou", "reagendou").',
             },
             observacao: {
               type: 'string',
@@ -292,6 +300,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const params = new URLSearchParams();
         if (args.date) params.set('data', args.date);
         if (args.status) params.set('status', args.status);
+        if (args.status_atendimento) params.set('status_atendimento', args.status_atendimento);
         if (args.agenda) params.set('agenda', args.agenda);
         if (args.telefone) params.set('telefone', args.telefone);
         if (args.email) params.set('email', args.email);
@@ -349,6 +358,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!args.id) throw new Error('O ID do agendamento é obrigatório.');
         const payload = {};
         if (args.status !== undefined) payload.status = args.status;
+        if (args.status_atendimento !== undefined) payload.status_atendimento = args.status_atendimento;
         if (args.observacao !== undefined) payload.observacao = args.observacao;
         if (args.inicio !== undefined) payload.inicio = args.inicio;
         if (args.fim !== undefined) payload.fim = args.fim;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Calendar as CalendarIcon, Clock, User, Phone, FileText, Trash2 } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, User, Phone, FileText, Trash2, CheckCircle2, Check, UserCheck, AlertCircle } from 'lucide-react';
 
 export default function EventModal({ 
   isOpen, 
@@ -35,6 +35,7 @@ export default function EventModal({
     procedimentoId: '',
     observacao: '',
     status: 'confirmado',
+    status_atendimento: 'agendado',
     is_encaixe: false
   });
 
@@ -73,6 +74,7 @@ export default function EventModal({
         procedimentoId: event.evento?.id || '',
         observacao: event.observacao || '',
         status: event.status || 'confirmado',
+        status_atendimento: event.status_atendimento || 'agendado',
         is_encaixe: event.is_encaixe || false
       });
     } else {
@@ -92,6 +94,7 @@ export default function EventModal({
         procedimentoId: initialProcId,
         observacao: '',
         status: 'confirmado',
+        status_atendimento: 'agendado',
         is_encaixe: false
       });
     }
@@ -240,32 +243,118 @@ export default function EventModal({
         {/* Form Body */}
         <form id="event-form" onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
           
-          {isEditMode && (
-            <div className="flex items-center gap-2 mb-2 p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-100 dark:border-zinc-800">
-              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mr-2">Status:</span>
-              <button 
-                type="button"
-                onClick={() => setFormData({...formData, status: 'atendido'})}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'atendido' ? 'bg-[#10b981] text-white shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-[#10b981] hover:text-[#10b981]'}`}
-              >
-                Atendido
-              </button>
-              <button 
-                type="button"
-                onClick={() => setFormData({...formData, status: 'faltou'})}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'faltou' ? 'bg-[#ef4444] text-white shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-[#ef4444] hover:text-[#ef4444]'}`}
-              >
-                Faltou
-              </button>
-              <button 
-                type="button"
-                onClick={() => setFormData({...formData, status: 'reagendou'})}
-                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${formData.status === 'reagendou' ? 'bg-[#f97316] text-white shadow-sm' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-[#f97316] hover:text-[#f97316]'}`}
-              >
-                Reagendou
-              </button>
+          {/* Status do Agendamento & Status do Atendimento */}
+          <div className="space-y-3 p-3.5 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800">
+            {/* 1. Status do Agendamento (Confirmado / Pendente / Cancelado) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                  Status do Agendamento:
+                </span>
+                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded text-zinc-500 bg-zinc-200 dark:bg-zinc-800">
+                  {formData.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status: 'confirmado'})}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                    formData.status === 'confirmado' 
+                      ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 hover:text-emerald-600'
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Confirmado
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status: 'pendente'})}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                    formData.status === 'pendente' 
+                      ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-amber-500 hover:text-amber-600'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  Pendente
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status: 'cancelado'})}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                    formData.status === 'cancelado' 
+                      ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-500/20' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-rose-500 hover:text-rose-600'
+                  }`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Cancelado
+                </button>
+              </div>
             </div>
-          )}
+
+            {/* 2. Status do Atendimento (Presença na Clínica) */}
+            <div className="space-y-1.5 pt-2 border-t border-zinc-200/70 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-indigo-500" />
+                  Status do Atendimento:
+                </span>
+                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded text-zinc-500 bg-zinc-200 dark:bg-zinc-800">
+                  {formData.status_atendimento}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status_atendimento: 'agendado'})}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                    formData.status_atendimento === 'agendado' 
+                      ? 'bg-zinc-800 dark:bg-zinc-700 text-white shadow-sm font-semibold' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  Agendado
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status_atendimento: 'atendido'})}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                    formData.status_atendimento === 'atendido' 
+                      ? 'bg-emerald-600 text-white shadow-sm font-semibold' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 hover:text-emerald-600'
+                  }`}
+                >
+                  Atendido
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status_atendimento: 'faltou'})}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                    formData.status_atendimento === 'faltou' 
+                      ? 'bg-red-600 text-white shadow-sm font-semibold' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-red-500 hover:text-red-600'
+                  }`}
+                >
+                  Faltou
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status_atendimento: 'reagendou'})}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                    formData.status_atendimento === 'reagendou' 
+                      ? 'bg-orange-500 text-white shadow-sm font-semibold' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-orange-500 hover:text-orange-600'
+                  }`}
+                >
+                  Reagendou
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
