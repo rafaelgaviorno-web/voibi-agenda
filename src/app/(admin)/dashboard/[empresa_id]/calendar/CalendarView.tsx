@@ -232,8 +232,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       slotMaxTime: '20:00:00',
       slotLabelInterval: '01:00:00',
       slotDuration: minInterval <= 15 ? '00:15:00' : (minInterval <= 20 ? '00:20:00' : '00:30:00'),
-      eventMinHeight: 60,
-      eventShortHeight: 52,
+      eventMinHeight: 38,
+      eventShortHeight: 32,
       allDaySlot: false,
       nowIndicator: true,
       dayHeaderFormat: { weekday: 'short', day: 'numeric', omitCommas: true },
@@ -329,14 +329,10 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         if (durationMins <= 30) {
           return {
             html: `
-              <div title="${tooltipText}" class="px-2 py-1.5 text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative select-none">
+              <div title="${tooltipText}" class="px-2 py-1 text-white h-full flex flex-col justify-center overflow-hidden cursor-pointer relative select-none">
                 ${badgesHtml}
-                <div class="font-bold text-[12px] leading-normal truncate text-white shrink-0 ${textStyle}">
+                <div class="font-bold text-[12px] leading-tight truncate text-white shrink-0 ${textStyle}">
                   ${arg.event.title}
-                </div>
-                <div class="text-[11px] text-white/95 font-medium leading-normal truncate flex items-center gap-1 shrink-0">
-                  <span>📞 ${arg.event.extendedProps.whatsapp || 'S/ Telefone'}</span>
-                  ${arg.event.extendedProps.servico ? `<span class="opacity-80 font-normal">&bull; ${arg.event.extendedProps.servico}</span>` : ''}
                 </div>
               </div>
             `
@@ -345,15 +341,12 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
         return {
           html: `
-            <div title="${tooltipText}" class="p-2 text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative select-none">
+            <div title="${tooltipText}" class="px-2 py-1.5 text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative select-none">
               ${badgesHtml}
-              <div class="font-bold text-[13px] leading-normal truncate text-white shrink-0 ${textStyle}">
+              <div class="font-bold text-[13px] leading-tight truncate text-white mt-0.5 shrink-0 ${textStyle}">
                 ${arg.event.title}
               </div>
-              <div class="text-[11px] text-white/95 font-medium leading-normal truncate flex items-center gap-1 mt-0.5 shrink-0">
-                📞 ${arg.event.extendedProps.whatsapp || 'S/ Telefone'}
-              </div>
-              <div class="text-[10px] text-white/80 truncate mt-0.5 flex items-center gap-1 shrink-0">
+              <div class="text-[11px] text-white/85 truncate mt-0.5 flex items-center gap-1 shrink-0">
                 🩺 ${arg.event.extendedProps.servico || 'Agendamento'}
               </div>
             </div>

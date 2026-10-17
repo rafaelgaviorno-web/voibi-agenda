@@ -44,8 +44,8 @@
 }
 
 .fc-timegrid-slot {
-  height: 56px !important;
-  min-height: 56px !important;
+  height: 42px !important;
+  min-height: 42px !important;
   border-bottom: 1px dotted #e8eaed !important;
 }
 
@@ -58,11 +58,11 @@
 .fc-timegrid-event {
   border-radius: 6px;
   border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.18);
-  padding: 3px 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.15);
+  padding: 2px 6px;
   transition: all 0.15s ease;
   cursor: pointer;
-  min-height: 60px !important;
+  min-height: 38px !important;
   overflow: hidden;
 }
 
