@@ -166,7 +166,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
         evento: { nome: 'Agendamento Externo' },
         inicio: startIso,
         fim: endIso,
-        status: 'confirmado',
+        status: 'pendente',
         respostas_personalizadas: respostasEstruturadas,
         observacao: 'Agendado pelo site público\n' + 
           Object.entries(customAnswers).map(([k,v]) => {

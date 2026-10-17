@@ -77,7 +77,7 @@ export async function saveAppointment(data: any, empresaId: string) {
           cliente_id: clienteId,
           inicio: inicioIso,
           fim: fimIso,
-          status: data.status || 'confirmado',
+          status: data.status || 'pendente',
           status_atendimento: data.status_atendimento || 'agendado',
           observacao: data.observacao,
           is_encaixe: data.is_encaixe
@@ -110,7 +110,7 @@ export async function saveAppointment(data: any, empresaId: string) {
           cliente_id: clienteId,
           inicio: inicioIso,
           fim: fimIso,
-          status: data.status || 'confirmado',
+          status: data.status || 'pendente',
           status_atendimento: data.status_atendimento || 'agendado',
           observacao: data.observacao,
           is_encaixe: data.is_encaixe

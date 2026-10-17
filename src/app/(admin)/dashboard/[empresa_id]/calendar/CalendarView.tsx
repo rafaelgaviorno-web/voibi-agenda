@@ -114,7 +114,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId),
          inicio: `${formData.data}T${formData.horaInicio}:00`,
          fim: `${formData.data}T${formData.horaFim}:00`,
-         status: formData.status || 'confirmado',
+         status: formData.status || 'pendente',
          status_atendimento: formData.status_atendimento || 'agendado',
          observacao: formData.observacao,
          is_encaixe: formData.is_encaixe
@@ -199,7 +199,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           extendedProps: {
             whatsapp: e.cliente?.whatsapp || e.cliente?.telefone || '',
             servico: e.evento?.nome || e.servico || '',
-            status: e.status || 'confirmado',
+            status: e.status || 'pendente',
             status_atendimento: statusAtendimento,
             is_encaixe: e.is_encaixe || false
           }
@@ -274,7 +274,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const end = arg.event.end;
         const durationMins = (end && start) ? (end.valueOf() - start.valueOf()) / 60000 : 60;
         
-        const statusAgendamento = arg.event.extendedProps.status || 'confirmado';
+        const statusAgendamento = arg.event.extendedProps.status || 'pendente';
         const statusAtendimento = arg.event.extendedProps.status_atendimento || 'agendado';
         
         const tooltipText = `Paciente: ${arg.event.title}\nAgendamento: ${statusAgendamento.toUpperCase()}\nAtendimento: ${statusAtendimento.toUpperCase()}\nWhatsApp: ${arg.event.extendedProps.whatsapp || 'Não informado'}\nProcedimento: ${arg.event.extendedProps.servico || 'Agendamento'}\nHorário: ${arg.timeText}`;
@@ -291,6 +291,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Pendente</span>');
         } else if (isCancelado) {
           badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Cancelado</span>');
+        } else {
+          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Confirmado</span>');
         }
 
         // Exibe SEMPRE a badge do status de atendimento

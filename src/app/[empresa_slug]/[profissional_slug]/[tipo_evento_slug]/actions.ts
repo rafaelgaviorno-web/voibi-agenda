@@ -117,7 +117,7 @@ export async function createBookingAction(formData: FormData) {
       cliente_id: clienteId,
       inicio,
       fim,
-      status: 'confirmado'
+      status: 'pendente'
     })
     .select('*')
     .single();

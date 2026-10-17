@@ -65,7 +65,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       agend_profissionais!inner(id, nome, cor, empresa_id)
     `)
     .eq('agend_profissionais.empresa_id', auth.empresa.id)
-    .in('status', ['confirmado', 'remarcado'])
+    .in('status', ['confirmado', 'pendente', 'remarcado'])
     .gt('inicio', now.toISOString())
     .lte('inicio', limiteFimBusca.toISOString())
     .order('inicio', { ascending: true });

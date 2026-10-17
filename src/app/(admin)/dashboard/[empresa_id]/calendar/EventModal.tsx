@@ -34,7 +34,7 @@ export default function EventModal({
     agendaId: '',
     procedimentoId: '',
     observacao: '',
-    status: 'confirmado',
+    status: 'pendente',
     status_atendimento: 'agendado',
     is_encaixe: false
   });
@@ -73,7 +73,7 @@ export default function EventModal({
         agendaId: event.profissional?.id || event.agendaId || '',
         procedimentoId: event.evento?.id || '',
         observacao: event.observacao || '',
-        status: event.status || 'confirmado',
+        status: event.status || 'pendente',
         status_atendimento: event.status_atendimento || 'agendado',
         is_encaixe: event.is_encaixe || false
       });
@@ -93,7 +93,7 @@ export default function EventModal({
         agendaId: agendas[0]?.id || '',
         procedimentoId: initialProcId,
         observacao: '',
-        status: 'confirmado',
+        status: 'pendente',
         status_atendimento: 'agendado',
         is_encaixe: false
       });
@@ -262,18 +262,6 @@ export default function EventModal({
               <div className="grid grid-cols-3 gap-1.5">
                 <button 
                   type="button"
-                  onClick={() => setFormData({...formData, status: 'confirmado'})}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                    formData.status === 'confirmado' 
-                      ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20' 
-                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 hover:text-emerald-600'
-                  }`}
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  Confirmado
-                </button>
-                <button 
-                  type="button"
                   onClick={() => setFormData({...formData, status: 'pendente'})}
                   className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
                     formData.status === 'pendente' 
@@ -283,6 +271,18 @@ export default function EventModal({
                 >
                   <Clock className="w-3.5 h-3.5" />
                   Pendente
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status: 'confirmado'})}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                    formData.status === 'confirmado' 
+                      ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 hover:text-emerald-600'
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Confirmado
                 </button>
                 <button 
                   type="button"
