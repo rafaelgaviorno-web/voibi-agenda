@@ -107,7 +107,9 @@ export default function EventModal({
   const getDuracao = (procIdOverride?: string) => {
     const pid = procIdOverride !== undefined ? procIdOverride : formData.procedimentoId;
     const p = procedimentos?.find(p => p.id === pid);
-    return p ? p.duracao_minutos : 30;
+    if (p) return p.duracao_minutos;
+    const selectedAgenda = agendas.find(a => a.id === formData.agendaId);
+    return selectedAgenda?.intervalo_minutos || 30;
   };
 
   const calculateEnd = (start: string, procIdOverride?: string) => {
@@ -122,6 +124,7 @@ export default function EventModal({
   useEffect(() => {
     if (formData.agendaId && formData.data) {
        const selectedAgenda = agendas.find(a => a.id === formData.agendaId);
+       const agendaInterval = selectedAgenda?.intervalo_minutos || 30;
        
        const [year, month, day] = formData.data.split('-');
        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
@@ -160,7 +163,7 @@ export default function EventModal({
              if (!isBooked) {
                 slots.push(timeStr);
              }
-             current = new Date(current.getTime() + 30 * 60000);
+             current = new Date(current.getTime() + agendaInterval * 60000);
           }
        });
        

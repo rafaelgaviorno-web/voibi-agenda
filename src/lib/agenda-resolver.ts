@@ -4,6 +4,7 @@ export interface ResolvedAgenda {
   id: string;
   nome: string;
   cor?: string;
+  intervalo_minutos?: number;
   webhook_url?: string | null;
   permitir_sobreposicao?: boolean;
 }
@@ -29,7 +30,7 @@ export async function resolveProfissional(
   if (isProfUuid) {
     const { data: p } = await supabase
       .from('agend_profissionais')
-      .select('id, nome, cor, webhook_url, permitir_sobreposicao')
+      .select('id, nome, cor, intervalo_minutos, webhook_url, permitir_sobreposicao')
       .eq('id', cleanProf)
       .eq('empresa_id', empresaId)
       .maybeSingle();
@@ -40,7 +41,7 @@ export async function resolveProfissional(
   // 1. Tentar busca exata ou ilike direto
   const { data: directMatch } = await supabase
     .from('agend_profissionais')
-    .select('id, nome, cor, webhook_url, permitir_sobreposicao')
+    .select('id, nome, cor, intervalo_minutos, webhook_url, permitir_sobreposicao')
     .eq('empresa_id', empresaId)
     .ilike('nome', `%${cleanProf}%`)
     .limit(1)
@@ -53,7 +54,7 @@ export async function resolveProfissional(
   if (stripped && stripped !== cleanProf) {
     const { data: strippedMatch } = await supabase
       .from('agend_profissionais')
-      .select('id, nome, cor, webhook_url, permitir_sobreposicao')
+      .select('id, nome, cor, intervalo_minutos, webhook_url, permitir_sobreposicao')
       .eq('empresa_id', empresaId)
       .ilike('nome', `%${stripped}%`)
       .limit(1)
@@ -72,7 +73,7 @@ export async function resolveProfissional(
   for (const word of words) {
     const { data: wordMatch } = await supabase
       .from('agend_profissionais')
-      .select('id, nome, cor, webhook_url, permitir_sobreposicao')
+      .select('id, nome, cor, intervalo_minutos, webhook_url, permitir_sobreposicao')
       .eq('empresa_id', empresaId)
       .ilike('nome', `%${word}%`)
       .limit(1)

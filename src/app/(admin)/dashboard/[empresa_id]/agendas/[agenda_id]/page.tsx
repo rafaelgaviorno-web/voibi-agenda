@@ -59,6 +59,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
   async function saveBasico(data: { 
     nome: string; 
     cor: string; 
+    intervalo_minutos?: number;
     webhook_url?: string; 
     permitir_sobreposicao?: boolean; 
     campos_personalizados?: any[]; 
@@ -69,6 +70,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
       const { error } = await supabase.from('agend_profissionais').update({ 
         nome: data.nome, 
         cor: data.cor,
+        intervalo_minutos: data.intervalo_minutos || 30,
         webhook_url: data.webhook_url || null,
         permitir_sobreposicao: !!data.permitir_sobreposicao,
         campos_personalizados: data.campos_personalizados || []
@@ -94,6 +96,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
           ...customAgendas[idx],
           nome: data.nome,
           cor: data.cor,
+          intervalo_minutos: data.intervalo_minutos || 30,
           webhook_url: data.webhook_url,
           permitir_sobreposicao: data.permitir_sobreposicao,
           campos_personalizados: data.campos_personalizados
@@ -103,6 +106,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
           id: agenda_id,
           nome: data.nome,
           cor: data.cor,
+          intervalo_minutos: data.intervalo_minutos || 30,
           webhook_url: data.webhook_url,
           permitir_sobreposicao: data.permitir_sobreposicao,
           campos_personalizados: data.campos_personalizados

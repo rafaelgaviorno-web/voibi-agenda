@@ -5,6 +5,7 @@ export interface EventTypeParams {
   bufferBeforeMinutes: number;
   bufferAfterMinutes: number;
   minNoticeHours: number;
+  intervalMinutes?: number;
 }
 
 export interface TimeSlot {
@@ -26,7 +27,7 @@ export interface BookingOrBlock {
  * Motor de cálculo de disponibilidade
  * @param date Data base para gerar os horários (no fuso horário local da busca)
  * @param availabilityRegras Lista de janelas de tempo disponíveis no dia (ex: 09:00-12:00, 13:00-18:00)
- * @param eventType Configurações do tipo de evento
+ * @param eventType Configurações do tipo de evento e intervalo da agenda
  * @param existingBookings Agendamentos já confirmados/remarcados do profissional
  * @param blocks Bloqueios/exceções do profissional
  * @param now Data/hora atual para cálculo de antecedência mínima
@@ -41,6 +42,9 @@ export function getAvailableSlots(
 ): TimeSlot[] {
   const availableSlots: TimeSlot[] = [];
   const minNoticeTime = addHours(now, eventType.minNoticeHours);
+  const stepMinutes = eventType.intervalMinutes && eventType.intervalMinutes > 0 
+    ? eventType.intervalMinutes 
+    : eventType.durationMinutes;
 
   // Para cada janela de disponibilidade do dia
   for (const rule of availabilityRegras) {
@@ -65,7 +69,7 @@ export function getAvailableSlots(
 
       // 1. Validar antecedência mínima
       if (isBefore(currentSlotStart, minNoticeTime)) {
-        currentSlotStart = addMinutes(currentSlotStart, eventType.durationMinutes);
+        currentSlotStart = addMinutes(currentSlotStart, stepMinutes);
         continue;
       }
 
@@ -75,7 +79,7 @@ export function getAvailableSlots(
       );
 
       if (isBlocked) {
-        currentSlotStart = addMinutes(currentSlotStart, eventType.durationMinutes);
+        currentSlotStart = addMinutes(currentSlotStart, stepMinutes);
         continue;
       }
 
@@ -94,9 +98,8 @@ export function getAvailableSlots(
         });
       }
 
-      // Avança para o próximo slot (por padrão, os slots podem começar a cada X minutos da duração, ou intervalos fixos. 
-      // Para o MVP, avançaremos de acordo com a duração do evento)
-      currentSlotStart = currentSlotEnd;
+      // Avança para o próximo slot de acordo com o intervalo da agenda (ou duração do procedimento)
+      currentSlotStart = addMinutes(currentSlotStart, stepMinutes);
     }
   }
 

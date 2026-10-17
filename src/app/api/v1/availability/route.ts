@@ -49,7 +49,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   const dayOfWeek = safeDate.getDay(); // 0 = Domingo, 6 = Sábado
 
   let eventType: { id?: string; duracao_minutos?: number; buffer_antes_minutos?: number; buffer_depois_minutos?: number; antecedencia_min_horas?: number; profissional_id?: string | null } | null = null;
-  let resolvedProf: { id: string; nome: string } | null = null;
+  let resolvedProf: { id: string; nome: string; intervalo_minutos?: number } | null = null;
 
   // 1. Obter Event Type se informado
   if (eventTypeId) {
@@ -83,7 +83,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   if (!resolvedProf) {
     const { data: allProfs } = await supabase
       .from('agend_profissionais')
-      .select('id, nome, cor')
+      .select('id, nome, cor, intervalo_minutos')
       .eq('empresa_id', auth.empresa.id)
       .order('nome', { ascending: true });
 
@@ -151,10 +151,11 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
         date,
         mappedRegras,
         {
-          durationMinutes: eventType?.duracao_minutos || 30,
+          durationMinutes: eventType?.duracao_minutos || p.intervalo_minutos || 30,
           bufferBeforeMinutes: eventType?.buffer_antes_minutos || 0,
           bufferAfterMinutes: eventType?.buffer_depois_minutos || 0,
-          minNoticeHours: minNotice
+          minNoticeHours: minNotice,
+          intervalMinutes: p.intervalo_minutos || 30
         },
         parsedBookings,
         parsedBlocks
@@ -246,7 +247,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       available_times: [],
       horarios_disponiveis: [],
       sugestoes: [],
-      agenda: { id: resolvedProf.id, nome: resolvedProf.nome },
+      agenda: { id: resolvedProf.id, nome: resolvedProf.nome, intervalo_minutos: resolvedProf.intervalo_minutos || 30 },
       date: dateStr
     });
   }
@@ -284,10 +285,11 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     date,
     mappedRegras,
     {
-      durationMinutes: eventType?.duracao_minutos || 30,
+      durationMinutes: eventType?.duracao_minutos || resolvedProf.intervalo_minutos || 30,
       bufferBeforeMinutes: eventType?.buffer_antes_minutos || 0,
       bufferAfterMinutes: eventType?.buffer_depois_minutos || 0,
-      minNoticeHours: minNotice
+      minNoticeHours: minNotice,
+      intervalMinutes: resolvedProf.intervalo_minutos || 30
     },
     parsedBookings,
     parsedBlocks

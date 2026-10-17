@@ -206,6 +206,12 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     });
   }, [localEvents, searchPatient, selectedAgendas]);
 
+  const minInterval = useMemo(() => {
+    const active = agendas.filter((a: any) => selectedAgendas.includes(a.id));
+    if (active.length === 0) return 30;
+    return Math.min(...active.map((a: any) => a.intervalo_minutos || 30));
+  }, [agendas, selectedAgendas]);
+
   useEffect(() => {
     if (!calendarRef.current) return;
 
@@ -224,6 +230,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       slotMinTime: '07:00:00',
       slotMaxTime: '20:00:00',
       slotLabelInterval: '01:00:00',
+      slotDuration: minInterval <= 15 ? '00:15:00' : (minInterval <= 20 ? '00:20:00' : '00:30:00'),
       allDaySlot: false,
       nowIndicator: true,
       dayHeaderFormat: { weekday: 'short', day: 'numeric', omitCommas: true },
@@ -362,7 +369,11 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const hours = String(dateObj.getHours()).padStart(2, '0');
         const mins = String(dateObj.getMinutes()).padStart(2, '0');
         
-        const endDt = new Date(dateObj.getTime() + 30 * 60000);
+        const targetAgendaId = agendas.length === 1 ? agendas[0].id : (selectedAgendas.length === 1 ? selectedAgendas[0] : '');
+        const targetAgenda = agendas.find((a: any) => a.id === targetAgendaId);
+        const slotMinutes = targetAgenda?.intervalo_minutos || 30;
+
+        const endDt = new Date(dateObj.getTime() + slotMinutes * 60000);
         const endHours = String(endDt.getHours()).padStart(2, '0');
         const endMins = String(endDt.getMinutes()).padStart(2, '0');
         
@@ -373,7 +384,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           id: '',
           inicio: inicioIso,
           fim: fimIso,
-          agendaId: agendas.length === 1 ? agendas[0].id : ''
+          agendaId: targetAgendaId
         });
         setIsModalOpen(true);
       },

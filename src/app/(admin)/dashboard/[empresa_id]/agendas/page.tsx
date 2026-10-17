@@ -44,13 +44,17 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
     const cor = formData.get('cor') as string;
     const emp_id = formData.get('empresa_id') as string;
     const unidade_id = formData.get('unidade_id') as string;
+    const intervalo_raw = formData.get('intervalo_minutos') as string;
+    const intervalo_minutos = parseInt(intervalo_raw || '30', 10);
+    const validInterval = isNaN(intervalo_minutos) ? 30 : intervalo_minutos;
     
     if (emp_id !== 'mock-clinic') {
       await supabase.from('agend_profissionais').insert({ 
         nome, 
         cor, 
         empresa_id: emp_id,
-        unidade_id: unidade_id || null
+        unidade_id: unidade_id || null,
+        intervalo_minutos: validInterval
       });
       revalidatePath(`/dashboard/${emp_id}/layout`);
       revalidatePath(`/dashboard/${emp_id}/agendas`);
@@ -65,7 +69,8 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
         nome,
         cor,
         empresa_id: emp_id,
-        unidade_id
+        unidade_id,
+        intervalo_minutos: validInterval
       });
       
       cookieStore.set('voibi_mock_agendas', JSON.stringify(customAgendas));
@@ -89,6 +94,20 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
           <div className="flex-1 min-w-[200px] space-y-1.5">
              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome da Agenda</label>
              <input required name="nome" className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Ex: Dr. Carlos / Sala de Raio-X" />
+          </div>
+
+          <div className="flex-1 min-w-[150px] space-y-1.5">
+             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Intervalo de Atendimento</label>
+             <select name="intervalo_minutos" defaultValue="30" className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+               <option value="10">10 em 10 min</option>
+               <option value="15">15 em 15 min</option>
+               <option value="20">20 em 20 min</option>
+               <option value="30">30 em 30 min (Padrão)</option>
+               <option value="40">40 em 40 min</option>
+               <option value="45">45 em 45 min</option>
+               <option value="50">50 em 50 min</option>
+               <option value="60">60 em 60 min (1 hora)</option>
+             </select>
           </div>
 
           {unidades.length > 0 && (
@@ -149,7 +168,12 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 transition-colors" title={agenda.nome}>{agenda.nome}</h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/50">
+                      ⏱️ {agenda.intervalo_minutos || 30}/{agenda.intervalo_minutos || 30} min
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: agenda.cor || '#ccc' }}></span>
                     Configurar horários
                   </p>

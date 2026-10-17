@@ -22,6 +22,7 @@ export default function AgendaConfigClient({
   // Estados locais
   const [nome, setNome] = useState(agenda.nome);
   const [cor, setCor] = useState(agenda.cor || '#4285f4');
+  const [intervaloMinutos, setIntervaloMinutos] = useState<number>(agenda.intervalo_minutos || 30);
   const [webhookUrl, setWebhookUrl] = useState(agenda.webhook_url || '');
   const [permitirSobreposicao, setPermitirSobreposicao] = useState(agenda.permitir_sobreposicao || false);
   const [campos, setCampos] = useState<any[]>(agenda.campos_personalizados || []);
@@ -75,6 +76,7 @@ export default function AgendaConfigClient({
       await onSaveBasico({ 
         nome, 
         cor, 
+        intervalo_minutos: intervaloMinutos,
         webhook_url: webhookUrl, 
         permitir_sobreposicao: permitirSobreposicao, 
         campos_personalizados: campos 
@@ -192,6 +194,26 @@ export default function AgendaConfigClient({
             <div>
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nome da Agenda</label>
                <input value={nome} onChange={e => setNome(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+            </div>
+            <div>
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Intervalo de Atendimento</label>
+               <select 
+                 value={intervaloMinutos} 
+                 onChange={e => setIntervaloMinutos(Number(e.target.value))}
+                 className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+               >
+                 <option value={10}>10 em 10 minutos</option>
+                 <option value={15}>15 em 15 minutos</option>
+                 <option value={20}>20 em 20 minutos</option>
+                 <option value={30}>30 em 30 minutos (Padrão)</option>
+                 <option value={40}>40 em 40 minutos</option>
+                 <option value={45}>45 em 45 minutos</option>
+                 <option value={50}>50 em 50 minutos</option>
+                 <option value={60}>60 em 60 minutos (1 hora)</option>
+               </select>
+               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                 Define o intervalo entre os horários disponíveis desta agenda (gerados para a IA e no agendamento).
+               </p>
             </div>
             <div>
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Cor no Calendário</label>

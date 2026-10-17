@@ -11,7 +11,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
 
   const { data: profissionais, error } = await supabase
     .from('agend_profissionais')
-    .select('id, nome, cor, unidade_id, created_at')
+    .select('id, nome, cor, unidade_id, intervalo_minutos, created_at')
     .eq('empresa_id', auth.empresa.id)
     .order('nome', { ascending: true });
 
