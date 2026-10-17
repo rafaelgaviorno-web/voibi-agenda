@@ -1213,6 +1213,43 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
                 </button>
               </div>
 
+              {/* Confirmar Agendamento ao Clicar no Chat */}
+              <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono">POST</span>
+                    <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">Confirmar Consulta (Botão no Chat)</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 font-mono truncate max-w-[280px]">/api/v1/bookings/confirm</p>
+                </div>
+                <button
+                  onClick={() => copyToClipboard('quick_curl_confirm_chat', `curl -X POST "${originUrl}/api/v1/bookings/confirm" -H "Authorization: Bearer ${currentApiKey}" -H "Content-Type: application/json" -d '{"booking_id":"UUID_DO_AGENDAMENTO"}'`)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm"
+                >
+                  {copiedMap['quick_curl_confirm_chat'] ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedMap['quick_curl_confirm_chat'] ? 'Copiado!' : 'Copiar cURL'}
+                </button>
+              </div>
+
+              {/* Buscar Pendentes de Confirmação */}
+              <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-mono">GET</span>
+                    <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">Buscar Pendentes (Reaviso no Dia Seguinte)</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 font-mono truncate max-w-[280px]">/api/v1/bookings?status=pendente&futuros=true</p>
+                </div>
+                <button
+                  onClick={() => copyToClipboard('quick_curl_pendentes_dia', `curl -X GET "${originUrl}/api/v1/bookings?status=pendente&futuros=true" -H "Authorization: Bearer ${currentApiKey}"`)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm"
+                >
+                  {copiedMap['quick_curl_pendentes_dia'] ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedMap['quick_curl_pendentes_dia'] ? 'Copiado!' : 'Copiar cURL'}
+                </button>
+              </div>
+
+              {/* Buscar Faltosos */}
               <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 md:col-span-2">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

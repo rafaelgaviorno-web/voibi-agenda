@@ -63,12 +63,26 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     query = query.eq('status_atendimento', resolvedStatusAtendimento);
   }
 
-  // Filtro por Data
+  // Filtro por Data (data exata, período ou apenas futuros)
+  const dataInicioStr = searchParams.get('data_inicio') || searchParams.get('inicio');
+  const dataFimStr = searchParams.get('data_fim') || searchParams.get('fim');
+  const apenasFuturos = searchParams.get('futuros') === 'true' || searchParams.get('apenas_futuros') === 'true';
+
   if (dataStr) {
     const targetDate = parseISO(dataStr);
     query = query
       .gte('inicio', startOfDay(targetDate).toISOString())
       .lte('inicio', endOfDay(targetDate).toISOString());
+  } else {
+    if (dataInicioStr) {
+      query = query.gte('inicio', startOfDay(parseISO(dataInicioStr)).toISOString());
+    }
+    if (dataFimStr) {
+      query = query.lte('inicio', endOfDay(parseISO(dataFimStr)).toISOString());
+    }
+    if (apenasFuturos) {
+      query = query.gt('inicio', new Date().toISOString());
+    }
   }
 
   // Filtro por Profissional / Agenda
