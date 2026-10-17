@@ -1212,6 +1212,23 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
                   {copiedMap['quick_curl_get_client'] ? 'Copiado!' : 'Copiar cURL'}
                 </button>
               </div>
+
+              <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 md:col-span-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-mono">GET</span>
+                    <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">Buscar Pacientes Faltosos (Para Reengajamento)</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 font-mono truncate max-w-[420px]">/api/v1/bookings?status_atendimento=faltou</p>
+                </div>
+                <button
+                  onClick={() => copyToClipboard('quick_curl_faltosos', `curl -X GET "${originUrl}/api/v1/bookings?status_atendimento=faltou" -H "Authorization: Bearer ${currentApiKey}"`)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm"
+                >
+                  {copiedMap['quick_curl_faltosos'] ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedMap['quick_curl_faltosos'] ? 'Copiado!' : 'Copiar cURL'}
+                </button>
+              </div>
             </div>
           </div>
 

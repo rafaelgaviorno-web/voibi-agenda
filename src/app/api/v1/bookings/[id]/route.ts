@@ -17,7 +17,14 @@ export const GET = withApiLogger(async function GET(request: NextRequest, { para
     .single();
 
   if (error || !data) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
-  return NextResponse.json({ data });
+  return NextResponse.json({ 
+    data: {
+      ...data,
+      status: data.status || 'pendente',
+      status_agendamento: data.status || 'pendente',
+      status_atendimento: data.status_atendimento || 'agendado',
+    } 
+  });
 });
 
 export const PATCH = withApiLogger(async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -52,12 +59,19 @@ export const PATCH = withApiLogger(async function PATCH(request: NextRequest, { 
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  if (data) {
+  const formattedUpdated = data ? {
+    ...data,
+    status: data.status || 'pendente',
+    status_agendamento: data.status || 'pendente',
+    status_atendimento: data.status_atendimento || 'agendado',
+  } : data;
+
+  if (formattedUpdated) {
     const { triggerBookingWebhook } = await import('@/lib/webhook');
-    triggerBookingWebhook('booking.updated', data, auth.empresa.id).catch(console.error);
+    triggerBookingWebhook('booking.updated', formattedUpdated, auth.empresa.id).catch(console.error);
   }
 
-  return NextResponse.json({ data });
+  return NextResponse.json({ data: formattedUpdated });
 });
 
 export const DELETE = withApiLogger(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

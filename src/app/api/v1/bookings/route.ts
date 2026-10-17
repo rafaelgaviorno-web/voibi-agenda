@@ -37,17 +37,30 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     .order('inicio', { ascending: true })
     .limit(limitParam);
 
-  // Filtro por Status (padrão 'confirmado' caso não passe 'all' ou outro status)
-  if (statusParam && statusParam !== 'all') {
-    query = query.eq('status', statusParam);
-  } else if (!statusParam) {
+  // Filtro inteligente por Status e Atendimento (compatibilidade total com n8n e IA)
+  const statusAtendimentoParam = searchParams.get('status_atendimento');
+  const faltososParam = searchParams.get('faltosos') === 'true' || searchParams.get('faltou') === 'true';
+
+  const atendimentoValues = ['agendado', 'aguardando', 'atendido', 'faltou', 'reagendou'];
+
+  // Resolve status_atendimento caso passe status_atendimento=..., status=faltou (ou outro de atendimento) ou faltosos=true
+  const resolvedStatusAtendimento = faltososParam 
+    ? 'faltou' 
+    : (statusAtendimentoParam || (statusParam && atendimentoValues.includes(statusParam.toLowerCase()) ? statusParam.toLowerCase() : null));
+
+  // Resolve status de agendamento (apenas se não for um status de atendimento)
+  const resolvedStatusAgendamento = (statusParam && !atendimentoValues.includes(statusParam.toLowerCase())) 
+    ? statusParam 
+    : null;
+
+  if (resolvedStatusAgendamento && resolvedStatusAgendamento !== 'all') {
+    query = query.eq('status', resolvedStatusAgendamento);
+  } else if (!resolvedStatusAgendamento && !resolvedStatusAtendimento) {
     query = query.in('status', ['confirmado', 'pendente', 'remarcado']);
   }
 
-  // Filtro por Status de Atendimento (ex: agendado, atendido, faltou, reagendou)
-  const statusAtendimentoParam = searchParams.get('status_atendimento');
-  if (statusAtendimentoParam && statusAtendimentoParam !== 'all') {
-    query = query.eq('status_atendimento', statusAtendimentoParam);
+  if (resolvedStatusAtendimento && resolvedStatusAtendimento !== 'all') {
+    query = query.eq('status_atendimento', resolvedStatusAtendimento);
   }
 
   // Filtro por Data
@@ -111,7 +124,14 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: bookings || [] });
+  const formattedBookings = (bookings || []).map((b: any) => ({
+    ...b,
+    status: b.status || 'pendente',
+    status_agendamento: b.status || 'pendente',
+    status_atendimento: b.status_atendimento || 'agendado',
+  }));
+
+  return NextResponse.json({ data: formattedBookings });
 });
 
 export const POST = withApiLogger(async function POST(request: NextRequest) {
@@ -330,8 +350,15 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   const dataFormatada = format(startDate, "dd/MM/yyyy 'às' HH:mm");
   const confirmMsg = `Agendamento confirmado com sucesso com ${resolvedProf.nome} para ${dataFormatada}!`;
 
+  const formattedBooking = {
+    ...booking,
+    status: booking.status || 'pendente',
+    status_agendamento: booking.status || 'pendente',
+    status_atendimento: booking.status_atendimento || 'agendado',
+  };
+
   return NextResponse.json({ 
-    data: booking,
+    data: formattedBooking,
     text: confirmMsg,
     message: confirmMsg,
     content: confirmMsg,

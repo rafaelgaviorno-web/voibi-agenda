@@ -62,7 +62,12 @@ export async function triggerBookingWebhook(
 
     const payload: WebhookPayload = {
       event,
-      data: booking,
+      data: {
+        ...booking,
+        status: booking.status || 'pendente',
+        status_agendamento: booking.status || 'pendente',
+        status_atendimento: booking.status_atendimento || 'agendado',
+      },
       timestamp: new Date().toISOString()
     };
 
