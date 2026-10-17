@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Calendar as CalendarIcon, Clock, User, Phone, FileText, Trash2, CheckCircle2, Check, UserCheck, AlertCircle } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, User, Phone, FileText, Trash2, CheckCircle2, Check, UserCheck, AlertCircle, RotateCcw } from 'lucide-react';
 
 export default function EventModal({ 
   isOpen, 
@@ -300,73 +300,95 @@ export default function EventModal({
             </div>
 
             {/* 2. Status do Atendimento (Presença na Clínica) */}
-            <div className="space-y-1.5 pt-2 border-t border-zinc-200/70 dark:border-zinc-800">
+            <div className="space-y-2 pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
                   <UserCheck className="w-3.5 h-3.5 text-indigo-500" />
                   Status do Atendimento:
                 </span>
-                <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-                  {formData.status_atendimento === 'aguardando' 
-                    ? 'Aguardando Atendimento' 
-                    : formData.status_atendimento}
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border transition-colors ${
+                  formData.status_atendimento === 'aguardando' 
+                    ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800'
+                    : formData.status_atendimento === 'atendido'
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
+                    : formData.status_atendimento === 'faltou'
+                    ? 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800'
+                    : formData.status_atendimento === 'reagendou'
+                    ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800'
+                    : 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800'
+                }`}>
+                  {formData.status_atendimento === 'aguardando' ? 'Aguardando Atendimento' : formData.status_atendimento}
                 </span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+
+              {/* Linha 1: Agendado e Aguardando Atendimento com espaço de sobra para leitura perfeita */}
+              <div className="grid grid-cols-2 gap-2">
                 <button 
                   type="button"
                   onClick={() => setFormData({...formData, status_atendimento: 'agendado'})}
-                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     formData.status_atendimento === 'agendado' 
-                      ? 'bg-blue-600 text-white shadow-sm font-semibold' 
-                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                      ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/20' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-blue-500 hover:text-blue-600'
                   }`}
                 >
-                  Agendado
+                  <CalendarIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span>Agendado</span>
                 </button>
+                
                 <button 
                   type="button"
                   onClick={() => setFormData({...formData, status_atendimento: 'aguardando'})}
-                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     formData.status_atendimento === 'aguardando' 
-                      ? 'bg-purple-600 text-white shadow-sm font-semibold ring-2 ring-purple-300 dark:ring-purple-900' 
+                      ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-500/20' 
                       : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-purple-500 hover:text-purple-600'
                   }`}
                 >
-                  Aguardando
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  <span className="whitespace-nowrap">Aguardando Atendimento</span>
                 </button>
+              </div>
+
+              {/* Linha 2: Atendido, Faltou e Reagendou com visual equilibrado e ícones */}
+              <div className="grid grid-cols-3 gap-2">
                 <button 
                   type="button"
                   onClick={() => setFormData({...formData, status_atendimento: 'atendido'})}
-                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                  className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     formData.status_atendimento === 'atendido' 
-                      ? 'bg-emerald-600 text-white shadow-sm font-semibold' 
+                      ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20' 
                       : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 hover:text-emerald-600'
                   }`}
                 >
-                  Atendido
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Atendido</span>
                 </button>
+                
                 <button 
                   type="button"
                   onClick={() => setFormData({...formData, status_atendimento: 'faltou'})}
-                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                  className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     formData.status_atendimento === 'faltou' 
-                      ? 'bg-red-600 text-white shadow-sm font-semibold' 
-                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-red-500 hover:text-red-600'
+                      ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-500/20' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-rose-500 hover:text-rose-600'
                   }`}
                 >
-                  Faltou
+                  <X className="w-3.5 h-3.5 shrink-0" />
+                  <span>Faltou</span>
                 </button>
+                
                 <button 
                   type="button"
                   onClick={() => setFormData({...formData, status_atendimento: 'reagendou'})}
-                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                  className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     formData.status_atendimento === 'reagendou' 
-                      ? 'bg-orange-500 text-white shadow-sm font-semibold' 
+                      ? 'bg-orange-500 text-white shadow-sm ring-2 ring-orange-500/20' 
                       : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-orange-500 hover:text-orange-600'
                   }`}
                 >
-                  Reagendou
+                  <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                  <span>Reagendou</span>
                 </button>
               </div>
             </div>
