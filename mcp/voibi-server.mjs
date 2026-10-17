@@ -112,7 +112,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             status_atendimento: {
               type: 'string',
-              description: 'Filtrar por status de atendimento (ex: "agendado", "atendido", "faltou", "reagendou" ou "all").',
+              description: 'Filtrar por status de atendimento (ex: "agendado", "aguardando", "atendido", "faltou", "reagendou" ou "all").',
             },
             agenda: {
               type: 'string',
@@ -201,7 +201,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             status_atendimento: {
               type: 'string',
-              description: 'Novo status de atendimento (ex: "agendado", "atendido", "faltou", "reagendou").',
+              description: 'Novo status de atendimento (ex: "agendado", "aguardando", "atendido", "faltou", "reagendou").',
             },
             observacao: {
               type: 'string',

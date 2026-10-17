@@ -109,6 +109,7 @@ export default function ReportsClient({
   const getStatusAtendimentoColor = (status: string) => {
     switch (status) {
       case 'agendado': return 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300';
+      case 'aguardando': return 'bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300';
       case 'atendido': return 'bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300';
       case 'faltou': return 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300';
       case 'reagendou': return 'bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300';
@@ -117,7 +118,7 @@ export default function ReportsClient({
   };
 
   const statusAgendamentoOptions = ['confirmado', 'pendente', 'cancelado'];
-  const statusAtendimentoOptions = ['agendado', 'atendido', 'faltou', 'reagendou'];
+  const statusAtendimentoOptions = ['agendado', 'aguardando', 'atendido', 'faltou', 'reagendou'];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -246,7 +247,11 @@ export default function ReportsClient({
                 className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 capitalize"
               >
                 <option value="">Todos</option>
-                {statusAtendimentoOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                {statusAtendimentoOptions.map(s => (
+                  <option key={s} value={s}>
+                    {s === 'aguardando' ? 'Aguardando Atendimento' : s}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -311,7 +316,7 @@ export default function ReportsClient({
                         </td>
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${getStatusAtendimentoColor(ev.status_atendimento || 'agendado')}`}>
-                            {ev.status_atendimento || 'agendado'}
+                            {(ev.status_atendimento || 'agendado') === 'aguardando' ? 'Aguardando Atendimento' : (ev.status_atendimento || 'agendado')}
                           </span>
                         </td>
                       </tr>

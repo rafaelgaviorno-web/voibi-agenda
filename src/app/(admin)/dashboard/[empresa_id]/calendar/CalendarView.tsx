@@ -181,6 +181,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           isGlobalBlock ? '#fee2e2' : // Fundo vermelho claro para bloqueio geral
           isBlock ? '#64748b' : // Cinza/grafite para bloqueio especifico
           isCancelado ? '#64748b' : // Cinza escuro para cancelado
+          statusAtendimento === 'aguardando' ? '#7c3aed' : // Roxo para aguardando atendimento
           statusAtendimento === 'atendido' ? '#16a34a' :
           statusAtendimento === 'faltou' ? '#dc2626' :
           statusAtendimento === 'reagendou' ? '#ea580c' :
@@ -284,20 +285,25 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
         const badges: string[] = [];
         if (arg.event.extendedProps.is_encaixe) {
-          badges.push('<span class="bg-yellow-400 text-yellow-950 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Encaixe</span>');
+          badges.push('<span class="bg-yellow-400 text-yellow-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Encaixe</span>');
         }
         if (isPendente) {
-          badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Pendente</span>');
+          badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Pendente</span>');
         } else if (isCancelado) {
-          badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Cancelado</span>');
+          badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">Cancelado</span>');
         }
 
-        if (statusAtendimento === 'atendido') {
-          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Atendido</span>');
+        // Exibe SEMPRE a badge do status de atendimento
+        if (statusAtendimento === 'aguardando') {
+          badges.push('<span class="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30 animate-pulse">Aguardando</span>');
+        } else if (statusAtendimento === 'atendido') {
+          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Atendido</span>');
         } else if (statusAtendimento === 'faltou') {
-          badges.push('<span class="bg-red-700 text-white text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Faltou</span>');
+          badges.push('<span class="bg-red-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Faltou</span>');
         } else if (statusAtendimento === 'reagendou') {
-          badges.push('<span class="bg-orange-600 text-white text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wider">Reagendou</span>');
+          badges.push('<span class="bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Reagendou</span>');
+        } else {
+          badges.push('<span class="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Agendado</span>');
         }
 
         const badgesHtml = badges.length > 0 

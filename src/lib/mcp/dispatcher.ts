@@ -57,7 +57,11 @@ export const VOIBI_MCP_TOOLS = [
         },
         status: {
           type: 'string',
-          description: 'Filtrar por status (ex: "confirmado", "remarcado", "cancelado", "atendido" ou "all"). Padrão: confirmados e remarcados.',
+          description: 'Filtrar por status (ex: "confirmado", "pendente", "cancelado" ou "all"). Padrão: confirmados.',
+        },
+        status_atendimento: {
+          type: 'string',
+          description: 'Filtrar por status de atendimento (ex: "agendado", "aguardando", "atendido", "faltou", "reagendou" ou "all").',
         },
         agenda: {
           type: 'string',
@@ -142,7 +146,11 @@ export const VOIBI_MCP_TOOLS = [
         },
         status: {
           type: 'string',
-          description: 'Novo status do agendamento (ex: "confirmado", "remarcado", "atendido").',
+          description: 'Novo status do agendamento (ex: "confirmado", "pendente", "cancelado").',
+        },
+        status_atendimento: {
+          type: 'string',
+          description: 'Novo status de atendimento (ex: "agendado", "aguardando", "atendido", "faltou", "reagendou").',
         },
         observacao: {
           type: 'string',
@@ -269,6 +277,7 @@ export async function handleCallTool(
         const url = new URL(`${safeBase}/api/v1/bookings`);
         if (args.date) url.searchParams.set('data', args.date);
         if (args.status) url.searchParams.set('status', args.status);
+        if (args.status_atendimento) url.searchParams.set('status_atendimento', args.status_atendimento);
         if (args.agenda) url.searchParams.set('agenda', args.agenda);
         if (args.telefone) url.searchParams.set('telefone', args.telefone);
         if (args.email) url.searchParams.set('email', args.email);
@@ -351,6 +360,7 @@ export async function handleCallTool(
         if (!args.id) throw new Error('O ID do agendamento é obrigatório.');
         const payload: Record<string, any> = {};
         if (args.status !== undefined) payload.status = args.status;
+        if (args.status_atendimento !== undefined) payload.status_atendimento = args.status_atendimento;
         if (args.observacao !== undefined) payload.observacao = args.observacao;
         if (args.inicio !== undefined) payload.inicio = args.inicio;
         if (args.fim !== undefined) payload.fim = args.fim;

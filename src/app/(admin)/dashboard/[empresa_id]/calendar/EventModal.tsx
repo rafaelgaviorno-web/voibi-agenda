@@ -306,21 +306,34 @@ export default function EventModal({
                   <UserCheck className="w-3.5 h-3.5 text-indigo-500" />
                   Status do Atendimento:
                 </span>
-                <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded text-zinc-500 bg-zinc-200 dark:bg-zinc-800">
-                  {formData.status_atendimento}
+                <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                  {formData.status_atendimento === 'aguardando' 
+                    ? 'Aguardando Atendimento' 
+                    : formData.status_atendimento}
                 </span>
               </div>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                 <button 
                   type="button"
                   onClick={() => setFormData({...formData, status_atendimento: 'agendado'})}
                   className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
                     formData.status_atendimento === 'agendado' 
-                      ? 'bg-zinc-800 dark:bg-zinc-700 text-white shadow-sm font-semibold' 
+                      ? 'bg-blue-600 text-white shadow-sm font-semibold' 
                       : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
                   Agendado
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, status_atendimento: 'aguardando'})}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all text-center cursor-pointer ${
+                    formData.status_atendimento === 'aguardando' 
+                      ? 'bg-purple-600 text-white shadow-sm font-semibold ring-2 ring-purple-300 dark:ring-purple-900' 
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-purple-500 hover:text-purple-600'
+                  }`}
+                >
+                  Aguardando
                 </button>
                 <button 
                   type="button"
