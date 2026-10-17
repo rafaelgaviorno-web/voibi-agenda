@@ -17,10 +17,60 @@ async function handleResposta(request: NextRequest, isGet = false) {
   }
 
   const { searchParams } = new URL(request.url);
-  const bookingId = body?.booking_id || body?.id || searchParams.get('booking_id') || searchParams.get('id');
-  const telefone = body?.telefone || body?.phone || body?.whatsapp || body?.from || searchParams.get('telefone') || searchParams.get('whatsapp') || searchParams.get('from');
-  const respostaRaw = String(body?.resposta || body?.button || body?.opcao || body?.acao || body?.text || searchParams.get('resposta') || searchParams.get('opcao') || searchParams.get('acao') || 'confirmar').trim().toLowerCase();
-  const observacaoExtra = body?.observacao || searchParams.get('observacao') || '';
+  
+  // Extrai booking_id direto (caso fornecido)
+  const bookingId = 
+    body?.booking_id || 
+    body?.id || 
+    body?.data?.booking_id || 
+    searchParams.get('booking_id') || 
+    searchParams.get('id');
+
+  // Extrai telefone em formatos diretos ou aninhados (Evolution, Z-API, Meta, Typebot, Chatwoot, etc.)
+  const rawTelefone = 
+    body?.telefone || 
+    body?.phone || 
+    body?.whatsapp || 
+    body?.from || 
+    body?.number || 
+    body?.sender || 
+    body?.data?.key?.remoteJid || 
+    body?.contact?.phone_number || 
+    body?.customer?.phone || 
+    body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.from ||
+    searchParams.get('telefone') || 
+    searchParams.get('phone') || 
+    searchParams.get('whatsapp') || 
+    searchParams.get('from');
+
+  const telefone = rawTelefone ? String(rawTelefone).replace(/@.*$/, '') : '';
+
+  // Extrai texto da resposta/botão (simples ou aninhado de bots e WhatsApp)
+  const rawResposta = 
+    body?.resposta || 
+    body?.button || 
+    body?.button_text || 
+    body?.buttonText || 
+    body?.opcao || 
+    body?.acao || 
+    body?.text || 
+    body?.content || 
+    body?.value || 
+    body?.selectedOption || 
+    body?.data?.message?.conversation || 
+    body?.data?.message?.buttonsResponseMessage?.selectedDisplayText || 
+    body?.data?.message?.buttonsResponseMessage?.selectedButtonId || 
+    body?.data?.message?.listResponseMessage?.title || 
+    body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.button?.text || 
+    body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.interactive?.button_reply?.title || 
+    searchParams.get('resposta') || 
+    searchParams.get('opcao') || 
+    searchParams.get('acao') || 
+    searchParams.get('button') || 
+    'confirmar';
+
+  const respostaRaw = String(rawResposta).trim().toLowerCase();
+  const observacaoExtra = body?.observacao || body?.notes || searchParams.get('observacao') || '';
 
   const supabase = getServiceSupabase();
   let targetBookingId = bookingId;
