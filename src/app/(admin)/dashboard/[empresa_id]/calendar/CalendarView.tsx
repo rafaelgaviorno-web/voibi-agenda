@@ -128,12 +128,12 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     }
 
     if (empresaId !== 'mock-clinic') {
+      // A server action chama revalidatePath, que já devolve a tela atualizada
       const res = await saveAppointment(formData, empresaId);
       if (!res.success) {
         const err = res.error as any;
         throw new Error(err?.message || err?.details || "Erro ao salvar no banco de dados.");
       }
-      router.refresh();
     }
   };
 
@@ -144,8 +144,9 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       const filteredStored = stored.filter((e: any) => e.id !== id);
       localStorage.setItem('voibi_mock_events', JSON.stringify(filteredStored));
     } else {
+      // Remove na hora; a server action revalida a página em seguida
+      setLocalEvents((prev: any) => prev.filter((e: any) => e.id !== id));
       await deleteAppointment(id, empresaId);
-      router.refresh();
     }
   };
 
@@ -215,12 +216,12 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     return Math.min(...active.map((a: any) => a.intervalo_minutos || 30));
   }, [agendas, selectedAgendas]);
 
+  // Valores atuais para os callbacks do FullCalendar, que é criado uma única vez
+  const latestRef = useRef<any>({});
+  latestRef.current = { events, localEvents, agendas, selectedAgendas, handleSaveEvent, isModalOpen };
+
   useEffect(() => {
     if (!calendarRef.current) return;
-
-    if (calendarInstance.current) {
-       calendarInstance.current.destroy();
-    }
 
     const calendar = new Calendar(calendarRef.current, {
       plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -337,7 +338,7 @@ Horário: ${arg.timeText}`);
         };
       },
       eventClick: (info) => {
-        const original = localEvents.find((e:any) => String(e.id) === String(info.event.id));
+        const original = latestRef.current.localEvents.find((e:any) => String(e.id) === String(info.event.id));
         if(original && original.status !== 'bloqueio') {
           setSelectedEventData({
             ...original,
@@ -351,6 +352,7 @@ Horário: ${arg.timeText}`);
         const clickedTime = info.date.getTime();
         
         // Verificar se clicou em cima de um bloqueio visível
+        const { events, agendas, selectedAgendas } = latestRef.current;
         const isBlocked = events.some((e:any) => {
           if (e.extendedProps?.status !== 'bloqueio') return false;
           
@@ -398,7 +400,7 @@ Horário: ${arg.timeText}`);
       },
       eventDrop: async (info) => {
         const eventId = info.event.id;
-        const original = localEvents.find((e:any) => String(e.id) === String(eventId));
+        const original = latestRef.current.localEvents.find((e:any) => String(e.id) === String(eventId));
         if (original && info.event.start && info.event.end) {
            const adjustedData = `${info.event.start.getFullYear()}-${String(info.event.start.getMonth()+1).padStart(2,'0')}-${String(info.event.start.getDate()).padStart(2,'0')}`;
            const adjustedHoraInicio = `${String(info.event.start.getHours()).padStart(2,'0')}:${String(info.event.start.getMinutes()).padStart(2,'0')}`;
@@ -419,12 +421,12 @@ Horário: ${arg.timeText}`);
              status_atendimento: original.status_atendimento,
              is_encaixe: original.is_encaixe
            };
-           await handleSaveEvent(formData);
+           await latestRef.current.handleSaveEvent(formData);
         }
       },
       eventResize: async (info) => {
         const eventId = info.event.id;
-        const original = localEvents.find((e:any) => String(e.id) === String(eventId));
+        const original = latestRef.current.localEvents.find((e:any) => String(e.id) === String(eventId));
         if (original && info.event.start && info.event.end) {
            const adjustedData = `${info.event.start.getFullYear()}-${String(info.event.start.getMonth()+1).padStart(2,'0')}-${String(info.event.start.getDate()).padStart(2,'0')}`;
            const adjustedHoraInicio = `${String(info.event.start.getHours()).padStart(2,'0')}:${String(info.event.start.getMinutes()).padStart(2,'0')}`;
@@ -445,7 +447,7 @@ Horário: ${arg.timeText}`);
              status_atendimento: original.status_atendimento,
              is_encaixe: original.is_encaixe
            };
-           await handleSaveEvent(formData);
+           await latestRef.current.handleSaveEvent(formData);
         }
       }
     });
@@ -454,7 +456,39 @@ Horário: ${arg.timeText}`);
     calendarInstance.current = calendar;
 
     return () => calendar.destroy();
-  }, [events, currentView]);
+    // Criado uma vez: as atualizações abaixo mantêm a semana e a rolagem atuais
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Atualiza os eventos no calendário existente, sem recriá-lo
+  useEffect(() => {
+    const calendar = calendarInstance.current;
+    if (!calendar) return;
+    calendar.batchRendering(() => {
+      calendar.removeAllEventSources();
+      calendar.addEventSource(events);
+    });
+  }, [events]);
+
+  useEffect(() => {
+    calendarInstance.current?.setOption('slotDuration', minInterval <= 15 ? '00:15:00' : (minInterval <= 20 ? '00:20:00' : '00:30:00'));
+  }, [minInterval]);
+
+  // Busca mudanças feitas fora desta tela (IA, n8n, página do paciente):
+  // a cada 30s com a aba visível e ao voltar para a aba
+  useEffect(() => {
+    if (empresaId === 'mock-clinic') return;
+    const refreshIfIdle = () => {
+      if (document.visibilityState === 'visible' && !latestRef.current.isModalOpen) router.refresh();
+    };
+    const timer = setInterval(refreshIfIdle, 30000);
+    document.addEventListener('visibilitychange', refreshIfIdle);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshIfIdle);
+    };
+  }, [empresaId, router]);
+
 
   const handlePrev = () => calendarInstance.current?.prev();
   const handleNext = () => calendarInstance.current?.next();

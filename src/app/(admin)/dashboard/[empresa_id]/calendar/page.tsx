@@ -102,17 +102,16 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
   } else {
     const supabase = getServiceSupabase();
     
-    const { data: uns } = await supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id);
-    unidades = uns || [];
-    currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
-
+    // Todas as consultas em paralelo: cada ida ao banco custa ~300 ms
     const [
+      { data: uns },
       { data: agendamentosData },
       { data: profData },
       { data: dispData },
       { data: bloqueiosData },
       { data: procData }
     ] = await Promise.all([
+      supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_agendamentos').select(`
         id, inicio, fim, status, status_atendimento, is_encaixe, observacao,
         cliente:agend_clientes_finais(id, nome, telefone),
@@ -120,10 +119,15 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
         evento:agend_tipos_evento(id, nome)
       `).eq('profissional.empresa_id', empresa_id),
       supabase.from('agend_profissionais').select('id, nome, cor, intervalo_minutos').eq('empresa_id', empresa_id),
-      supabase.from('agend_disponibilidade').select('profissional_id, dia_semana, hora_inicio, hora_fim'),
+      supabase.from('agend_disponibilidade')
+        .select('profissional_id, dia_semana, hora_inicio, hora_fim, agend_profissionais!inner(empresa_id)')
+        .eq('agend_profissionais.empresa_id', empresa_id),
       supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id').eq('empresa_id', empresa_id),
       supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id)
     ]);
+
+    unidades = uns || [];
+    currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
 
     agendamentos = agendamentosData || [];
     
