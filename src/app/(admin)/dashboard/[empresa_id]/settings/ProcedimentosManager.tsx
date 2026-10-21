@@ -218,7 +218,7 @@ export default function ProcedimentosManager({
                           <button onClick={() => saveEdit(p.id)} disabled={isPending} className="text-green-600 hover:bg-green-50 p-1.5 rounded-md transition-colors" title="Salvar">
                             <Check className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setEditingId(null)} disabled={isPending} className="text-zinc-400 hover:bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-md transition-colors" title="Cancelar">
+                          <button onClick={() => setEditingId(null)} disabled={isPending} className="text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1.5 rounded-md transition-colors" title="Cancelar">
                             <X className="w-4 h-4" />
                           </button>
                         </>

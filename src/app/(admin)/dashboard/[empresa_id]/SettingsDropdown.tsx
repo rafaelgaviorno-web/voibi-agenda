@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Settings, Stethoscope, Users, CalendarDays, ChevronDown, ChevronRight, CalendarX, Building2, Key } from 'lucide-react';
+import { Settings, Stethoscope, Users, CalendarDays, ChevronDown, CalendarX, Building2, Key } from 'lucide-react';
+import { navIcon, navItem, navItemActive, navItemIdle, subItem, subItemActive, subItemIdle, subNav } from './navStyles';
 
 export default function SettingsDropdown({ baseUrl }: { baseUrl: string }) {
   const pathname = usePathname();
@@ -11,69 +12,43 @@ export default function SettingsDropdown({ baseUrl }: { baseUrl: string }) {
   const isActive = pathname.startsWith(`${baseUrl}/settings`);
   const [isOpen, setIsOpen] = useState(isActive);
 
+  const tab = searchParams.get('tab');
+  const otherTabs = ['usuarios', 'agendas', 'bloqueios', 'unidades'];
+
+  const links = [
+    { href: `${baseUrl}/settings?tab=procedimentos`, label: 'Procedimentos', icon: Stethoscope, active: isActive && !otherTabs.includes(tab || '') },
+    { href: `${baseUrl}/settings?tab=unidades`, label: 'Unidades', icon: Building2, active: isActive && tab === 'unidades' },
+    { href: `${baseUrl}/settings?tab=agendas`, label: 'Agendas (Profissionais)', icon: CalendarDays, active: isActive && tab === 'agendas' },
+    { href: `${baseUrl}/settings?tab=usuarios`, label: 'Equipe e Acessos', icon: Users, active: isActive && tab === 'usuarios' },
+    { href: `${baseUrl}/settings?tab=bloqueios`, label: 'Bloqueios e Exceções', icon: CalendarX, active: isActive && tab === 'bloqueios' },
+    { href: `${baseUrl}/automations?tab=api`, label: 'Chave de API & Integrações', icon: Key, active: false },
+  ];
+
   return (
-    <div className="space-y-1 mt-2">
-      <button 
+    <div className="space-y-0.5">
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 transition-colors ${
-          isActive && !isOpen ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-700 dark:text-zinc-300 font-medium'
-        } text-sm`}
+        className={`${navItem} justify-between ${isActive && !isOpen ? navItemActive : navItemIdle}`}
       >
         <div className="flex items-center gap-3">
-          <Settings className={`w-4 h-4 ${isActive ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-500 dark:text-zinc-400'}`} />
+          <Settings className={navIcon} />
           <span>Configurações</span>
         </div>
-        {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-zinc-400" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-zinc-400" />
-        )}
+        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
       </button>
-      
+
       {isOpen && (
-        <div className="pl-10 pr-3 py-1 space-y-1">
-          <Link 
-            href={`${baseUrl}/settings?tab=procedimentos`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') !== 'usuarios' && searchParams.get('tab') !== 'agendas' && searchParams.get('tab') !== 'bloqueios' && searchParams.get('tab') !== 'unidades' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
-          >
-            <Stethoscope className="w-3.5 h-3.5" />
-            Procedimentos
-          </Link>
-          <Link 
-            href={`${baseUrl}/settings?tab=unidades`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'unidades' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            Unidades
-          </Link>
-          <Link 
-            href={`${baseUrl}/settings?tab=agendas`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'agendas' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
-          >
-            <CalendarDays className="w-3.5 h-3.5" />
-            Agendas (Profissionais)
-          </Link>
-          <Link 
-            href={`${baseUrl}/settings?tab=usuarios`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'usuarios' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            Equipe e Acessos
-          </Link>
-          <Link 
-            href={`${baseUrl}/settings?tab=bloqueios`}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${isActive && searchParams.get('tab') === 'bloqueios' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:bg-zinc-950'}`}
-          >
-            <CalendarX className="w-3.5 h-3.5" />
-            Bloqueios e Exceções
-          </Link>
-          <Link 
-            href={`${baseUrl}/automations?tab=api`}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30"
-          >
-            <Key className="w-3.5 h-3.5 text-blue-500" />
-            Chave de API & Integrações
-          </Link>
+        <div className={subNav}>
+          {links.map(({ href, label, icon: Icon, active }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`${subItem} ${active ? subItemActive : subItemIdle}`}
+            >
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              {label}
+            </Link>
+          ))}
         </div>
       )}
     </div>

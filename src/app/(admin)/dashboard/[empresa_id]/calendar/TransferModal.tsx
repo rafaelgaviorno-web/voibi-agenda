@@ -57,7 +57,7 @@ export default function TransferModal({
           </h2>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full transition-colors text-zinc-500 dark:text-zinc-400"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-zinc-500 dark:text-zinc-400"
           >
             <X size={20} />
           </button>

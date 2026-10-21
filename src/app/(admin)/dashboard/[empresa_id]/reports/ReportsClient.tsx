@@ -129,7 +129,7 @@ export default function ReportsClient({
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Relatórios</h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Gere relatórios detalhados de agendamentos e encaixes.</p>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:bg-zinc-950 shadow-sm transition-all">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-950 shadow-sm transition-all">
             <Download className="w-4 h-4" />
             Exportar CSV
           </button>
@@ -141,7 +141,7 @@ export default function ReportsClient({
             className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'geral' 
                 ? 'border-blue-600 text-blue-600' 
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
             }`}
           >
             Relatório de Agenda
@@ -151,7 +151,7 @@ export default function ReportsClient({
             className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'encaixes' 
                 ? 'border-blue-600 text-blue-600' 
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
             }`}
           >
             Relatório de Encaixes
@@ -285,7 +285,7 @@ export default function ReportsClient({
                     const formattedTime = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                     return (
-                      <tr key={ev.id} className="hover:bg-zinc-50 dark:bg-zinc-950 transition-colors">
+                      <tr key={ev.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-colors">
                         <td className="py-3 px-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100 font-medium">
                           {formattedDate} <span className="text-zinc-500 dark:text-zinc-400 font-normal ml-1">{formattedTime}</span>
                         </td>

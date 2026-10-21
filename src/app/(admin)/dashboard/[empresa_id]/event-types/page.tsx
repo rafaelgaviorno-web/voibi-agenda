@@ -27,7 +27,7 @@ export default async function EventTypesPage({ params }: { params: Promise<{ emp
         ) : null}
         
         {eventos?.map((ev) => (
-          <div key={ev.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm flex items-center justify-between group hover:border-zinc-300 dark:border-zinc-600 transition-colors">
+          <div key={ev.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm flex items-center justify-between group hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors">
             <div className="space-y-1">
               <h3 className="font-semibold text-lg">{ev.nome}</h3>
               <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -43,7 +43,7 @@ export default async function EventTypesPage({ params }: { params: Promise<{ emp
             </div>
             
             <div className="flex items-center gap-2">
-               <button className="p-2 text-zinc-400 hover:text-zinc-900 dark:text-zinc-100 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">
+               <button className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                  <MoreHorizontal className="w-5 h-5" />
                </button>
             </div>

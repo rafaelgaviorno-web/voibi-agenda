@@ -125,7 +125,7 @@ export default function AgendaConfigClient({
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href={`/dashboard/${empresaId}/agendas`} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full transition-colors text-zinc-500 dark:text-zinc-400">
+          <Link href={`/dashboard/${empresaId}/agendas`} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-zinc-500 dark:text-zinc-400">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
@@ -154,14 +154,14 @@ export default function AgendaConfigClient({
       <div className="flex border-b border-zinc-200 dark:border-zinc-700 mb-6">
         <button 
           onClick={() => setActiveTab('basico')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'basico' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:border-zinc-600'}`}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'basico' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600'}`}
         >
           <User className="w-4 h-4" />
           Dados Básicos
         </button>
         <button 
           onClick={() => setActiveTab('horarios')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'horarios' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:border-zinc-600'}`}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'horarios' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600'}`}
         >
           <Clock className="w-4 h-4" />
           Horários de Atendimento
@@ -169,7 +169,7 @@ export default function AgendaConfigClient({
 
         <button 
           onClick={() => setActiveTab('formulario')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'formulario' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:border-zinc-600'}`}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'formulario' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600'}`}
         >
           <FormInput className="w-4 h-4" />
           Formulário do Cliente
@@ -247,7 +247,7 @@ export default function AgendaConfigClient({
             </div>
             
             <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <label className="flex items-start gap-3 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-xl cursor-pointer hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
+              <label className="flex items-start gap-3 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-xl cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
                 <div className="flex items-center h-5">
                   <input
                     type="checkbox"

@@ -1,17 +1,40 @@
-/* Google Calendar Theme for FullCalendar v6 */
+/* Tema Voibi para FullCalendar v6 — claro e escuro */
 
-/* Variáveis de Cores (Material Design) */
 :root {
-  --fc-border-color: #dadce0;
-  --fc-day-today-bg-color: transparent;
-  --fc-today-bg-color: transparent;
-  --fc-now-indicator-color: #ea4335;
-  --fc-page-bg-color: #ffffff;
+  --vc-border: #e4e4e7;
+  --vc-border-soft: #f1f1f3;
+  --vc-muted: #71717a;
+  --vc-text: #18181b;
+  --vc-today-bg: rgba(82, 113, 255, 0.045);
+  --vc-block-stripe: rgba(113, 113, 122, 0.12);
+  --vc-block-global-bg: rgba(239, 68, 68, 0.05);
+  --vc-block-global-stripe: rgba(239, 68, 68, 0.12);
+  --vc-block-text: #52525b;
+
+  --fc-border-color: var(--vc-border);
+  --fc-today-bg-color: var(--vc-today-bg);
+  --fc-now-indicator-color: #f43f5e;
+  --fc-page-bg-color: transparent;
 }
 
-/* Remover bordas pesadas e deixar suave */
+.dark {
+  --vc-border: #27272a;
+  --vc-border-soft: #1c1c1f;
+  --vc-muted: #a1a1aa;
+  --vc-text: #fafafa;
+  --vc-today-bg: rgba(82, 113, 255, 0.07);
+  --vc-block-stripe: rgba(161, 161, 170, 0.1);
+  --vc-block-global-bg: rgba(239, 68, 68, 0.06);
+  --vc-block-global-stripe: rgba(239, 68, 68, 0.14);
+  --vc-block-text: #a1a1aa;
+
+  --fc-border-color: var(--vc-border);
+  --fc-today-bg-color: var(--vc-today-bg);
+}
+
+/* Bordas suaves */
 .fc-theme-standard td, .fc-theme-standard th {
-  border-color: var(--fc-border-color);
+  border-color: var(--vc-border);
 }
 
 .fc-theme-standard .fc-scrollgrid {
@@ -22,96 +45,237 @@
   border-top: none;
 }
 
-/* Cabeçalho do Google Calendar */
+/* Cabeçalho dos dias */
 .fc-col-header-cell {
   border-top: none !important;
   border-left: none !important;
   border-right: none !important;
 }
 
-/* Remover o link padrão que estragava a cor */
 .fc-col-header-cell-cushion {
   text-decoration: none !important;
   display: block !important;
   padding: 0 !important;
 }
 
-/* Eixos de tempo (esquerdos) */
+.vc-dayhead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 6px;
+}
+
+.vc-dow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vc-muted);
+}
+
+.vc-daynum {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--vc-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.vc-daynum.is-today {
+  background: #5271ff;
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(82, 113, 255, 0.5);
+}
+
+/* Eixo de horários */
 .fc-timegrid-slot-label-cushion {
-  font-size: 10px;
-  color: #70757a;
-  text-transform: lowercase;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vc-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .fc-timegrid-slot {
   height: 42px !important;
   min-height: 42px !important;
-  border-bottom: 1px dotted #e8eaed !important;
+  border-bottom: 1px dashed var(--vc-border-soft) !important;
 }
 
-/* Mostra a linha sólida principal no divisor de hora */
+/* Linha sólida no divisor de hora */
 .fc-timegrid-slot-minor {
-  border-bottom: 1px solid #dadce0 !important;
+  border-bottom: 1px solid var(--vc-border) !important;
 }
 
-/* Estilizar os blocos de eventos */
+/* Blocos de eventos */
 .fc-timegrid-event {
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.15);
-  padding: 2px 6px;
-  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  padding: 0;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
   cursor: pointer;
   min-height: 38px !important;
   overflow: hidden;
 }
 
 .fc-timegrid-event:hover {
-  filter: brightness(0.96);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35) !important;
   z-index: 25 !important;
 }
 
-/* Toolbar superior (Botões e Título) */
-.fc .fc-toolbar-title {
-  font-size: 22px;
-  font-weight: 400;
-  color: #3c4043;
+.fc-daygrid-event {
+  border-radius: 6px;
 }
 
-.fc .fc-button-primary {
+.vc-event {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 7px;
+  overflow: hidden;
+  color: #fff;
+  user-select: none;
+}
+
+.vc-event.is-short {
+  justify-content: center;
+  padding: 2px 7px;
+}
+
+.vc-event-title {
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.vc-event-meta {
+  font-size: 11px;
+  line-height: 1.2;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.vc-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 1px;
+  overflow: hidden;
+}
+
+.vc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #27272a;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 13px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vc-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.vc-pill.is-pulsing i {
+  animation: vc-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes vc-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+/* Bloqueios: hachurado neutro (por agenda) ou avermelhado (geral/feriado) */
+.fc .fc-bg-event.vc-block {
+  opacity: 1;
+  box-shadow: none;
   background-color: transparent;
-  border: 1px solid #dadce0;
-  color: #3c4043;
-  border-radius: 4px;
-  text-transform: capitalize;
-  font-weight: 500;
-  padding: 8px 16px;
-  transition: background-color 0.15s;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--vc-block-stripe) 0 6px,
+    transparent 6px 12px
+  );
+  outline: 1px dashed var(--vc-border);
+  outline-offset: -1px;
+  cursor: not-allowed;
 }
 
-.fc .fc-button-primary:not(:disabled):hover {
-  background-color: #f1f3f4;
-  color: #3c4043;
-  border-color: #dadce0;
+.fc .fc-bg-event.vc-block-global {
+  background-color: var(--vc-block-global-bg);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--vc-block-global-stripe) 0 6px,
+    transparent 6px 12px
+  );
+  outline-color: rgba(239, 68, 68, 0.3);
 }
 
-.fc .fc-button-primary:not(:disabled):active,
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-  background-color: #e8f0fe;
-  color: #1967d2;
-  border-color: #e8f0fe;
+.fc-bg-event.vc-block .fc-event-title {
+  display: none;
 }
 
-/* Linha do tempo vermelha */
-.fc-timegrid-now-indicator-line {
-  border-color: #ea4335;
+.vc-block-label {
+  height: 100%;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vc-block-text);
+}
+
+/* Linha do horário atual */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: #f43f5e;
   border-width: 2px 0 0;
 }
 
 .fc-timegrid-now-indicator-arrow {
-  border-color: #ea4335;
+  border-color: #f43f5e;
   border-width: 6px 0 6px 7px;
   border-top-color: transparent;
   border-bottom-color: transparent;
+}
+
+/* Visão mensal */
+.fc .fc-daygrid-day-number {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vc-muted);
+  text-decoration: none;
+  padding: 6px 8px;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+  color: #5271ff;
+  font-weight: 700;
 }

@@ -5,12 +5,15 @@ import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Menu, ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import EventModal from './EventModal';
 import { saveAppointment, deleteAppointment } from './actions';
 import UnidadeSwitcher from '../UnidadeSwitcher';
 import '@/app/calendar.css';
+
+const escapeHtml = (value: string) =>
+  String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
 export default function CalendarView({ rawEvents, profissionais: agendas, procedimentos, unidades, currentUnidadeId, baseUrl }: any) {
   const searchParams = useSearchParams();
@@ -18,8 +21,6 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   const router = useRouter();
   const empresaId = params.empresa_id as string;
   const agendasParam = searchParams.get('agendas');
-  
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   const [localEvents, setLocalEvents] = useState(rawEvents);
 
@@ -178,8 +179,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const statusAtendimento = e.status_atendimento || 'agendado';
 
         const backgroundColor = 
-          isGlobalBlock ? '#fee2e2' : // Fundo vermelho claro para bloqueio geral
-          isBlock ? '#64748b' : // Cinza/grafite para bloqueio especifico
+          isBlock ? 'transparent' : // Bloqueios usam .vc-block (calendar.css)
           isCancelado ? '#64748b' : // Cinza escuro para cancelado
           statusAtendimento === 'aguardando' ? '#7c3aed' : // Roxo para aguardando atendimento
           statusAtendimento === 'atendido' ? '#16a34a' :
@@ -193,9 +193,11 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           title: isBlock ? (e.observacao || 'Bloqueio') : (e.cliente?.nome || e.nome || 'Agendamento'),
           start: e.start || e.inicio,
           end: e.end || e.fim,
-          display: 'block',
+          // Bloqueios ficam no fundo da coluna e não dividem a largura com os agendamentos
+          display: isBlock ? 'background' : 'block',
           backgroundColor,
           borderColor: backgroundColor,
+          classNames: isBlock ? ['vc-block', isGlobalBlock ? 'vc-block-global' : ''] : [],
           extendedProps: {
             whatsapp: e.cliente?.whatsapp || e.cliente?.telefone || '',
             servico: e.evento?.nome || e.servico || '',
@@ -247,29 +249,21 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const dayNum = textStr.length > 1 ? textStr[1] : '';
         
         if (isMonthView) {
-          return {
-            html: `<div style="display:flex; flex-direction:column; align-items:center; padding: 8px 0;">
-                     <span style="font-size: 11px; text-transform: uppercase; color: #70757a; font-weight: 500;">${weekday}</span>
-                   </div>`
-          };
+          return { html: `<div class="vc-dayhead"><span class="vc-dow">${weekday}</span></div>` };
         }
 
         return {
-          html: `<div style="display:flex; flex-direction:column; align-items:center; padding: 4px 0;">
-                   <span style="font-size: 11px; text-transform: uppercase; color: #70757a; font-weight: 500; margin-bottom: 2px;">${weekday}</span>
-                   <span style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 24px; color: ${arg.isToday ? '#fff' : '#3c4043'}; background-color: ${arg.isToday ? '#1a73e8' : 'transparent'}; margin:0 auto;">
-                     ${dayNum}
-                   </span>
+          html: `<div class="vc-dayhead">
+                   <span class="vc-dow">${weekday}</span>
+                   <span class="vc-daynum${arg.isToday ? ' is-today' : ''}">${dayNum}</span>
                  </div>`
         };
       },
       eventContent: (arg) => {
+        const title = escapeHtml(arg.event.title);
+
         if (arg.event.extendedProps.status === 'bloqueio') {
-          return { 
-            html: `<div class="p-1 text-zinc-700 dark:text-zinc-300 font-bold text-[10px] uppercase text-center w-full h-full flex items-center justify-center bg-zinc-200/50 rounded-sm border border-zinc-300 dark:border-zinc-600 border-dashed" style="min-height: 24px;">
-                     ${arg.event.title}
-                   </div>` 
-          };
+          return { html: `<div class="vc-block-label">${title}</div>` };
         }
 
         const start = arg.event.start;
@@ -278,8 +272,14 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         
         const statusAgendamento = arg.event.extendedProps.status || 'pendente';
         const statusAtendimento = arg.event.extendedProps.status_atendimento || 'agendado';
+        const servico = escapeHtml(arg.event.extendedProps.servico || 'Agendamento');
         
-        const tooltipText = `Paciente: ${arg.event.title}\nAgendamento: ${statusAgendamento.toUpperCase()}\nAtendimento: ${statusAtendimento.toUpperCase()}\nWhatsApp: ${arg.event.extendedProps.whatsapp || 'Não informado'}\nProcedimento: ${arg.event.extendedProps.servico || 'Agendamento'}\nHorário: ${arg.timeText}`;
+        const tooltipText = escapeHtml(`Paciente: ${arg.event.title}
+Agendamento: ${statusAgendamento.toUpperCase()}
+Atendimento: ${statusAtendimento.toUpperCase()}
+WhatsApp: ${arg.event.extendedProps.whatsapp || 'Não informado'}
+Procedimento: ${arg.event.extendedProps.servico || 'Agendamento'}
+Horário: ${arg.timeText}`);
 
         const isCancelado = statusAgendamento === 'cancelado';
         const isPendente = statusAgendamento === 'pendente';
@@ -290,50 +290,37 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           return {
             html: `
               <div title="${tooltipText}" class="px-1.5 py-0.5 text-white truncate text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
-                <span>${arg.timeText}</span>
-                <span class="truncate ${textStyle}">${arg.event.title}</span>
+                <span class="opacity-80 font-medium">${arg.timeText}</span>
+                <span class="truncate ${textStyle}">${title}</span>
               </div>
             `
           };
         }
 
+        const pill = (label: string, dot: string, extra = '') =>
+          `<span class="vc-pill ${extra}"><i style="background:${dot}"></i>${label}</span>`;
+
         const badges: string[] = [];
-        if (arg.event.extendedProps.is_encaixe) {
-          badges.push('<span class="bg-yellow-400 text-yellow-950 text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Encaixe</span>');
-        }
-        if (isPendente) {
-          badges.push('<span class="bg-amber-400 text-amber-950 text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Pendente</span>');
-        } else if (isCancelado) {
-          badges.push('<span class="bg-zinc-800 text-zinc-100 text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm">Cancelado</span>');
-        } else {
-          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/20">Confirmado</span>');
-        }
+        if (arg.event.extendedProps.is_encaixe) badges.push(pill('Encaixe', '#eab308'));
+        if (isPendente) badges.push(pill('Pendente', '#f59e0b'));
+        else if (isCancelado) badges.push(pill('Cancelado', '#71717a'));
+        else badges.push(pill('Confirmado', '#10b981'));
 
         // Exibe SEMPRE a badge do status de atendimento
-        if (statusAtendimento === 'aguardando') {
-          badges.push('<span class="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30 animate-pulse">Aguardando</span>');
-        } else if (statusAtendimento === 'atendido') {
-          badges.push('<span class="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Atendido</span>');
-        } else if (statusAtendimento === 'faltou') {
-          badges.push('<span class="bg-red-800 text-white text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Faltou</span>');
-        } else if (statusAtendimento === 'reagendou') {
-          badges.push('<span class="bg-orange-700 text-white text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Reagendou</span>');
-        } else {
-          badges.push('<span class="bg-blue-700 text-white text-[8px] font-black px-1.5 py-0.5 leading-none rounded uppercase tracking-wider shadow-sm ring-1 ring-white/30">Agendado</span>');
-        }
+        if (statusAtendimento === 'aguardando') badges.push(pill('Aguardando', '#8b5cf6', 'is-pulsing'));
+        else if (statusAtendimento === 'atendido') badges.push(pill('Atendido', '#10b981'));
+        else if (statusAtendimento === 'faltou') badges.push(pill('Faltou', '#ef4444'));
+        else if (statusAtendimento === 'reagendou') badges.push(pill('Reagendou', '#f97316'));
+        else badges.push(pill('Agendado', '#5271ff'));
 
-        const badgesHtml = badges.length > 0 
-          ? `<div class="flex items-center gap-1 flex-wrap mb-1 shrink-0">${badges.join('')}</div>` 
-          : '';
+        const badgesHtml = `<div class="vc-pills">${badges.join('')}</div>`;
 
         if (durationMins <= 30) {
           return {
             html: `
-              <div title="${tooltipText}" class="px-2 py-1 text-white h-full flex flex-col justify-center overflow-hidden cursor-pointer relative select-none">
+              <div title="${tooltipText}" class="vc-event is-short">
+                <div class="vc-event-title ${textStyle}">${title}</div>
                 ${badgesHtml}
-                <div class="font-bold text-[12px] leading-tight truncate text-white shrink-0 ${textStyle}">
-                  ${arg.event.title}
-                </div>
               </div>
             `
           };
@@ -341,14 +328,10 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
         return {
           html: `
-            <div title="${tooltipText}" class="px-2 py-1.5 text-white h-full flex flex-col justify-start overflow-hidden cursor-pointer relative select-none">
+            <div title="${tooltipText}" class="vc-event">
+              <div class="vc-event-title ${textStyle}">${title}</div>
+              <div class="vc-event-meta">${arg.timeText} · ${servico}</div>
               ${badgesHtml}
-              <div class="font-bold text-[13px] leading-tight truncate text-white mt-0.5 shrink-0 ${textStyle}">
-                ${arg.event.title}
-              </div>
-              <div class="text-[11px] text-white/85 truncate mt-0.5 flex items-center gap-1 shrink-0">
-                🩺 ${arg.event.extendedProps.servico || 'Agendamento'}
-              </div>
             </div>
           `
         };
@@ -476,96 +459,91 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   const handlePrev = () => calendarInstance.current?.prev();
   const handleNext = () => calendarInstance.current?.next();
   const handleToday = () => calendarInstance.current?.today();
-  const handleViewChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const view = e.target.value;
+  const handleViewChange = (view: string) => {
     setCurrentView(view);
     calendarInstance.current?.changeView(view);
   };
 
-  return (
-    <div className="flex flex-col h-screen w-full font-sans text-sm bg-white dark:bg-zinc-900 text-[#3c4043]">
-      
-      {/* Top Bar - Estilo Google Calendar */}
-      <header className="flex items-center justify-between px-4 py-2 border-b border-[#dadce0]">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors text-[#5f6368]"
-            title="Menu principal"
-          >
-            <Menu size={24} />
-          </button>
-          
-          <div className="flex items-center gap-2 mr-4">
-            <span className="text-[22px] font-normal text-[#3c4043] dark:text-zinc-200">Agenda</span>
-          </div>
+  const views = [
+    { value: 'timeGridDay', label: 'Dia' },
+    { value: 'timeGridWeek', label: 'Semana' },
+    { value: 'dayGridMonth', label: 'Mês' },
+  ];
 
+  const iconButton = 'p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors';
+
+  return (
+    <div className="flex flex-col h-screen w-full font-sans text-sm bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300">
+      
+      {/* Barra superior */}
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 py-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-3 min-w-0">
           <button 
             onClick={handleToday}
-            className="px-4 py-2 font-medium text-sm border border-[#dadce0] rounded hover:bg-[#f1f3f4] transition-colors"
+            className="px-3 py-1.5 font-medium text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
           >
             Hoje
           </button>
 
-          <div className="flex items-center gap-1">
-            <button 
-              onClick={handlePrev}
-              className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors text-[#5f6368]"
-            >
-              <ChevronLeft size={20} />
+          <div className="flex items-center">
+            <button onClick={handlePrev} className={iconButton} title="Anterior" aria-label="Anterior">
+              <ChevronLeft size={18} />
             </button>
-            <button 
-              onClick={handleNext}
-              className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors text-[#5f6368]"
-            >
-              <ChevronRight size={20} />
+            <button onClick={handleNext} className={iconButton} title="Próximo" aria-label="Próximo">
+              <ChevronRight size={18} />
             </button>
           </div>
 
-          <h2 className="text-[22px] font-normal text-[#3c4043] ml-2 capitalize">
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap truncate first-letter:uppercase">
             {calendarTitle}
           </h2>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <UnidadeSwitcher unidades={unidades} currentUnidadeId={currentUnidadeId} baseUrl={baseUrl} />
-          </div>
-          
-          <button 
-            onClick={() => { setSelectedEventData(null); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white shadow-sm rounded-full text-sm font-medium hover:bg-blue-700 hover:shadow transition-all"
-          >
-            <Plus size={18} className="text-white" />
-            Criar Agendamento
-          </button>
-          
-          <div className="relative flex items-center hidden md:flex">
-            <Search className="absolute left-3 text-gray-500 w-4 h-4" />
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="relative hidden md:flex items-center">
+            <Search className="absolute left-2.5 text-zinc-400 w-4 h-4 pointer-events-none" />
             <input 
               type="text" 
-              placeholder="Pesquisar..." 
-              className="pl-10 pr-4 py-2 bg-[#f1f3f4] border-none rounded-md focus:bg-white dark:bg-zinc-900 focus:ring-1 focus:ring-blue-500 focus:shadow-md transition-all text-sm w-64"
+              placeholder="Buscar paciente..." 
+              className="pl-8 pr-3 py-1.5 w-52 rounded-lg text-sm bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15 transition-all"
               value={searchPatient}
               onChange={e => setSearchPatient(e.target.value)}
             />
           </div>
 
-          <select 
-            value={currentView} 
-            onChange={handleViewChange}
-            className="border border-[#dadce0] rounded px-3 py-2 text-sm font-medium hover:bg-[#f1f3f4] focus:outline-none transition-colors appearance-none bg-white dark:bg-zinc-900 min-w-[100px] cursor-pointer"
+          <div className="flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800" role="tablist">
+            {views.map(v => (
+              <button
+                key={v.value}
+                role="tab"
+                aria-selected={currentView === v.value}
+                onClick={() => handleViewChange(v.value)}
+                className={`px-3 py-1 rounded-md text-[13px] font-medium transition-all ${
+                  currentView === v.value
+                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+
+          <UnidadeSwitcher unidades={unidades} currentUnidadeId={currentUnidadeId} baseUrl={baseUrl} />
+          
+          <button 
+            onClick={() => { setSelectedEventData(null); setIsModalOpen(true); }}
+            className="flex items-center gap-1.5 pl-3 pr-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-semibold shadow-sm shadow-brand-500/30 whitespace-nowrap transition-colors"
           >
-            <option value="timeGridDay">Dia</option>
-            <option value="timeGridWeek">Semana</option>
-            <option value="dayGridMonth">Mês</option>
-          </select>
+            <Plus size={16} strokeWidth={2.5} />
+            Novo agendamento
+          </button>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Grade do Calendário */}
-        <div className="flex-1 overflow-hidden bg-white dark:bg-zinc-900 relative z-0">
+        <div className="flex-1 overflow-hidden bg-white dark:bg-zinc-950 relative z-0">
           <div ref={calendarRef} className="absolute inset-0"></div>
         </div>
       </div>

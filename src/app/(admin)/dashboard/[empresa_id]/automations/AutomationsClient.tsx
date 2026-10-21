@@ -1387,7 +1387,7 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
-                  <button type="button" onClick={() => {setShowLembreteForm(false); setIsEditingLembrete(null);}} className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:bg-zinc-800 rounded-lg transition-colors cursor-pointer">
+                  <button type="button" onClick={() => {setShowLembreteForm(false); setIsEditingLembrete(null);}} className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer">
                     Cancelar
                   </button>
                   <button type="submit" disabled={isSavingRule} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm disabled:opacity-50">

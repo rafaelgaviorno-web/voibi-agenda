@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CalendarDays, ChevronDown, ChevronRight, ArrowRightLeft, Search } from 'lucide-react';
+import { CalendarDays, ChevronDown, ArrowRightLeft, Search, Check } from 'lucide-react';
+import { navIcon, navItem, navItemIdle } from './navStyles';
 import TransferModal from './calendar/TransferModal';
 import { transferAppointments } from './calendar/actions';
 
@@ -86,74 +87,86 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 transition-colors ${
-          isOpen ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-700 dark:text-zinc-300 font-medium'
-        } text-sm`}
+        className={`${navItem} justify-between ${navItemIdle}`}
       >
         <div className="flex items-center gap-3">
-          <CalendarDays className={`w-4 h-4 ${isOpen ? 'text-indigo-600' : 'text-zinc-500 dark:text-zinc-400'}`} />
+          <CalendarDays className={navIcon} />
           <span>Agendas</span>
+          {agendas.length > 0 && (
+            <span className="text-[11px] font-medium tabular-nums px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+              {selectedAgendas.length}/{agendas.length}
+            </span>
+          )}
         </div>
-        {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-zinc-400" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-zinc-400" />
-        )}
+        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
       </button>
       
       {isOpen && (
-        <div className="pl-6 pr-3 py-2 space-y-3">
+        <div className="ml-[1.4rem] pl-3 border-l border-zinc-200 dark:border-zinc-800 py-1.5 space-y-2">
           
-          <div className="relative flex items-center">
-             <Search className="absolute left-2.5 text-zinc-400 w-3.5 h-3.5" />
-             <input 
-               type="text" 
-               placeholder="Buscar agenda..." 
-               className="pl-8 pr-3 py-1.5 w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all text-zinc-700 dark:text-zinc-300"
-               value={searchQuery}
-               onChange={e => setSearchQuery(e.target.value)}
-             />
-          </div>
+          {agendas.length > 5 && (
+            <div className="relative flex items-center">
+               <Search className="absolute left-2.5 text-zinc-400 w-3.5 h-3.5" />
+               <input 
+                 type="text" 
+                 placeholder="Buscar agenda..." 
+                 className="pl-8 pr-3 py-1.5 w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-xs focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all text-zinc-700 dark:text-zinc-300 placeholder:text-zinc-400"
+                 value={searchQuery}
+                 onChange={e => setSearchQuery(e.target.value)}
+               />
+            </div>
+          )}
 
-          <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-3 px-1">
             <button 
               onClick={handleSelectAll} 
-              className={`text-[11px] font-medium transition-colors ${isAllSelected ? 'text-indigo-600' : 'text-zinc-500 hover:text-indigo-600'}`}
+              disabled={isAllSelected}
+              className="text-[11px] font-medium text-zinc-500 hover:text-brand-600 dark:hover:text-brand-400 disabled:text-brand-600 dark:disabled:text-brand-400 transition-colors"
             >
               Marcar todas
             </button>
+            <span className="text-zinc-300 dark:text-zinc-700">·</span>
             <button 
               onClick={handleDeselectAll} 
-              className={`text-[11px] font-medium transition-colors ${isNoneSelected ? 'text-red-600' : 'text-zinc-500 hover:text-red-600'}`}
+              disabled={isNoneSelected}
+              className="text-[11px] font-medium text-zinc-500 hover:text-red-600 disabled:text-zinc-400 dark:disabled:text-zinc-600 transition-colors"
             >
               Desmarcar todas
             </button>
           </div>
 
-          <div className="max-h-56 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-            {filteredAgendas.map(agenda => (
-              <div key={agenda.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-zinc-50 dark:bg-zinc-950 rounded-lg group transition-colors">
-                <button 
-                  onClick={() => toggleAgenda(agenda.id)}
-                  className={`flex items-center gap-3 cursor-pointer flex-1 min-w-0 text-left transition-opacity ${selectedAgendas.includes(agenda.id) ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: agenda.cor }}></div>
-                  <span className={`text-sm truncate ${selectedAgendas.includes(agenda.id) ? 'font-semibold text-zinc-800 dark:text-zinc-100' : 'font-medium text-zinc-500 dark:text-zinc-400'}`}>
-                    {agenda.nome}
-                  </span>
-                </button>
-                <button
-                  onClick={() => { setTransferSourceId(agenda.id); setIsTransferModalOpen(true); }}
-                  title="Transferir Agendamentos"
-                  className="p-1.5 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-                >
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
+          <div className="max-h-56 overflow-y-auto space-y-0.5 pr-1">
+            {filteredAgendas.map(agenda => {
+              const selected = selectedAgendas.includes(agenda.id);
+              return (
+                <div key={agenda.id} className="flex items-center justify-between px-1.5 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 rounded-md group transition-colors">
+                  <button 
+                    onClick={() => toggleAgenda(agenda.id)}
+                    className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0 text-left"
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 border-2 transition-colors"
+                      style={{ borderColor: agenda.cor, backgroundColor: selected ? agenda.cor : 'transparent' }}
+                    >
+                      {selected && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />}
+                    </span>
+                    <span className={`text-[13px] truncate transition-colors ${selected ? 'font-medium text-zinc-800 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                      {agenda.nome}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => { setTransferSourceId(agenda.id); setIsTransferModalOpen(true); }}
+                    title="Transferir Agendamentos"
+                    className="p-1 text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-zinc-700 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all shrink-0"
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
             {filteredAgendas.length === 0 && (
               <p className="text-xs text-zinc-400 text-center py-2">Nenhuma agenda encontrada.</p>
             )}

@@ -82,7 +82,7 @@ export default function UserRowActions({
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Editar Usuário</h2>
-              <button onClick={() => setIsEditing(false)} className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-400 p-1 rounded-full hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">
+              <button onClick={() => setIsEditing(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-400 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>

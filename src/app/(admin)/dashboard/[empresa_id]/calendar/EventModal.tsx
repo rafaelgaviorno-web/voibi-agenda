@@ -231,14 +231,14 @@ export default function EventModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             {isEditMode ? 'Editar Agendamento' : 'Novo Agendamento'}
           </h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-400 p-1 rounded-full hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-400 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -403,7 +403,7 @@ export default function EventModal({
               required
               value={formData.nome}
               onChange={e => setFormData({...formData, nome: e.target.value})}
-              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow" 
               placeholder="Nome completo"
             />
           </div>
@@ -417,7 +417,7 @@ export default function EventModal({
               required
               value={formData.whatsapp}
               onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow" 
               placeholder="(00) 00000-0000"
             />
           </div>
@@ -433,7 +433,7 @@ export default function EventModal({
                 required
                 value={formData.data}
                 onChange={e => setFormData({...formData, data: e.target.value})}
-                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow" 
               />
             </div>
             
@@ -446,7 +446,7 @@ export default function EventModal({
                 required
                 value={formData.agendaId}
                 onChange={e => setFormData({...formData, agendaId: e.target.value})}
-                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow"
               >
                 <option value="" disabled>Selecione</option>
                 {agendas.map(ag => (
@@ -465,7 +465,7 @@ export default function EventModal({
               <select 
                 value={formData.procedimentoId}
                 onChange={e => setFormData({...formData, procedimentoId: e.target.value, horaFim: calculateEnd(formData.horaInicio, e.target.value)})}
-                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow"
               >
                 <option value="" disabled>Selecione</option>
                 {procedimentos?.map(p => (
@@ -483,7 +483,7 @@ export default function EventModal({
                 required
                 value={formData.horaInicio}
                 onChange={e => setFormData({...formData, horaInicio: e.target.value, horaFim: calculateEnd(e.target.value)})}
-                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow"
               >
                 {!formData.horaInicio && availableSlots.length === 0 && <option value="" disabled>Selecione uma agenda...</option>}
                 {formData.horaInicio && !availableSlots.includes(formData.horaInicio) && (
@@ -517,7 +517,7 @@ export default function EventModal({
               value={formData.observacao}
               onChange={e => setFormData({...formData, observacao: e.target.value})}
               rows={3}
-              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none" 
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-shadow resize-none" 
               placeholder="Anotações adicionais..."
             />
           </div>
@@ -531,7 +531,7 @@ export default function EventModal({
               type="button" 
               onClick={handleDelete}
               disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               Excluir
@@ -553,7 +553,7 @@ export default function EventModal({
               form="event-form"
               type="submit" 
               disabled={isSaving}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+              className="px-6 py-2 text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 rounded-lg font-semibold shadow-sm shadow-brand-500/30 transition-colors disabled:opacity-50"
             >
               {isSaving ? 'Salvando...' : 'Salvar'}
             </button>

@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { User, LogOut, Lock, Moon, Sun, ChevronDown, ChevronRight } from 'lucide-react';
+import { User, LogOut, Lock, Moon, Sun, ChevronUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
+import { navIcon, navItem, navItemIdle } from './navStyles';
 
 export default function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -18,52 +19,50 @@ export default function ProfileDropdown() {
     router.push('/login');
   };
 
-  return (
-    <div className="mt-auto border-t border-zinc-200 dark:border-zinc-800">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-            <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          </div>
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Meu Perfil</span>
-        </div>
-        {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-zinc-400" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-zinc-400" />
-        )}
-      </button>
+  const isDark = resolvedTheme === 'dark';
 
+  return (
+    <div className="mt-auto border-t border-zinc-200 dark:border-zinc-800 p-3">
       {isOpen && (
-        <div className="px-4 pb-4 space-y-1">
+        <div className="pb-2 space-y-0.5">
           <Link 
             href="/redefinir-senha" 
-            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm font-medium text-zinc-600 dark:text-zinc-400 transition-colors"
+            className={`${navItem} ${navItemIdle}`}
           >
-            <Lock className="w-4 h-4" />
+            <Lock className={navIcon} />
             Alterar Senha
           </Link>
           
           <button 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm font-medium text-zinc-600 dark:text-zinc-400 transition-colors"
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className={`${navItem} ${navItemIdle}`}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            Tema {theme === 'dark' ? 'Claro' : 'Escuro'}
+            {isDark ? <Sun className={navIcon} /> : <Moon className={navIcon} />}
+            Tema {isDark ? 'Claro' : 'Escuro'}
           </button>
 
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium text-red-600 dark:text-red-400 transition-colors"
+            className={`${navItem} text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10`}
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className={navIcon} />
             Sair da conta
           </button>
         </div>
       )}
+
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`${navItem} justify-between ${navItemIdle} ${isOpen ? 'bg-zinc-100 dark:bg-zinc-800/70' : ''}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-500/15 flex items-center justify-center">
+            <User className="w-3.5 h-3.5 text-brand-600 dark:text-brand-300" />
+          </div>
+          <span className="text-zinc-700 dark:text-zinc-300">Meu Perfil</span>
+        </div>
+        <ChevronUp className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? '' : 'rotate-180'}`} />
+      </button>
     </div>
   );
 }

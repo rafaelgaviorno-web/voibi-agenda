@@ -1,18 +1,51 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Tokens semânticos — tema claro */
 :root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+
+  --primary: 229 100% 66%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+
+  --accent: 229 100% 97%;
+  --accent-foreground: 230 70% 50%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 229 100% 66%;
+  --radius: 0.75rem;
+}
+
+/* Tokens semânticos — tema escuro */
+.dark {
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
 
-  --card: 240 10% 3.9%;
+  --card: 240 6% 7%;
   --card-foreground: 0 0% 98%;
 
-  --popover: 240 10% 3.9%;
+  --popover: 240 6% 7%;
   --popover-foreground: 0 0% 98%;
 
-  --primary: 263.4 70% 50.4%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 229 100% 66%;
+  --primary-foreground: 0 0% 100%;
 
   --secondary: 240 3.7% 15.9%;
   --secondary-foreground: 0 0% 98%;
@@ -20,22 +53,21 @@
   --muted: 240 3.7% 15.9%;
   --muted-foreground: 240 5% 64.9%;
 
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  --accent: 229 40% 16%;
+  --accent-foreground: 229 100% 80%;
 
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 62.8% 50%;
   --destructive-foreground: 0 0% 98%;
 
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --ring: 263.4 70% 50.4%;
-  --radius: 0.75rem;
+  --ring: 229 100% 66%;
 }
 
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
-  
+
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
@@ -60,13 +92,59 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* FullCalendar Dark Mode Fixes */
+/*
+ * Escala da marca Voibi (#5271FF, cor do logo).
+ * Substitui blue/indigo/violet do Tailwind para que todas as telas
+ * passem a usar a mesma cor principal sem alterar cada componente.
+ */
+@theme {
+  --color-brand-50: #f0f3ff;
+  --color-brand-100: #e2e8ff;
+  --color-brand-200: #cad4ff;
+  --color-brand-300: #a8b8ff;
+  --color-brand-400: #7e95ff;
+  --color-brand-500: #5271ff;
+  --color-brand-600: #3f59f2;
+  --color-brand-700: #3346d6;
+  --color-brand-800: #2b3aad;
+  --color-brand-900: #283488;
+  --color-brand-950: #181e4f;
+
+  --color-blue-50: #f0f3ff;
+  --color-blue-100: #e2e8ff;
+  --color-blue-200: #cad4ff;
+  --color-blue-300: #a8b8ff;
+  --color-blue-400: #7e95ff;
+  --color-blue-500: #5271ff;
+  --color-blue-600: #3f59f2;
+  --color-blue-700: #3346d6;
+  --color-blue-800: #2b3aad;
+  --color-blue-900: #283488;
+  --color-blue-950: #181e4f;
+
+  --color-indigo-50: #f0f3ff;
+  --color-indigo-100: #e2e8ff;
+  --color-indigo-200: #cad4ff;
+  --color-indigo-300: #a8b8ff;
+  --color-indigo-400: #7e95ff;
+  --color-indigo-500: #5271ff;
+  --color-indigo-600: #3f59f2;
+  --color-indigo-700: #3346d6;
+  --color-indigo-800: #2b3aad;
+  --color-indigo-900: #283488;
+  --color-indigo-950: #181e4f;
+}
+
+/* FullCalendar — cores seguem os tokens nos dois temas (ver calendar.css) */
 .dark {
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: #18181b;
@@ -80,8 +158,8 @@
   --fc-button-hover-border-color: #52525b;
   --fc-button-active-bg-color: #52525b;
   --fc-button-active-border-color: #71717a;
-  --fc-today-bg-color: rgba(255, 255, 255, 0.05);
-  --fc-now-indicator-color: #ef4444;
+  --fc-today-bg-color: rgba(82, 113, 255, 0.06);
+  --fc-now-indicator-color: #f43f5e;
 }
 .dark .fc {
   color: #e4e4e7;
@@ -91,7 +169,27 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  @apply antialiased selection:bg-primary/30 selection:text-primary-foreground;
+  font-feature-settings: "cv11", "ss01";
+  @apply antialiased selection:bg-primary/25;
+}
+
+/* Controles nativos (date picker, select, scrollbar) seguem o tema */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
+/* Foco visível e consistente em todo o app */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Scrollbars discretas */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(161 161 170 / 0.35) transparent;
+}
+.dark * {
+  scrollbar-color: rgb(82 82 91 / 0.6) transparent;
 }
 
 .glass {

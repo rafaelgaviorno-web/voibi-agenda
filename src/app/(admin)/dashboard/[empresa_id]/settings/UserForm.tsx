@@ -141,7 +141,7 @@ export default function UserForm({ agendas, unidades, createUsuario }: { agendas
                </div>
             )}
             {agendasFiltradas.map(agenda => (
-              <label key={agenda.id} className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white dark:bg-zinc-900 rounded-md transition-colors border border-transparent hover:border-zinc-200 dark:border-zinc-700">
+              <label key={agenda.id} className="flex items-center gap-3 cursor-pointer p-2 hover:bg-white dark:bg-zinc-900 rounded-md transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
                 <input 
                   type="checkbox" 
                   name="agendas" 

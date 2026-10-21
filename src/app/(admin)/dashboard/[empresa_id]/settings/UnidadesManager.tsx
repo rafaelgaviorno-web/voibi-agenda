@@ -103,7 +103,7 @@ export default function UnidadesManager({
               />
             </div>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setIsAdding(false); setEditingId(null); }} className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-md text-sm font-medium hover:bg-zinc-50 dark:bg-zinc-950">
+              <button type="button" onClick={() => { setIsAdding(false); setEditingId(null); }} className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-md text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-950">
                 Cancelar
               </button>
               <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50">

@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthShell, { AuthAlert, authButton, authInput, authLabel } from '@/components/AuthShell';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -48,50 +49,29 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="max-w-md w-full p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl">
-        <div className="flex justify-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight"><span className="text-blue-600">Voibi</span> <span className="text-white">Agenda</span></h1>
+    <AuthShell title="Definir nova senha" description="Digite a sua nova senha de acesso.">
+      {error && <AuthAlert type="error">{error}</AuthAlert>}
+      {message && <AuthAlert type="success">{message}</AuthAlert>}
+
+      <form onSubmit={handleUpdate} className="space-y-5">
+        <div className="space-y-1.5">
+          <label htmlFor="password" className={authLabel}>Nova senha</label>
+          <input 
+            required 
+            id="password"
+            type="password" 
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={authInput}
+            placeholder="Mínimo de 6 caracteres" 
+          />
         </div>
-        
-        <h2 className="text-xl font-bold text-center text-white mb-2">Definir Nova Senha</h2>
-        <p className="text-zinc-400 text-center mb-8 text-sm">Digite a sua nova senha de acesso</p>
 
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-lg text-sm mb-6 text-center">
-            {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-sm mb-6 text-center">
-            {message}
-          </div>
-        )}
-
-        <form onSubmit={handleUpdate} className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300 ml-1">Nova Senha</label>
-            <input 
-              required 
-              type="password" 
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-zinc-600" 
-              placeholder="••••••••" 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg shadow-blue-600/20 mt-4 disabled:opacity-50"
-          >
-            {loading ? 'Salvando...' : 'Salvar Nova Senha'}
-          </button>
-        </form>
-      </div>
-    </div>
+        <button type="submit" disabled={loading} className={`${authButton} mt-2`}>
+          {loading ? 'Salvando...' : 'Salvar nova senha'}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

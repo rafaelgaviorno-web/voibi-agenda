@@ -38,7 +38,7 @@ export default function AgendasDropdown({ agendas, baseUrl }: { agendas: any[], 
 
   return (
     <details className="group [&_summary::-webkit-details-marker]:hidden" open>
-      <summary className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:bg-zinc-800 text-sm font-medium transition-colors cursor-pointer text-zinc-700 dark:text-zinc-300">
+      <summary className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm font-medium transition-colors cursor-pointer text-zinc-700 dark:text-zinc-300">
         <div className="flex items-center gap-3">
           <CalendarDays className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
           Agendas
@@ -72,7 +72,7 @@ export default function AgendasDropdown({ agendas, baseUrl }: { agendas: any[], 
                 </svg>
               )}
             </div>
-            <span className="text-sm text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:text-zinc-100 transition-colors truncate">
+            <span className="text-sm text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors truncate">
               {agenda.nome}
             </span>
           </label>
