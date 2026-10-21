@@ -30,10 +30,11 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
     ];
   } else {
     const supabase = getServiceSupabase();
-    const { data } = await supabase.from('agend_profissionais').select('*').eq('empresa_id', empresa_id).order('created_at', { ascending: false });
+    const [{ data }, { data: uns }] = await Promise.all([
+      supabase.from('agend_profissionais').select('*').eq('empresa_id', empresa_id).order('created_at', { ascending: false }),
+      supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id)
+    ]);
     agendas = data || [];
-    
-    const { data: uns } = await supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id);
     unidades = uns || [];
   }
 

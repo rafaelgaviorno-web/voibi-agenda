@@ -23,18 +23,19 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
     ];
   } else {
     const supabase = getServiceSupabase();
-    const { data } = await supabase.from('agend_empresas').select('api_key, webhook_url').eq('id', empresa_id).single();
+    const [{ data }, { data: regras }] = await Promise.all([
+      supabase.from('agend_empresas').select('api_key, webhook_url').eq('id', empresa_id).single(),
+      supabase
+        .from('agend_regras_lembretes')
+        .select('*')
+        .eq('empresa_id', empresa_id)
+        .order('minutos_antes', { ascending: false })
+    ]);
     if (data) {
       apiKey = data.api_key;
       webhookUrl = data.webhook_url || '';
     }
 
-    const { data: regras } = await supabase
-      .from('agend_regras_lembretes')
-      .select('*')
-      .eq('empresa_id', empresa_id)
-      .order('minutos_antes', { ascending: false });
-    
     initialLembretes = regras || [];
   }
 

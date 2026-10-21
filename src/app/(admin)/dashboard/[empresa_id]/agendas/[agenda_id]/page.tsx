@@ -34,23 +34,24 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
   } else {
     const supabase = getServiceSupabase();
     
-    const { data: agendaData } = await supabase
-      .from('agend_profissionais')
-      .select('*')
-      .eq('id', agenda_id)
-      .eq('empresa_id', empresa_id)
-      .single();
-      
+    // Em paralelo; a disponibilidade só é usada se a agenda for desta empresa
+    const [{ data: agendaData }, { data: dispData }] = await Promise.all([
+      supabase
+        .from('agend_profissionais')
+        .select('*')
+        .eq('id', agenda_id)
+        .eq('empresa_id', empresa_id)
+        .single(),
+      supabase
+        .from('agend_disponibilidade')
+        .select('*')
+        .eq('profissional_id', agenda_id)
+        .order('dia_semana', { ascending: true })
+        .order('hora_inicio', { ascending: true })
+    ]);
+
     if (!agendaData) notFound();
     agenda = agendaData;
-
-    const { data: dispData } = await supabase
-      .from('agend_disponibilidade')
-      .select('*')
-      .eq('profissional_id', agenda_id)
-      .order('dia_semana', { ascending: true })
-      .order('hora_inicio', { ascending: true });
-    
     disponibilidade = dispData || [];
   }
 

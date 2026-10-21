@@ -67,22 +67,23 @@ export default async function ReportsPage({ params }: { params: Promise<{ empres
     ];
   } else {
     const supabase = getServiceSupabase();
-    
-    const { data: uns } = await supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id);
+
+    // Consultas em paralelo: cada ida ao banco custa uma viagem do servidor até o Supabase
+    const [{ data: uns }, { data: agendamentosData }, { data: profData }, { data: procData }] = await Promise.all([
+      supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
+      supabase.from('agend_agendamentos').select(`
+        id, inicio, fim, status, status_atendimento, is_encaixe,
+        cliente:agend_clientes_finais(nome, telefone),
+        profissional:agend_profissionais!inner(id, nome, cor, empresa_id),
+        evento:agend_tipos_evento(id, nome)
+      `).eq('profissional.empresa_id', empresa_id),
+      supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id),
+      supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id)
+    ]);
+
     unidades = uns || [];
-
-    const { data: agendamentosData } = await supabase.from('agend_agendamentos').select(`
-      id, inicio, fim, status, status_atendimento, is_encaixe,
-      cliente:agend_clientes_finais(nome, telefone),
-      profissional:agend_profissionais!inner(id, nome, cor, empresa_id),
-      evento:agend_tipos_evento(id, nome)
-    `).eq('profissional.empresa_id', empresa_id);
     agendamentos = (agendamentosData || []).filter(a => a.status !== 'bloqueio');
-
-    const { data: profData } = await supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id);
     profissionais = profData || [];
-    
-    const { data: procData } = await supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id);
     procedimentos = procData || [];
   }
 
