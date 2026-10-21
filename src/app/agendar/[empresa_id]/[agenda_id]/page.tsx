@@ -78,7 +78,7 @@ export default async function AgendamentoPublicoPage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col font-sans">
       <BookingWizard 
         empresa={empresa} 
         profissional={profissional} 

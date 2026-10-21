@@ -1,10 +1,21 @@
 'use client';
 
+import { VoibiMark } from '@/components/VoibiLogo';
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Calendar as CalendarIcon, Clock, CheckCircle2, User, Phone, ArrowRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br';
 dayjs.locale('pt-br');
+
+// Iniciais do profissional para o avatar (ignora títulos como Dr./Dra.)
+const getInitials = (nome: string) =>
+  (nome || '')
+    .replace(/^dra?\.?\s+/i, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join('');
 
 export default function BookingWizard({ empresa, profissional }: any) {
   const [step, setStep] = useState(1);
@@ -200,20 +211,24 @@ export default function BookingWizard({ empresa, profissional }: any) {
   };
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-50/50">
-      <div className="max-w-5xl w-full mx-auto px-4 py-8 md:py-12 flex-1 flex flex-col justify-center">
+    <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-50 [color-scheme:light]">
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand-100/70 to-transparent pointer-events-none" />
+      <div className="relative max-w-5xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-8 md:py-12 flex-1 flex flex-col justify-center">
         
         {/* Card Principal - Layout Duas Colunas */}
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 flex flex-col md:flex-row overflow-hidden min-h-[600px]">
+        <div className="bg-white rounded-3xl shadow-[0_12px_40px_-12px_rgba(24,30,79,0.18)] ring-1 ring-zinc-900/5 flex flex-col md:flex-row overflow-hidden md:min-h-[600px]">
           
           {/* Coluna Esquerda: Dados da Clínica e Resumo */}
-          <div className="w-full md:w-[340px] bg-zinc-50/50 p-8 border-b md:border-b-0 md:border-r border-zinc-100 flex flex-col">
+          <div className="w-full md:w-[320px] bg-zinc-50/70 p-6 md:p-8 border-b md:border-b-0 md:border-r border-zinc-100 flex flex-col">
             <div className="flex-1">
-              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-zinc-100 mb-6 flex items-center justify-center text-2xl font-bold" style={{ color: profissional.cor }}>
-                {empresa.nome.charAt(0)}
+              <div
+                className="w-14 h-14 rounded-2xl mb-5 flex items-center justify-center text-lg font-bold text-white shadow-lg"
+                style={{ backgroundColor: profissional.cor || '#5271ff', boxShadow: `0 8px 20px -6px ${profissional.cor || '#5271ff'}80` }}
+              >
+                {getInitials(profissional.nome)}
               </div>
-              <h2 className="text-zinc-500 font-medium mb-2">{empresa.nome}</h2>
-              <h1 className="text-2xl font-bold text-zinc-900 tracking-tight mb-8">{profissional.nome}</h1>
+              <h2 className="text-sm text-zinc-500 font-medium mb-1">{empresa.nome}</h2>
+              <h1 className="text-2xl font-bold text-zinc-900 tracking-tight mb-6 md:mb-8">{profissional.nome}</h1>
 
               <div className="space-y-4">
                 <div className="flex items-start gap-3 text-zinc-600">
@@ -225,7 +240,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                 </div>
 
                 {selectedDate && selectedTime && (
-                  <div className="flex items-start gap-3 text-blue-700 bg-blue-50/50 p-3 rounded-xl border border-blue-100 transition-all">
+                  <div className="flex items-start gap-3 text-brand-800 bg-brand-50 p-3 rounded-xl border border-brand-100 transition-all">
                     <CalendarIcon className="w-5 h-5 mt-0.5 text-blue-500" />
                     <div>
                       <div className="font-semibold capitalize">{dayjs(selectedDate).format('dddd, D [de] MMMM')}</div>
@@ -237,22 +252,22 @@ export default function BookingWizard({ empresa, profissional }: any) {
             </div>
 
             {/* Footer da lateral */}
-            <div className="mt-8 pt-8 border-t border-zinc-200/60">
-              <div className="text-xs text-zinc-400 font-medium">
-                Powered by <span className="text-zinc-600 font-bold">Voibi</span>
+            <div className="hidden md:block mt-8 pt-6 border-t border-zinc-200/60">
+              <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
+                Powered by <VoibiMark className="w-4 text-zinc-700" /> <span className="text-zinc-700 font-bold">voibi</span>
               </div>
             </div>
           </div>
 
           {/* Coluna Direita: Fluxo de Agendamento */}
-          <div className="flex-1 p-8 relative flex flex-col">
+          <div className="flex-1 p-6 md:p-8 relative flex flex-col">
             
             {/* Header / Botão Voltar */}
             {step > 1 && step < 3 && (
               <div className="mb-6">
                 <button 
                   onClick={() => setStep(step - 1)} 
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors p-2 -ml-2 rounded-lg hover:bg-blue-50 w-fit"
+                  className="flex items-center gap-1.5 text-sm text-zinc-600 hover:text-zinc-900 font-medium transition-colors py-1.5 pl-1.5 pr-3 -ml-1.5 rounded-lg hover:bg-zinc-100 w-fit"
                 >
                   <ChevronLeft className="w-5 h-5" />
                   Voltar
@@ -265,7 +280,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
               {/* Passo 1: Calendário e Horários */}
               {step === 1 && (
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-zinc-900 mb-6">Selecione uma Data e Horário</h3>
+                  <h3 className="text-xl font-bold text-zinc-900 tracking-tight mb-6">Selecione uma data e horário</h3>
                   
                   <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
                     {/* Calendário */}
@@ -289,9 +304,9 @@ export default function BookingWizard({ empresa, profissional }: any) {
                               disabled={isPast}
                               onClick={() => { setSelectedDate(d.toDate()); setSelectedTime(null); }}
                               className={`aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                                isSelected ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 
+                                isSelected ? 'bg-brand-500 text-white font-semibold shadow-md shadow-brand-500/40' : 
                                 isPast ? 'text-zinc-300 cursor-not-allowed' : 
-                                'bg-blue-50/50 text-blue-900 hover:bg-blue-100 hover:text-blue-700'
+                                'bg-brand-50 text-brand-700 font-semibold hover:bg-brand-100'
                               }`}
                             >
                               {d.date()}
@@ -313,8 +328,8 @@ export default function BookingWizard({ empresa, profissional }: any) {
                               onClick={() => setSelectedTime(time)}
                               className={`flex-1 p-3.5 rounded-xl border text-sm font-semibold transition-all ${
                                 selectedTime === time 
-                                ? 'border-zinc-800 bg-zinc-800 text-white shadow-md' 
-                                : 'border-blue-200 text-blue-700 bg-white hover:border-blue-300 hover:shadow-sm'
+                                ? 'border-zinc-900 bg-zinc-900 text-white' 
+                                : 'border-brand-200 text-brand-700 bg-white hover:border-brand-500 hover:bg-brand-50'
                               }`}
                             >
                               {time}
@@ -322,7 +337,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                             {selectedTime === time && (
                               <button 
                                 onClick={handleNextStep}
-                                className="px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors shadow-md text-sm"
+                                className="px-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold transition-colors shadow-md shadow-brand-500/30 text-sm"
                               >
                                 Avançar
                               </button>
@@ -348,7 +363,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                         <input 
                           type="text" 
-                          className="w-full pl-11 pr-4 py-3.5 bg-white border border-zinc-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-zinc-900"
+                          className="w-full pl-11 pr-4 py-3.5 bg-white border border-zinc-300 rounded-xl focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 outline-none transition-all text-zinc-900"
                           placeholder="Ex: João da Silva"
                           value={clientData.nome}
                           onChange={e => setClientData({...clientData, nome: e.target.value})}
@@ -361,7 +376,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                         <input 
                           type="tel" 
-                          className="w-full pl-11 pr-4 py-3.5 bg-white border border-zinc-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-zinc-900"
+                          className="w-full pl-11 pr-4 py-3.5 bg-white border border-zinc-300 rounded-xl focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 outline-none transition-all text-zinc-900"
                           placeholder="(11) 99999-9999"
                           value={clientData.whatsapp}
                           onChange={e => setClientData({...clientData, whatsapp: e.target.value})}
@@ -379,7 +394,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                             </label>
                             {campo.tipo === 'select' ? (
                               <select 
-                                className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-zinc-900 appearance-none cursor-pointer"
+                                className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 outline-none transition-all text-zinc-900 appearance-none cursor-pointer"
                                 required={campo.obrigatorio}
                                 value={customAnswers[campo.id] || ''}
                                 onChange={e => setCustomAnswers({...customAnswers, [campo.id]: e.target.value})}
@@ -391,7 +406,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                               </select>
                             ) : campo.tipo === 'textarea' ? (
                               <textarea 
-                                className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-zinc-900 resize-none h-24"
+                                className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 outline-none transition-all text-zinc-900 resize-none h-24"
                                 required={campo.obrigatorio}
                                 value={customAnswers[campo.id] || ''}
                                 onChange={e => setCustomAnswers({...customAnswers, [campo.id]: e.target.value})}
@@ -399,7 +414,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                             ) : (
                               <input 
                                 type="text" 
-                                className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-zinc-900"
+                                className="w-full px-4 py-3 bg-white border border-zinc-300 rounded-xl focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 outline-none transition-all text-zinc-900"
                                 required={campo.obrigatorio}
                                 value={customAnswers[campo.id] || ''}
                                 onChange={e => setCustomAnswers({...customAnswers, [campo.id]: e.target.value})}
@@ -418,7 +433,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                         isSubmitting ||
                         customFields.some((c:any) => c.obrigatorio && !customAnswers[c.id])
                       }
-                      className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                      className="w-full mt-6 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:hover:bg-brand-500 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
