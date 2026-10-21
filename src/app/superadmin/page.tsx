@@ -1,6 +1,6 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
-import Link from 'next/link';
+import EmpresaCard from './EmpresaCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,26 +132,7 @@ export default async function SuperadminPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {empresas?.map(empresa => (
-          <div key={empresa.id} className="bg-zinc-800 border border-zinc-700 rounded-xl p-5 flex flex-col h-full">
-            <h4 className="text-lg font-bold text-white mb-1">{empresa.nome}</h4>
-            <p className="text-xs text-zinc-400 mb-1">Slug: {empresa.slug}</p>
-            <p className="text-xs font-semibold text-blue-400 mb-6">Plano: {empresa.agend_planos?.nome || 'Sem plano'}</p>
-            <div className="mt-auto space-y-2">
-              <Link 
-                href={`/dashboard/${empresa.id}/calendar`}
-                className="block text-center w-full bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-md text-sm font-semibold transition-colors"
-              >
-                Acessar Painel (Admin)
-              </Link>
-              <Link 
-                href={`/${empresa.slug}`}
-                target="_blank"
-                className="block text-center w-full bg-transparent border border-zinc-600 text-white hover:bg-zinc-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Ver Link Público
-              </Link>
-            </div>
-          </div>
+          <EmpresaCard key={empresa.id} empresa={empresa} planos={planos || []} />
         ))}
         {empresas?.length === 0 && (
           <div className="text-zinc-500 text-sm col-span-3">Nenhuma empresa cadastrada ainda.</div>
