@@ -4,6 +4,7 @@ import { authenticateApiKey } from '@/lib/api-auth';
 import { getAvailableSlots } from '@/lib/availability/engine';
 import { parseISO, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
+import { getBlocksForProfessional } from '@/lib/availability/blocks';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -136,15 +137,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
         .gte('inicio', diaInicio)
         .lte('fim', diaFim);
 
-      const { data: blocks } = await supabase
-        .from('agend_bloqueios')
-        .select('inicio, fim')
-        .eq('profissional_id', p.id)
-        .gte('inicio', diaInicio)
-        .lte('fim', diaFim);
+      const parsedBlocks = await getBlocksForProfessional(supabase, p.id, diaInicio, diaFim);
 
       const parsedBookings = (bookings || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
-      const parsedBlocks = (blocks || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
       const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));
 
       const slots = getAvailableSlots(
@@ -265,15 +260,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     .lte('fim', diaFim);
 
   // 5. Obter Bloqueios do Dia
-  const { data: blocks } = await supabase
-    .from('agend_bloqueios')
-    .select('inicio, fim')
-    .eq('profissional_id', profId)
-    .gte('inicio', diaInicio)
-    .lte('fim', diaFim);
+  const parsedBlocks = await getBlocksForProfessional(supabase, profId, diaInicio, diaFim);
 
   const parsedBookings = (bookings || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
-  const parsedBlocks = (blocks || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
   const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));
 
   // Por padrão não bloqueamos artificialmente 24h na consulta em tempo real da IA, a não ser que pedido explicitamente

@@ -67,6 +67,7 @@ export async function deleteEmpresa(empresaId: string) {
     }
 
     // 2. Dados ligados diretamente à empresa (filhos antes dos pais)
+    await supabase.from('agend_bloqueios').delete().eq('empresa_id', empresaId);
     await supabase.from('agend_agendamentos').delete().eq('empresa_id', empresaId);
     await supabase.from('agend_clientes_finais').delete().eq('empresa_id', empresaId);
     await supabase.from('agend_tipos_evento').delete().eq('empresa_id', empresaId);
@@ -95,4 +96,27 @@ export async function deleteEmpresa(empresaId: string) {
     console.error('Erro inesperado ao excluir empresa:', err);
     return { success: false, error: err?.message || 'Erro ao excluir empresa' };
   }
+}
+
+export async function createPlano(data: { nome: string; max_agendas: string; preco_mensal: string }) {
+  if (!(await isSuperadmin())) return { success: false, error: 'Acesso negado.' };
+
+  const nome = data.nome.trim();
+  const maxAgendas = parseInt(data.max_agendas, 10);
+  const preco = parseFloat(data.preco_mensal.replace(',', '.'));
+  if (!nome || Number.isNaN(maxAgendas) || Number.isNaN(preco)) {
+    return { success: false, error: 'Preencha nome, limite de agendas e preço com valores válidos.' };
+  }
+
+  const { error } = await getServiceSupabase()
+    .from('agend_planos')
+    .insert({ nome, max_agendas: maxAgendas, preco_mensal: preco });
+  if (error) {
+    console.error('Erro ao criar plano:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/superadmin/planos');
+  revalidatePath('/superadmin');
+  return { success: true };
 }

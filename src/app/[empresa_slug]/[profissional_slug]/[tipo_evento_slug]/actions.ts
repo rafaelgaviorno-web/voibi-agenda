@@ -2,6 +2,7 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { getAvailableSlots } from '@/lib/availability/engine';
 import { parseISO, startOfDay, endOfDay } from 'date-fns';
+import { getBlocksForProfessional } from '@/lib/availability/blocks';
 
 export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
   const supabase = getServiceSupabase();
@@ -37,15 +38,9 @@ export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
     .gte('inicio', diaInicio)
     .lte('fim', diaFim);
 
-  const { data: blocks } = await supabase
-    .from('agend_bloqueios')
-    .select('inicio, fim')
-    .eq('profissional_id', profId)
-    .gte('inicio', diaInicio)
-    .lte('fim', diaFim);
+  const parsedBlocks = await getBlocksForProfessional(supabase, profId, diaInicio, diaFim);
 
   const parsedBookings = (bookings || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
-  const parsedBlocks = (blocks || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
   const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));
 
   const slots = getAvailableSlots(

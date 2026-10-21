@@ -61,7 +61,7 @@ export default async function SettingsPage(props: {
       supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id),
       supabase.from('agend_usuarios').select('*, agend_usuario_agendas(agenda_id)').eq('empresa_id', empresa_id),
-      supabase.from('agend_bloqueios').select('*')
+      supabase.from('agend_bloqueios').select('*').eq('empresa_id', empresa_id)
     ]);
 
     if (pDataRes.error) console.error("Erro pData:", pDataRes.error);
@@ -261,19 +261,21 @@ export default async function SettingsPage(props: {
     const supabase = getServiceSupabase();
     
     if (action === 'remove') {
-      await supabase.from('agend_bloqueios').delete().eq('id', data.id);
+      await supabase.from('agend_bloqueios').delete().eq('id', data.id).eq('empresa_id', empresa_id);
       revalidatePath(`/dashboard/${empresa_id}/settings`);
       revalidatePath(`/dashboard/${empresa_id}/calendar`);
       return null;
     }
     if (action === 'add') {
-      const { data: newBlock } = await supabase.from('agend_bloqueios').insert({
+      const { data: newBlock, error: blockError } = await supabase.from('agend_bloqueios').insert({
+        empresa_id,
         inicio: data.inicio,
         fim: data.fim,
         motivo: data.motivo,
         profissional_id: data.profissional_id,
         unidade_id: data.unidade_id || null
       }).select().single();
+      if (blockError) console.error('Erro ao criar bloqueio:', blockError);
       
       revalidatePath(`/dashboard/${empresa_id}/settings`);
       revalidatePath(`/dashboard/${empresa_id}/calendar`);

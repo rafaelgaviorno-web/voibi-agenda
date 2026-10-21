@@ -1,6 +1,4 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
-import { getSession } from '@/lib/session';
-import { revalidatePath } from 'next/cache';
 import CreatePlanoForm from './CreatePlanoForm';
 
 export const dynamic = 'force-dynamic';
@@ -8,21 +6,6 @@ export const dynamic = 'force-dynamic';
 export default async function PlanosPage() {
   const supabase = getServiceSupabase();
   const { data: planos } = await supabase.from('agend_planos').select('*').order('preco_mensal', { ascending: true });
-
-  async function createPlano(formData: FormData) {
-    'use server'
-    if (!(await getSession())?.isSuperadmin) return;
-    const supabase = getServiceSupabase();
-    const { error } = await supabase.from('agend_planos').insert({ 
-      nome: formData.get('nome'), 
-      max_agendas: parseInt(formData.get('max_agendas') as string),
-      preco_mensal: parseFloat(formData.get('preco_mensal') as string)
-    });
-    if (error) {
-      console.error("Erro ao criar plano:", error);
-    }
-    revalidatePath('/superadmin/planos');
-  }
 
   return (
     <div className="space-y-8">

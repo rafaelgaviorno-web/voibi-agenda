@@ -121,7 +121,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       `).eq('profissional.empresa_id', empresa_id),
       supabase.from('agend_profissionais').select('id, nome, cor, intervalo_minutos').eq('empresa_id', empresa_id),
       supabase.from('agend_disponibilidade').select('profissional_id, dia_semana, hora_inicio, hora_fim'),
-      supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id'),
+      supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id').eq('empresa_id', empresa_id),
       supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id)
     ]);
 

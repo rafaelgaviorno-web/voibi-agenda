@@ -2,40 +2,39 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
+import { createPlano } from '../actions';
 
 export default function CreatePlanoForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     
-    const formData = new FormData(e.currentTarget);
-    const preco = formData.get('preco_mensal') as string;
-    
-    // Tratamento para vírgula
-    const precoFormatado = preco.replace(',', '.');
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-    const { error } = await supabase.from('agend_planos').insert({
-      nome: formData.get('nome'),
-      max_agendas: parseInt(formData.get('max_agendas') as string),
-      preco_mensal: parseFloat(precoFormatado)
+    const res = await createPlano({
+      nome: String(formData.get('nome') || ''),
+      max_agendas: String(formData.get('max_agendas') || ''),
+      preco_mensal: String(formData.get('preco_mensal') || ''),
     });
 
     setLoading(false);
 
-    if (error) {
-      alert("Erro ao salvar plano: " + error.message + "\n\nDetalhes: " + JSON.stringify(error));
-      console.error(error);
+    if (!res.success) {
+      setError(res.error || 'Erro ao salvar plano.');
     } else {
+      setError('');
+      form.reset();
       router.refresh();
-      (e.target as HTMLFormElement).reset();
     }
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-end">
       <div className="flex-1 space-y-1 w-full">
          <label className="text-sm font-medium text-zinc-300">Nome do Plano</label>
@@ -53,5 +52,7 @@ export default function CreatePlanoForm() {
         {loading ? 'Salvando...' : 'Adicionar Plano'}
       </button>
     </form>
+    {error && <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">{error}</p>}
+    </>
   );
 }
