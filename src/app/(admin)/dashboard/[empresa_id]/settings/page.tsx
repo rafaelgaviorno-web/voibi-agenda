@@ -375,7 +375,7 @@ export default async function SettingsPage(props: {
             agendas: 'Gerencie as agendas dos profissionais.',
             usuarios: 'Gerencie a equipe e o que cada pessoa pode acessar.',
             bloqueios: 'Bloqueie horários, feriados e exceções na agenda.',
-          } as Record<string, string>)[activeTab] || 'Gerencie os procedimentos e serviços oferecidos pela sua clínica.'}
+          } as Record<string, string>)[String(activeTab)] || 'Gerencie os procedimentos e serviços oferecidos pela sua clínica.'}
         </p>
       </div>
 
