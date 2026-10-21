@@ -369,7 +369,14 @@ export default async function SettingsPage(props: {
     <div className="space-y-8 max-w-4xl mx-auto p-8 lg:p-12">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Configurações</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Gerencie os procedimentos e serviços oferecidos pela sua clínica.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          {({
+            unidades: 'Gerencie as unidades (filiais) da sua clínica.',
+            agendas: 'Gerencie as agendas dos profissionais.',
+            usuarios: 'Gerencie a equipe e o que cada pessoa pode acessar.',
+            bloqueios: 'Bloqueie horários, feriados e exceções na agenda.',
+          } as Record<string, string>)[activeTab] || 'Gerencie os procedimentos e serviços oferecidos pela sua clínica.'}
+        </p>
       </div>
 
       {activeTab === 'procedimentos' && (
@@ -406,7 +413,7 @@ export default async function SettingsPage(props: {
             <CalendarDays className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
             Agendas (Profissionais)
           </h3>
-          <Link href={`/dashboard/${empresa_id}/agendas`} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <Link href={`/dashboard/${empresa_id}/agendas`} className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
             <Plus className="w-4 h-4" /> Nova Agenda
           </Link>
         </div>
@@ -460,7 +467,7 @@ export default async function SettingsPage(props: {
                   <th className="px-4 py-3 w-16"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {usuarios.map(u => (
                   <tr key={u.id} className="hover:bg-zinc-50/50 dark:bg-zinc-900/50">
                     <td className="px-4 py-4">

@@ -82,7 +82,7 @@ export default function UnidadesManager({
           Unidades (Filiais)
         </h3>
         {!isAdding && !editingId && (
-          <button onClick={() => { setIsAdding(true); setNome(''); }} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+          <button onClick={() => { setIsAdding(true); setNome(''); }} className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
             <Plus className="w-4 h-4" /> Nova Unidade
           </button>
         )}
@@ -121,7 +121,7 @@ export default function UnidadesManager({
                 <th className="px-4 py-3 w-24 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {unidades.length === 0 && (
                  <tr><td colSpan={2} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">Nenhuma unidade cadastrada.</td></tr>
               )}

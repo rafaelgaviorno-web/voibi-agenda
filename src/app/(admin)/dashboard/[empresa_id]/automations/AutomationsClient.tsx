@@ -531,7 +531,7 @@ export default function AutomationsClient({
           onClick={() => setActiveTab('logs')}
           className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 flex items-center gap-2 ${
             activeTab === 'logs'
-              ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600'
+              ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
           }`}
         >
@@ -542,7 +542,7 @@ export default function AutomationsClient({
           onClick={() => setActiveTab('api')}
           className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 flex items-center gap-2 ${
             activeTab === 'api'
-              ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600'
+              ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
           }`}
         >
@@ -553,7 +553,7 @@ export default function AutomationsClient({
           onClick={() => setActiveTab('n8n')}
           className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 flex items-center gap-2 ${
             activeTab === 'n8n'
-              ? 'text-orange-600 dark:text-orange-400 border-b-2 border-orange-600'
+              ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
           }`}
         >
@@ -564,7 +564,7 @@ export default function AutomationsClient({
           onClick={() => setActiveTab('reminders')}
           className={`pb-3 px-4 text-sm font-semibold transition-all relative shrink-0 flex items-center gap-2 ${
             activeTab === 'reminders'
-              ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600'
+              ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500'
               : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
           }`}
         >
@@ -614,7 +614,7 @@ export default function AutomationsClient({
                     <button 
                       type="submit" 
                       disabled={isPending}
-                      className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                     >
                       {isPending ? 'Salvando...' : 'Salvar Webhook'}
                     </button>
@@ -1314,7 +1314,7 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
                 <button 
                   type="submit" 
                   disabled={isPending}
-                  className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 px-6 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   {isPending ? 'Salvando...' : 'Salvar Conexão'}
                 </button>

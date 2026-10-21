@@ -138,7 +138,7 @@ export default function ProcedimentosManager({
               <th className="px-4 py-3 w-24">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {procedimentos.map(p => {
               const isEditing = editingId === p.id;
               

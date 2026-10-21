@@ -270,7 +270,7 @@ export default function ReportsClient({
                   <th className="py-3 px-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">Atendimento</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {filteredEvents.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
