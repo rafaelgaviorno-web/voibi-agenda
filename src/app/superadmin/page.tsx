@@ -1,6 +1,7 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import EmpresaCard from './EmpresaCard';
+import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export default async function SuperadminPage() {
 
   async function createEmpresa(formData: FormData) {
     'use server'
+    if (!(await getSession())?.isSuperadmin) return;
     const supabase = getServiceSupabase();
     const plano_id = formData.get('plano_id')?.toString();
     const cnpj = formData.get('cnpj')?.toString() || null;

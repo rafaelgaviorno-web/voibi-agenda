@@ -2,8 +2,10 @@
 
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
+import { canAccessEmpresa, getSession } from '@/lib/session';
 
 export async function deleteAgenda(agendaId: string, empresaId: string) {
+  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') {
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();

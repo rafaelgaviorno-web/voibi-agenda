@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
+import { logout } from '@/app/login/actions';
 import { navIcon, navItem, navItemIdle } from './navStyles';
 
 export default function ProfileDropdown() {
@@ -15,7 +16,7 @@ export default function ProfileDropdown() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    document.cookie = 'voibi-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    await logout();
     router.push('/login');
   };
 

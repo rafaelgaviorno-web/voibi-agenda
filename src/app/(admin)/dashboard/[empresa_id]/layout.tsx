@@ -4,7 +4,8 @@ import VoibiLogo from '@/components/VoibiLogo';
 import NavLink from './NavLink';
 import { navIcon } from './navStyles';
 import { getServiceSupabase } from '@/lib/supabase/client';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { SESSION_COOKIE, decodeSession } from '@/lib/session';
 import AutomationsDropdown from './AutomationsDropdown';
 import SidebarAgendas from './SidebarAgendas';
 import SettingsDropdown from './SettingsDropdown';
@@ -32,19 +33,10 @@ export default async function DashboardLayout({
   const cookieStore = await cookies();
   const savedUnidadeId = cookieStore.get('voibi_unidade_id')?.value;
   
-  const authCookie = cookieStore.get('voibi-auth')?.value;
-  let loggedInUserId = null;
-  if (authCookie) {
-    try {
-      const parsedAuth = JSON.parse(authCookie);
-      if (parsedAuth.isSuperadmin || parsedAuth.is_superadmin) {
-        isSuperAdmin = true;
-      }
-      loggedInUserId = parsedAuth.user?.id;
-    } catch (e) {
-      // Ignora erro de parse
-    }
-  }
+  const session = decodeSession(cookieStore.get(SESSION_COOKIE)?.value);
+  if (!session) redirect('/login');
+  isSuperAdmin = session.isSuperadmin;
+  const loggedInUserId = session.id;
 
   if (empresa_id === 'mock-clinic') {
     empresa = { id: 'mock-clinic', nome: 'Clínica de Teste Voibi' };

@@ -2,8 +2,10 @@
 
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
+import { canAccessEmpresa, getSession } from '@/lib/session';
 
 export async function saveAppointment(data: any, empresaId: string) {
+  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') {
     // Para mock, não precisamos fazer nada no server, apenas retornar sucesso
     return { success: true };
@@ -150,6 +152,7 @@ export async function saveAppointment(data: any, empresaId: string) {
 }
 
 export async function deleteAppointment(id: string, empresaId: string) {
+  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') return { success: true };
   
   const supabase = getServiceSupabase();
@@ -180,6 +183,7 @@ export async function deleteAppointment(id: string, empresaId: string) {
 }
 
 export async function transferAppointments(sourceId: string, targetId: string, date: string, empresaId: string) {
+  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') return { success: true };
   
   const supabase = getServiceSupabase();

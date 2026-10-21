@@ -1,4 +1,5 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
+import { getSession } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
 import CreatePlanoForm from './CreatePlanoForm';
 
@@ -10,6 +11,7 @@ export default async function PlanosPage() {
 
   async function createPlano(formData: FormData) {
     'use server'
+    if (!(await getSession())?.isSuperadmin) return;
     const supabase = getServiceSupabase();
     const { error } = await supabase.from('agend_planos').insert({ 
       nome: formData.get('nome'), 

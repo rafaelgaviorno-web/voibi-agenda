@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiLogs, clearApiLogs } from '@/lib/api-logger';
-import { cookies } from 'next/headers';
+import { authenticateApiKey } from '@/lib/api-auth';
+import { canAccessEmpresa, getSession } from '@/lib/session';
+
+// Acesso: sessão do painel com permissão na empresa, ou chave de API da própria empresa
+async function isAuthorized(request: NextRequest, empresaId: string) {
+  if (canAccessEmpresa(await getSession(), empresaId)) return true;
+
+  const hasApiKey =
+    request.headers.get('authorization') || request.headers.get('x-api-key') || request.headers.get('apikey');
+  if (!hasApiKey) return false;
+  const auth = await authenticateApiKey(request);
+  return !auth.error && auth.empresa?.id === empresaId;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,15 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'empresa_id é obrigatório' }, { status: 400 });
   }
 
-  // Verifica se o usuário tem cookie de autenticação do painel ou Bearer token
-  const cookieStore = await cookies();
-  const authCookie = cookieStore.get('voibi-auth');
-  const hasSupabaseCookie = cookieStore.getAll().some(c => c.name.includes('sb-') || c.name.includes('auth'));
-  const authHeader = request.headers.get('authorization');
-  const referer = request.headers.get('referer');
-  const isDashboardReferer = referer ? referer.includes('/dashboard/') : false;
-
-  if (!authCookie && !hasSupabaseCookie && !authHeader && !isDashboardReferer) {
+  if (!(await isAuthorized(request, empresaId))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -35,11 +39,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'empresa_id é obrigatório' }, { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  const authCookie = cookieStore.get('voibi-auth');
-  const authHeader = request.headers.get('authorization');
-
-  if (!authCookie && !authHeader) {
+  if (!(await isAuthorized(request, empresaId))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

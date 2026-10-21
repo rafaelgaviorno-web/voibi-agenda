@@ -36,8 +36,8 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
 
   const supabase = getServiceSupabase();
 
-  // Suporte à chave de teste do ambiente de demonstração
-  if (apiKey === 'sk_test_voibi_1234567890abcdef') {
+  // Chave de teste da clínica de demonstração: só fora de produção
+  if (process.env.NODE_ENV !== 'production' && apiKey === 'sk_test_voibi_1234567890abcdef') {
     const { data: firstEmp } = await supabase
       .from('agend_empresas')
       .select('id, slug, fuso_horario, webhook_url')

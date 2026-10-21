@@ -2,17 +2,10 @@
 
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
+import { getSession } from '@/lib/session';
 
 async function isSuperadmin() {
-  const authCookie = (await cookies()).get('voibi-auth')?.value;
-  if (!authCookie) return false;
-  try {
-    const parsed = JSON.parse(authCookie);
-    return parsed.isSuperadmin === true || parsed.is_superadmin === true;
-  } catch {
-    return false;
-  }
+  return (await getSession())?.isSuperadmin === true;
 }
 
 export async function updateEmpresa(

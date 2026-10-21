@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { SESSION_COOKIE, decodeSession } from '@/lib/session';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,17 +10,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Tenta ler o cookie de autenticação
-  const authCookie = request.cookies.get('voibi-auth');
-  let authData = null;
-  
-  try {
-    if (authCookie?.value) {
-      authData = JSON.parse(authCookie.value);
-    }
-  } catch (e) {
-    // Cookie inválido
-  }
+  // Sessão assinada; cookie alterado ou inventado é tratado como deslogado
+  const authData = decodeSession(request.cookies.get(SESSION_COOKIE)?.value);
 
   // Se não estiver logado e tentar acessar área protegida, joga pro login
   if (!authData) {

@@ -2,6 +2,7 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, encodeSession, sessionCookieOptions } from '@/lib/session';
 import AuthShell, { AuthAlert, authButton, authInput, authLabel } from '@/components/AuthShell';
 
 export const dynamic = 'force-dynamic';
@@ -32,11 +33,11 @@ export default async function LoginPage({
     const isSuperadmin = authData.user.user_metadata?.is_superadmin === true;
     if (isSuperadmin) {
       const cookieStore = await cookies();
-      cookieStore.set('voibi-auth', JSON.stringify({
+      cookieStore.set(SESSION_COOKIE, encodeSession({
          id: authData.user.id,
          isSuperadmin: true,
          empresa_id: null
-      }), { secure: process.env.NODE_ENV === 'production', httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 30 });
+      }), sessionCookieOptions);
       redirect('/superadmin');
     }
 
@@ -49,11 +50,11 @@ export default async function LoginPage({
 
     if (userData?.empresa_id) {
       const cookieStore = await cookies();
-      cookieStore.set('voibi-auth', JSON.stringify({
+      cookieStore.set(SESSION_COOKIE, encodeSession({
          id: authData.user.id,
          isSuperadmin: false,
          empresa_id: userData.empresa_id
-      }), { secure: process.env.NODE_ENV === 'production', httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 30 });
+      }), sessionCookieOptions);
       redirect(`/dashboard/${userData.empresa_id}/calendar`);
     } else {
       // Falha ao achar a empresa
