@@ -1,4 +1,4 @@
-import { getServiceSupabase } from '@/lib/supabase/client';
+import { getServiceSupabase, getAuthSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -18,9 +18,11 @@ export default async function LoginPage({
     'use server';
     const email = formData.get('login_email_unique')?.toString() || '';
     const password = formData.get('login_password_unique')?.toString() || '';
+    // Senha conferida num cliente separado: o de serviço precisa continuar com a chave de
+    // serviço para buscar a clínica do usuário (ver getAuthSupabase)
     const supabase = getServiceSupabase();
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await getAuthSupabase().auth.signInWithPassword({
       email,
       password,
     });
