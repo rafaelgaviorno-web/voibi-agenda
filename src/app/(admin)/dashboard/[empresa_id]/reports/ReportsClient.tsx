@@ -29,11 +29,12 @@ export default function ReportsClient({
   const [filtroProcedimento, setFiltroProcedimento] = useState('');
   
   // Dates
+  const localDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = localDate(today);
   const nextWeek = new Date(today);
   nextWeek.setDate(today.getDate() + 7);
-  const nextWeekStr = nextWeek.toISOString().split('T')[0];
+  const nextWeekStr = localDate(nextWeek);
 
   const [dataInicio, setDataInicio] = useState(todayStr);
   const [dataFim, setDataFim] = useState(nextWeekStr);

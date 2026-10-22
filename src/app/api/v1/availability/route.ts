@@ -5,6 +5,7 @@ import { getAvailableSlots } from '@/lib/availability/engine';
 import { parseISO, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
 import { getBlocksForProfessional } from '@/lib/availability/blocks';
+import { clinicNow } from '@/lib/timezone';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -25,7 +26,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   let rawDateStr = searchParams.get('date') || searchParams.get('data') || searchParams.get('dia');
 
   if (!rawDateStr) {
-    const amanha = new Date();
+    const amanha = clinicNow(auth.empresa.fuso_horario);
     amanha.setDate(amanha.getDate() + 1);
     rawDateStr = format(amanha, 'yyyy-MM-dd');
   }
@@ -153,7 +154,8 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
           intervalMinutes: p.intervalo_minutos || 30
         },
         parsedBookings,
-        parsedBlocks
+        parsedBlocks,
+        clinicNow(auth.empresa.fuso_horario)
       );
 
       const profTimes = slots.map(s => format(s.start, 'HH:mm'));
@@ -281,7 +283,8 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       intervalMinutes: resolvedProf.intervalo_minutos || 30
     },
     parsedBookings,
-    parsedBlocks
+    parsedBlocks,
+    clinicNow(auth.empresa.fuso_horario)
   );
 
   const formattedSlots = slots.map(s => ({

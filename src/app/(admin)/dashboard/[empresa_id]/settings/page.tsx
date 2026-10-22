@@ -9,6 +9,9 @@ import BloqueiosManager from './BloqueiosManager';
 import UnidadesManager from './UnidadesManager';
 import UserRowActions from './UserRowActions';
 import CopyLinkButton from './CopyLinkButton';
+import { TIMEZONES, DEFAULT_TIMEZONE, isValidTimeZone } from '@/lib/timezone';
+import { canAccessEmpresa, getSession } from '@/lib/session';
+import { getAllowedAgendaIds } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +28,8 @@ export default async function SettingsPage(props: {
   let usuarios: any[] = [];
   let bloqueios: any[] = [];
   let unidades: any[] = [];
-  
+  let fusoHorario = DEFAULT_TIMEZONE;
+
   if (empresa_id === 'mock-clinic') {
     unidades = [
       { id: 'un-1', nome: 'Matriz (Centro)', empresa_id: 'mock-clinic' },
@@ -56,13 +60,15 @@ export default async function SettingsPage(props: {
   } else {
     const supabase = getServiceSupabase();
     
-    const [pDataRes, unsRes, agDataRes, usDataRes, bDataRes] = await Promise.all([
+    const [pDataRes, unsRes, agDataRes, usDataRes, bDataRes, empRes] = await Promise.all([
       supabase.from('agend_tipos_evento').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id),
       supabase.from('agend_usuarios').select('*, agend_usuario_agendas(agenda_id)').eq('empresa_id', empresa_id),
-      supabase.from('agend_bloqueios').select('*').eq('empresa_id', empresa_id)
+      supabase.from('agend_bloqueios').select('*').eq('empresa_id', empresa_id),
+      supabase.from('agend_empresas').select('fuso_horario').eq('id', empresa_id).maybeSingle()
     ]);
+    fusoHorario = empRes.data?.fuso_horario || DEFAULT_TIMEZONE;
 
     if (pDataRes.error) console.error("Erro pData:", pDataRes.error);
     if (unsRes.error) console.error("Erro unsRes:", unsRes.error);
@@ -302,6 +308,19 @@ export default async function SettingsPage(props: {
     revalidatePath(`/dashboard/${empresa_id}/settings`);
   }
 
+  async function updateFusoHorario(formData: FormData) {
+    'use server'
+    if (empresa_id === 'mock-clinic') return;
+    const fuso = formData.get('fuso_horario') as string;
+    if (!isValidTimeZone(fuso)) return;
+    const supabase = getServiceSupabase();
+    // Só administradores da clínica (ou o superadmin) mudam o fuso
+    const session = await getSession();
+    if (!canAccessEmpresa(session, empresa_id) || (await getAllowedAgendaIds(supabase, session, empresa_id)) !== null) return;
+    await supabase.from('agend_empresas').update({ fuso_horario: fuso }).eq('id', empresa_id);
+    revalidatePath(`/dashboard/${empresa_id}/settings`);
+  }
+
   async function deleteUnidade(formData: FormData) {
     'use server'
     if (empresa_id === 'mock-clinic') return;
@@ -399,7 +418,24 @@ export default async function SettingsPage(props: {
       )}
 
       {activeTab === 'unidades' && (
-        <UnidadesManager 
+        <form action={updateFusoHorario} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-[240px] space-y-1.5">
+            <label htmlFor="fuso_horario" className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Fuso horário da clínica</label>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Usado nos lembretes automáticos e para não oferecer horários que já passaram, pela IA ou pelo link de agendamento.</p>
+            <select id="fuso_horario" name="fuso_horario" defaultValue={fusoHorario} className="w-full h-10 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-100">
+              {TIMEZONES.map((tz) => (
+                <option key={tz.value} value={tz.value}>{tz.label}</option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className="h-10 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 text-white dark:text-zinc-950 text-sm font-bold transition-colors">
+            Salvar fuso
+          </button>
+        </form>
+      )}
+
+      {activeTab === 'unidades' && (
+        <UnidadesManager
           unidades={unidades} 
           empresa_id={empresa_id} 
           createUnidade={createUnidade}

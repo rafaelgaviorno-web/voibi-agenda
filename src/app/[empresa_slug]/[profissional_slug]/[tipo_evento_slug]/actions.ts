@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 import { getAvailableSlots } from '@/lib/availability/engine';
 import { parseISO, startOfDay, endOfDay } from 'date-fns';
 import { getBlocksForProfessional } from '@/lib/availability/blocks';
+import { clinicNow } from '@/lib/timezone';
 
 export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
   const supabase = getServiceSupabase();
@@ -11,7 +12,7 @@ export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
 
   const { data: eventType } = await supabase
     .from('agend_tipos_evento')
-    .select('*, agend_profissionais!inner(id)')
+    .select('*, agend_profissionais!inner(id, agend_empresas(fuso_horario))')
     .eq('id', eventTypeId)
     .single();
 
@@ -53,7 +54,8 @@ export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
       minNoticeHours: eventType.antecedencia_min_horas
     },
     parsedBookings,
-    parsedBlocks
+    parsedBlocks,
+    clinicNow((eventType.agend_profissionais as any)?.agend_empresas?.fuso_horario)
   );
 
   return slots;

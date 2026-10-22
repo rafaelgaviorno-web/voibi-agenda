@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
 import { parseISO, addMinutes, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
+import { clinicNow } from '@/lib/timezone';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -81,7 +82,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       query = query.lte('inicio', endOfDay(parseISO(dataFimStr)).toISOString());
     }
     if (apenasFuturos) {
-      query = query.gt('inicio', new Date().toISOString());
+      query = query.gt('inicio', clinicNow(auth.empresa.fuso_horario).toISOString());
     }
   }
 

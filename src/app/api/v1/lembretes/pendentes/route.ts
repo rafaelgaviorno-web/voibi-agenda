@@ -4,6 +4,7 @@ import { authenticateApiKey } from '@/lib/api-auth';
 import { withApiLogger } from '@/lib/api-logger';
 import { format, parseISO, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { clinicNow } from '@/lib/timezone';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -17,7 +18,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   const horasFuturas = parseInt(searchParams.get('horas_futuras') || '72', 10);
 
   const supabase = getServiceSupabase();
-  const now = new Date();
+  // "Agora" no relógio da clínica (os horários da agenda são gravados assim)
+  const now = clinicNow(auth.empresa.fuso_horario);
+  const sentAt = new Date().toISOString();
 
   // 1. Buscar regras de lembretes ativas da empresa
   let regrasQuery = supabase
@@ -178,7 +181,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
             regra_id: r.id,
             regra_nome: r.nome,
             minutos_antes: r.minutos_antes,
-            enviado_em: now.toISOString()
+            enviado_em: sentAt
           });
           houveNovoEnvio = true;
         }

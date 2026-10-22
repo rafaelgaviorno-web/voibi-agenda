@@ -35,6 +35,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Os horários da agenda são gravados como hora de relógio da clínica e lidos em UTC (ver src/lib/timezone.ts)
+ENV TZ=UTC
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

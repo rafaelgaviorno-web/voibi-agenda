@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, X, AlertTriangle } from 'lucide-react';
 import { updateEmpresa, deleteEmpresa } from './actions';
+import { TIMEZONES, DEFAULT_TIMEZONE } from '@/lib/timezone';
 
 const input =
   'w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15';
@@ -33,6 +34,7 @@ export default function EmpresaCard({ empresa, planos }: { empresa: any; planos:
         slug: String(fd.get('slug') || ''),
         cnpj: String(fd.get('cnpj') || ''),
         plano_id: String(fd.get('plano_id') || ''),
+        fuso_horario: String(fd.get('fuso_horario') || ''),
       });
       if (!res.success) return setError(res.error || 'Erro ao salvar.');
       close();
@@ -135,6 +137,14 @@ export default function EmpresaCard({ empresa, planos }: { empresa: any; planos:
                       <option key={plano.id} value={plano.id}>
                         {plano.nome} (R$ {Number(plano.preco_mensal).toFixed(2)})
                       </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor={`fuso-${empresa.id}`} className={label}>Fuso horário</label>
+                  <select id={`fuso-${empresa.id}`} name="fuso_horario" defaultValue={empresa.fuso_horario || DEFAULT_TIMEZONE} className={input}>
+                    {TIMEZONES.map((tz) => (
+                      <option key={tz.value} value={tz.value}>{tz.label}</option>
                     ))}
                   </select>
                 </div>

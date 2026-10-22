@@ -3,6 +3,7 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
+import { isValidTimeZone } from '@/lib/timezone';
 
 async function isSuperadmin() {
   return (await getSession())?.isSuperadmin === true;
@@ -10,7 +11,7 @@ async function isSuperadmin() {
 
 export async function updateEmpresa(
   empresaId: string,
-  data: { nome: string; slug: string; cnpj: string; plano_id: string }
+  data: { nome: string; slug: string; cnpj: string; plano_id: string; fuso_horario?: string }
 ) {
   if (!(await isSuperadmin())) return { success: false, error: 'Acesso negado.' };
 
@@ -29,6 +30,7 @@ export async function updateEmpresa(
       slug,
       cnpj: data.cnpj.trim() || null,
       plano_id: data.plano_id || null,
+      ...(isValidTimeZone(data.fuso_horario) ? { fuso_horario: data.fuso_horario } : {}),
     })
     .eq('id', empresaId);
 

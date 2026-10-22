@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { authenticateApiKey } from '@/lib/api-auth';
 import { subDays } from 'date-fns';
+import { clinicNow } from '@/lib/timezone';
 
 export async function GET(request: NextRequest) {
   // Autenticação para proteger a rota (pode usar a mesma API Key das integrações)
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
   const procIds = procedimentos.map((p: any) => p.id);
 
   // Define a janela de tempo: 30 dias atrás (com tolerância de 25 a 35 dias)
-  const hoje = new Date();
+  const hoje = clinicNow(auth.empresa.fuso_horario);
   const dataFim = subDays(hoje, 25).toISOString(); // Até 25 dias atrás
   const dataInicio = subDays(hoje, 35).toISOString(); // Desde 35 dias atrás
 
