@@ -228,6 +228,32 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     return Math.min(...active.map((a: any) => a.intervalo_minutos || 30));
   }, [agendas, selectedAgendas]);
 
+  // Faixa de horários do calendário: do início mais cedo ao fim mais tarde das agendas marcadas.
+  // Agendamentos fora do expediente (encaixes) no período aberto ampliam a faixa para não sumirem.
+  const slotRange = useMemo(() => {
+    const toMin = (t: string) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+    let min = Infinity, max = -Infinity;
+    agendas
+      .filter((a: any) => selectedAgendas.includes(a.id))
+      .forEach((a: any) => (a.disponibilidade || []).forEach((d: any) => {
+        min = Math.min(min, toMin(d.hora_inicio));
+        max = Math.max(max, toMin(d.hora_fim));
+      }));
+    if (visibleRange) {
+      localEvents.forEach((e: any) => {
+        if (e.status === 'bloqueio' || !selectedAgendas.includes(e.profissional?.id)) return;
+        const start = new Date(e.inicio), end = new Date(e.fim);
+        if (start < visibleRange.start || start >= visibleRange.end) return;
+        min = Math.min(min, start.getHours() * 60 + start.getMinutes());
+        const endMin = end.getHours() * 60 + end.getMinutes();
+        max = Math.max(max, endMin === 0 ? 24 * 60 : endMin);
+      });
+    }
+    if (!isFinite(min) || !isFinite(max) || max <= min) return { start: '07:00:00', end: '20:00:00' };
+    const hour = (m: number) => `${String(m / 60).padStart(2, '0')}:00:00`;
+    return { start: hour(Math.floor(min / 60) * 60), end: hour(Math.min(24 * 60, Math.ceil(max / 60) * 60)) };
+  }, [agendas, selectedAgendas, localEvents, visibleRange]);
+
   // Valores atuais para os callbacks do FullCalendar, que é criado uma única vez
   const latestRef = useRef<any>({});
   latestRef.current = { events, localEvents, agendas, selectedAgendas, handleSaveEvent, isModalOpen };
@@ -243,8 +269,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       events: events,
       eventDisplay: 'block',
       height: '100%',
-      slotMinTime: '07:00:00',
-      slotMaxTime: '20:00:00',
+      slotMinTime: slotRange.start,
+      slotMaxTime: slotRange.end,
       slotLabelInterval: '01:00:00',
       slotDuration: minInterval <= 15 ? '00:15:00' : (minInterval <= 20 ? '00:20:00' : '00:30:00'),
       eventMinHeight: 38,
@@ -490,6 +516,13 @@ Horário: ${arg.timeText}`);
   useEffect(() => {
     calendarInstance.current?.setOption('slotDuration', minInterval <= 15 ? '00:15:00' : (minInterval <= 20 ? '00:20:00' : '00:30:00'));
   }, [minInterval]);
+
+  useEffect(() => {
+    const calendar = calendarInstance.current;
+    if (!calendar) return;
+    calendar.setOption('slotMinTime', slotRange.start);
+    calendar.setOption('slotMaxTime', slotRange.end);
+  }, [slotRange.start, slotRange.end]);
 
   // Busca mudanças feitas fora desta tela (IA, n8n, página do paciente):
   // a cada 30s com a aba visível e ao voltar para a aba
