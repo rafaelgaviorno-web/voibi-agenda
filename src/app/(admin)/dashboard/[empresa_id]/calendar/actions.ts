@@ -3,15 +3,29 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { revalidatePath } from 'next/cache';
 import { canAccessEmpresa, getSession } from '@/lib/session';
+import { canUseAgendas } from '@/lib/permissions';
 
 export async function saveAppointment(data: any, empresaId: string) {
-  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
+  const session = await getSession();
+  if (!canAccessEmpresa(session, empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') {
     // Para mock, não precisamos fazer nada no server, apenas retornar sucesso
     return { success: true };
   }
 
   const supabase = getServiceSupabase();
+
+  // A agenda de destino (e, numa edição, a agenda atual do agendamento) precisa ser
+  // desta clínica e estar liberada para o usuário
+  const agendaIds = [data.agendaId];
+  if (data.id) {
+    const { data: current } = await supabase.from('agend_agendamentos').select('profissional_id').eq('id', data.id).maybeSingle();
+    if (!current) return { success: false, error: 'Agendamento não encontrado.' };
+    agendaIds.push(current.profissional_id);
+  }
+  if (!(await canUseAgendas(supabase, session, empresaId, agendaIds))) {
+    return { success: false, error: 'Você não tem acesso a esta agenda.' };
+  }
   
   try {
     let clienteId = data.clienteId;
@@ -152,7 +166,8 @@ export async function saveAppointment(data: any, empresaId: string) {
 }
 
 export async function deleteAppointment(id: string, empresaId: string) {
-  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
+  const session = await getSession();
+  if (!canAccessEmpresa(session, empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') return { success: true };
   
   const supabase = getServiceSupabase();
@@ -171,6 +186,11 @@ export async function deleteAppointment(id: string, empresaId: string) {
     .eq('id', id)
     .single();
 
+  const bookingAgendaId = (booking as any)?.agend_profissionais?.id;
+  if (!booking || !(await canUseAgendas(supabase, session, empresaId, [bookingAgendaId]))) {
+    return { success: false, error: 'Você não tem acesso a este agendamento.' };
+  }
+
   await supabase.from('agend_agendamentos').delete().eq('id', id);
 
   if (booking) {
@@ -183,8 +203,12 @@ export async function deleteAppointment(id: string, empresaId: string) {
 }
 
 export async function transferAppointments(sourceId: string, targetId: string, date: string, empresaId: string) {
-  if (!canAccessEmpresa(await getSession(), empresaId)) return { success: false, error: 'Acesso negado.' };
+  const session = await getSession();
+  if (!canAccessEmpresa(session, empresaId)) return { success: false, error: 'Acesso negado.' };
   if (empresaId === 'mock-clinic') return { success: true };
+  if (!(await canUseAgendas(getServiceSupabase(), session, empresaId, [sourceId, targetId]))) {
+    return { success: false, error: 'Você não tem acesso a estas agendas.' };
+  }
   
   const supabase = getServiceSupabase();
   

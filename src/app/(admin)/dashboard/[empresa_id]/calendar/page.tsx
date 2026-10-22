@@ -1,5 +1,7 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import CalendarWrapper from './CalendarWrapper';
+import { getSession } from '@/lib/session';
+import { getAllowedAgendaIds } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,7 +111,8 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       { data: profData },
       { data: dispData },
       { data: bloqueiosData },
-      { data: procData }
+      { data: procData },
+      allowedAgendaIds
     ] = await Promise.all([
       supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_agendamentos').select(`
@@ -123,7 +126,8 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
         .select('profissional_id, dia_semana, hora_inicio, hora_fim, agend_profissionais!inner(empresa_id)')
         .eq('agend_profissionais.empresa_id', empresa_id),
       supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id').eq('empresa_id', empresa_id),
-      supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id)
+      supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id),
+      getSession().then((session) => getAllowedAgendaIds(supabase, session, empresa_id))
     ]);
 
     unidades = uns || [];
@@ -154,6 +158,12 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
     }
 
     procedimentos = procData || [];
+
+    // Usuário com acesso a algumas agendas: só elas (e os bloqueios gerais da clínica)
+    if (allowedAgendaIds) {
+      profissionais = profissionais.filter(p => allowedAgendaIds.includes(p.id));
+      agendamentos = agendamentos.filter(a => !a.profissional || allowedAgendaIds.includes(a.profissional.id));
+    }
   }
 
   return (

@@ -1,5 +1,7 @@
 import { getServiceSupabase } from '@/lib/supabase/client';
 import ReportsClient from './ReportsClient';
+import { getSession } from '@/lib/session';
+import { getAllowedAgendaIds } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +71,7 @@ export default async function ReportsPage({ params }: { params: Promise<{ empres
     const supabase = getServiceSupabase();
 
     // Consultas em paralelo: cada ida ao banco custa uma viagem do servidor até o Supabase
-    const [{ data: uns }, { data: agendamentosData }, { data: profData }, { data: procData }] = await Promise.all([
+    const [{ data: uns }, { data: agendamentosData }, { data: profData }, { data: procData }, allowedAgendaIds] = await Promise.all([
       supabase.from('agend_unidades').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_agendamentos').select(`
         id, inicio, fim, status, status_atendimento, is_encaixe,
@@ -78,17 +80,24 @@ export default async function ReportsPage({ params }: { params: Promise<{ empres
         evento:agend_tipos_evento(id, nome)
       `).eq('profissional.empresa_id', empresa_id),
       supabase.from('agend_profissionais').select('id, nome, cor, unidade_id').eq('empresa_id', empresa_id),
-      supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id)
+      supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id),
+      getSession().then((session) => getAllowedAgendaIds(supabase, session, empresa_id))
     ]);
 
     unidades = uns || [];
     agendamentos = (agendamentosData || []).filter(a => a.status !== 'bloqueio');
     profissionais = profData || [];
     procedimentos = procData || [];
+
+    // Usuário com acesso a algumas agendas: relatórios só delas
+    if (allowedAgendaIds) {
+      profissionais = profissionais.filter(p => allowedAgendaIds.includes(p.id));
+      agendamentos = agendamentos.filter(a => allowedAgendaIds.includes((a.profissional as any)?.id));
+    }
   }
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-white dark:bg-zinc-900">
+    <div className="flex-1 overflow-hidden flex flex-col">
       <ReportsClient 
         rawEvents={agendamentos}
         profissionais={profissionais}
