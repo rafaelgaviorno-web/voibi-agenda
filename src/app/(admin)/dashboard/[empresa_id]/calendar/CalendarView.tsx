@@ -8,12 +8,20 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import EventModal from './EventModal';
+import CalendarSidePanel from './CalendarSidePanel';
 import { saveAppointment, deleteAppointment } from './actions';
-import UnidadeSwitcher from '../UnidadeSwitcher';
 import '@/app/calendar.css';
 
 const escapeHtml = (value: string) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+
+// Fundo suave na cor do agendamento; o texto segue o tema (ver .vc-event em calendar.css)
+const tint = (hex: string, alpha = 0.16) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+};
 
 export default function CalendarView({ rawEvents, profissionais: agendas, procedimentos, unidades, currentUnidadeId, baseUrl }: any) {
   const searchParams = useSearchParams();
@@ -79,6 +87,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   const [searchPatient, setSearchPatient] = useState('');
   const [calendarTitle, setCalendarTitle] = useState('');
   const [currentView, setCurrentView] = useState('timeGridWeek');
+  // Período visível no calendário (usado no título, no resumo e no mini calendário)
+  const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
   
   const calendarRef = useRef<HTMLDivElement>(null);
   const calendarInstance = useRef<any>(null);
@@ -196,10 +206,11 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           end: e.end || e.fim,
           // Bloqueios ficam no fundo da coluna e não dividem a largura com os agendamentos
           display: isBlock ? 'background' : 'block',
-          backgroundColor,
-          borderColor: backgroundColor,
+          backgroundColor: isBlock ? backgroundColor : tint(backgroundColor),
+          borderColor: 'transparent',
           classNames: isBlock ? ['vc-block', isGlobalBlock ? 'vc-block-global' : ''] : [],
           extendedProps: {
+            color: backgroundColor,
             whatsapp: e.cliente?.whatsapp || e.cliente?.telefone || '',
             servico: e.evento?.nome || e.servico || '',
             status: e.status || 'pendente',
@@ -242,6 +253,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       dayHeaderFormat: { weekday: 'short', day: 'numeric', omitCommas: true },
       datesSet: (arg) => {
         setCalendarTitle(arg.view.title);
+        setVisibleRange({ start: arg.view.currentStart, end: arg.view.currentEnd });
       },
       dayHeaderContent: (arg) => {
         const isMonthView = arg.view.type === 'dayGridMonth';
@@ -285,14 +297,17 @@ Horário: ${arg.timeText}`);
         const isCancelado = statusAgendamento === 'cancelado';
         const isPendente = statusAgendamento === 'pendente';
         const textStyle = isCancelado ? 'line-through opacity-75' : '';
+        const color = escapeHtml(arg.event.extendedProps.color || '#5271ff');
+        const dot = `<i class="vc-dot" style="background:${color}"></i>`;
 
         // Visualização limpa em visualização de mês
         if (arg.view.type === 'dayGridMonth') {
           return {
             html: `
-              <div title="${tooltipText}" class="px-1.5 py-0.5 text-white truncate text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
-                <span class="opacity-80 font-medium">${arg.timeText}</span>
-                <span class="truncate ${textStyle}">${title}</span>
+              <div title="${tooltipText}" class="vc-month-event">
+                ${dot}
+                <span class="vc-month-time">${arg.timeText}</span>
+                <span class="vc-month-title ${textStyle}">${title}</span>
               </div>
             `
           };
@@ -320,7 +335,7 @@ Horário: ${arg.timeText}`);
           return {
             html: `
               <div title="${tooltipText}" class="vc-event is-short">
-                <div class="vc-event-title ${textStyle}">${title}</div>
+                <div class="vc-event-title ${textStyle}">${dot}${title}</div>
                 ${badgesHtml}
               </div>
             `
@@ -330,8 +345,9 @@ Horário: ${arg.timeText}`);
         return {
           html: `
             <div title="${tooltipText}" class="vc-event">
+              <div class="vc-event-time">${dot}${arg.timeText}</div>
               <div class="vc-event-title ${textStyle}">${title}</div>
-              <div class="vc-event-meta">${arg.timeText} · ${servico}</div>
+              <div class="vc-event-meta">${servico}</div>
               ${badgesHtml}
             </div>
           `
@@ -504,58 +520,111 @@ Horário: ${arg.timeText}`);
     { value: 'dayGridMonth', label: 'Mês' },
   ];
 
-  const iconButton = 'p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors';
+  const iconButton = 'w-8 h-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors';
+  const control = 'h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800';
+
+  // Título "Outubro de 2026" e resumo do período visível
+  const monthTitle = visibleRange
+    ? (() => {
+        const t = visibleRange.start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        return t.charAt(0).toUpperCase() + t.slice(1);
+      })()
+    : '';
+  const periodSummary = useMemo(() => {
+    if (!visibleRange) return null;
+    const inRange = localEvents.filter((e: any) => {
+      if (e.status === 'bloqueio' || e.status === 'cancelado') return false;
+      if (!selectedAgendas.includes(e.profissional?.id)) return false;
+      const start = new Date(e.inicio || e.start);
+      return start >= visibleRange.start && start < visibleRange.end;
+    });
+    return { total: inRange.length, pending: inRange.filter((e: any) => e.status === 'pendente').length };
+  }, [localEvents, selectedAgendas, visibleRange]);
+
+  const openEvent = (original: any) => {
+    setSelectedEventData({ ...original, agendaId: original.profissional?.id, observacao: original.observacao });
+    setIsModalOpen(true);
+  };
+
+  const confirmEvent = (original: any) => {
+    const start = new Date(original.inicio);
+    const end = new Date(original.fim);
+    const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    return handleSaveEvent({
+      id: original.id,
+      clienteId: original.cliente?.id,
+      nome: original.cliente?.nome,
+      whatsapp: original.cliente?.whatsapp || original.cliente?.telefone,
+      data: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`,
+      horaInicio: hhmm(start),
+      horaFim: hhmm(end),
+      agendaId: original.profissional?.id,
+      procedimentoId: original.evento?.id,
+      observacao: original.observacao,
+      status: 'confirmado',
+      status_atendimento: original.status_atendimento,
+      is_encaixe: original.is_encaixe
+    });
+  };
 
   return (
-    <div className="flex flex-col h-screen w-full font-sans text-sm bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300">
-      
-      {/* Barra superior */}
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-5 py-3 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-3 min-w-0">
-          <button 
-            onClick={handleToday}
-            className="px-3 py-1.5 font-medium text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-          >
-            Hoje
-          </button>
+    <div className="flex flex-col h-screen w-full font-sans text-sm bg-zinc-100 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 gap-5 p-4 lg:px-7 lg:py-6">
 
-          <div className="flex items-center">
-            <button onClick={handlePrev} className={iconButton} title="Anterior" aria-label="Anterior">
-              <ChevronLeft size={18} />
-            </button>
-            <button onClick={handleNext} className={iconButton} title="Próximo" aria-label="Próximo">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
-          <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap truncate first-letter:uppercase">
+      {/* Cabeçalho */}
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 shrink-0">
+        <div className="min-w-0">
+          <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-zinc-900 dark:text-white truncate">
+            {monthTitle || ' '}
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 truncate">
             {calendarTitle}
-          </h2>
+            {periodSummary && (
+              <>
+                {' · '}{periodSummary.total} {periodSummary.total === 1 ? 'agendamento' : 'agendamentos'}
+                {periodSummary.pending > 0 && <> · {periodSummary.pending} aguardando confirmação</>}
+              </>
+            )}
+          </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="relative hidden md:flex items-center">
-            <Search className="absolute left-2.5 text-zinc-400 w-4 h-4 pointer-events-none" />
-            <input 
-              type="text" 
-              placeholder="Buscar paciente..." 
-              className="pl-8 pr-3 py-1.5 w-52 rounded-lg text-sm bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:bg-white dark:focus:bg-zinc-900 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15 transition-all"
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className={`relative hidden md:flex items-center w-56 px-3 gap-2 ${control}`}>
+            <Search className="text-zinc-400 w-4 h-4 pointer-events-none shrink-0" />
+            <input
+              type="text"
+              placeholder="Buscar paciente"
+              className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
               value={searchPatient}
               onChange={e => setSearchPatient(e.target.value)}
             />
+          </label>
+
+          <div className={`flex items-center px-1 ${control}`}>
+            <button onClick={handlePrev} className={iconButton} title="Anterior" aria-label="Anterior">
+              <ChevronLeft size={17} />
+            </button>
+            <button
+              onClick={handleToday}
+              className="h-8 px-2.5 rounded-lg text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Hoje
+            </button>
+            <button onClick={handleNext} className={iconButton} title="Próximo" aria-label="Próximo">
+              <ChevronRight size={17} />
+            </button>
           </div>
 
-          <div className="flex items-center p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800" role="tablist">
+          <div className={`flex items-center p-1 ${control}`} role="tablist">
             {views.map(v => (
               <button
                 key={v.value}
                 role="tab"
                 aria-selected={currentView === v.value}
                 onClick={() => handleViewChange(v.value)}
-                className={`px-3 py-1 rounded-md text-[13px] font-medium transition-all ${
+                className={`h-full px-3.5 rounded-lg text-[13px] transition-all ${
                   currentView === v.value
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                    ? 'bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 font-bold'
+                    : 'text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
                 {v.label}
@@ -563,11 +632,9 @@ Horário: ${arg.timeText}`);
             ))}
           </div>
 
-          <UnidadeSwitcher unidades={unidades} currentUnidadeId={currentUnidadeId} baseUrl={baseUrl} />
-          
-          <button 
+          <button
             onClick={() => { setSelectedEventData(null); setIsModalOpen(true); }}
-            className="flex items-center gap-1.5 pl-3 pr-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-semibold shadow-sm shadow-brand-500/30 whitespace-nowrap transition-colors"
+            className="h-10 flex items-center gap-1.5 px-4 bg-brand-600 hover:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 text-white dark:text-zinc-950 rounded-xl text-sm font-bold shadow-lg shadow-brand-600/25 whitespace-nowrap transition-colors"
           >
             <Plus size={16} strokeWidth={2.5} />
             Novo agendamento
@@ -575,11 +642,21 @@ Horário: ${arg.timeText}`);
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 gap-5">
         {/* Grade do Calendário */}
-        <div className="flex-1 overflow-hidden bg-white dark:bg-zinc-950 relative z-0">
+        <div className="flex-1 min-w-0 relative z-0 rounded-[20px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-[0_1px_2px_rgba(18,19,31,0.04),0_12px_32px_-16px_rgba(18,19,31,0.16)] dark:shadow-none overflow-hidden">
           <div ref={calendarRef} className="absolute inset-0"></div>
         </div>
+
+        <CalendarSidePanel
+          localEvents={localEvents}
+          selectedAgendas={selectedAgendas}
+          visibleRange={visibleRange}
+          isMonthView={currentView === 'dayGridMonth'}
+          onGoToDate={(date: Date) => calendarInstance.current?.gotoDate(date)}
+          onOpenEvent={openEvent}
+          onConfirm={confirmEvent}
+        />
       </div>
 
       {/* Modal de Eventos */}

@@ -1,15 +1,18 @@
 /* Tema Voibi para FullCalendar v6 — claro e escuro */
 
 :root {
-  --vc-border: #e4e4e7;
-  --vc-border-soft: #f1f1f3;
-  --vc-muted: #71717a;
-  --vc-text: #18181b;
-  --vc-today-bg: rgba(82, 113, 255, 0.045);
-  --vc-block-stripe: rgba(113, 113, 122, 0.12);
+  --vc-border: #e9ebf3;
+  --vc-border-soft: #f2f3f8;
+  --vc-muted: #6b6f8a;
+  --vc-text: #12131f;
+  --vc-today-bg: rgba(82, 113, 255, 0.04);
+  --vc-pill-bg: rgba(255, 255, 255, 0.85);
+  --vc-today-num-bg: #3f59f2;
+  --vc-today-num-fg: #ffffff;
+  --vc-block-stripe: rgba(107, 111, 138, 0.1);
   --vc-block-global-bg: rgba(239, 68, 68, 0.05);
   --vc-block-global-stripe: rgba(239, 68, 68, 0.12);
-  --vc-block-text: #52525b;
+  --vc-block-text: #50546e;
 
   --fc-border-color: var(--vc-border);
   --fc-today-bg-color: var(--vc-today-bg);
@@ -18,15 +21,18 @@
 }
 
 .dark {
-  --vc-border: #27272a;
-  --vc-border-soft: #1c1c1f;
-  --vc-muted: #a1a1aa;
-  --vc-text: #fafafa;
-  --vc-today-bg: rgba(82, 113, 255, 0.07);
-  --vc-block-stripe: rgba(161, 161, 170, 0.1);
+  --vc-border: #1b1e33;
+  --vc-border-soft: #16182b;
+  --vc-muted: #9a9ebe;
+  --vc-text: #e8eaf6;
+  --vc-today-bg: rgba(111, 136, 255, 0.06);
+  --vc-pill-bg: rgba(255, 255, 255, 0.08);
+  --vc-today-num-bg: #7e95ff;
+  --vc-today-num-fg: #0b0c16;
+  --vc-block-stripe: rgba(154, 158, 190, 0.08);
   --vc-block-global-bg: rgba(239, 68, 68, 0.06);
   --vc-block-global-stripe: rgba(239, 68, 68, 0.14);
-  --vc-block-text: #a1a1aa;
+  --vc-block-text: #9a9ebe;
 
   --fc-border-color: var(--vc-border);
   --fc-today-bg-color: var(--vc-today-bg);
@@ -62,14 +68,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 0 6px;
+  gap: 4px;
+  padding: 12px 0 10px;
 }
 
 .vc-dow {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--vc-muted);
 }
@@ -80,17 +86,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  font-size: 20px;
-  font-weight: 600;
+  border-radius: 11px;
+  font-size: 18px;
+  font-weight: 800;
   color: var(--vc-text);
   font-variant-numeric: tabular-nums;
 }
 
 .vc-daynum.is-today {
-  background: #5271ff;
-  color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(82, 113, 255, 0.5);
+  background: var(--vc-today-num-bg);
+  color: var(--vc-today-num-fg);
+  box-shadow: 0 6px 14px -6px rgba(63, 89, 242, 0.7);
 }
 
 /* Eixo de horários */
@@ -114,9 +120,9 @@
 
 /* Blocos de eventos */
 .fc-timegrid-event {
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: none;
   padding: 0;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
   cursor: pointer;
@@ -125,12 +131,63 @@
 }
 
 .fc-timegrid-event:hover {
-  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 10px 22px -10px rgba(18, 19, 31, 0.45) !important;
   z-index: 25 !important;
 }
 
 .fc-daygrid-event {
-  border-radius: 6px;
+  border-radius: 7px;
+  border: none;
+}
+
+.vc-month-event {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--vc-text);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.vc-month-time {
+  font-weight: 600;
+  color: var(--vc-muted);
+  flex-shrink: 0;
+}
+
+.vc-month-title {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+
+.vc-month-event .vc-dot {
+  margin-right: 0;
+}
+
+.vc-event-time {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--vc-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .vc-event {
@@ -138,9 +195,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 4px 7px;
+  padding: 6px 8px;
   overflow: hidden;
-  color: #fff;
+  color: var(--vc-text);
   user-select: none;
 }
 
@@ -151,8 +208,9 @@
 
 .vc-event-title {
   font-size: 12.5px;
-  font-weight: 650;
-  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -162,7 +220,7 @@
 .vc-event-meta {
   font-size: 11px;
   line-height: 1.2;
-  opacity: 0.85;
+  color: var(--vc-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -183,8 +241,8 @@
   gap: 4px;
   padding: 1px 6px 1px 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #27272a;
+  background: var(--vc-pill-bg);
+  color: var(--vc-text);
   font-size: 9px;
   font-weight: 700;
   line-height: 13px;
@@ -276,6 +334,6 @@
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-  color: #5271ff;
-  font-weight: 700;
+  color: var(--vc-today-num-bg);
+  font-weight: 800;
 }

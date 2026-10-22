@@ -211,37 +211,36 @@ export default function BookingWizard({ empresa, profissional }: any) {
   };
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-50 [color-scheme:light]">
-      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand-100/70 to-transparent pointer-events-none" />
+    <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-100 [color-scheme:light]">
       <div className="relative max-w-5xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-8 md:py-12 flex-1 flex flex-col justify-center">
         
         {/* Card Principal - Layout Duas Colunas */}
-        <div className="bg-white rounded-3xl shadow-[0_12px_40px_-12px_rgba(24,30,79,0.18)] ring-1 ring-zinc-900/5 flex flex-col md:flex-row overflow-hidden md:min-h-[600px]">
+        <div className="bg-white rounded-[28px] shadow-[0_24px_48px_-24px_rgba(18,19,31,0.3)] ring-1 ring-zinc-900/5 flex flex-col md:flex-row overflow-hidden md:min-h-[600px]">
           
           {/* Coluna Esquerda: Dados da Clínica e Resumo */}
-          <div className="w-full md:w-[320px] bg-zinc-50/70 p-6 md:p-8 border-b md:border-b-0 md:border-r border-zinc-100 flex flex-col">
+          <div className="w-full md:w-[320px] bg-ink text-white p-6 md:p-8 flex flex-col">
             <div className="flex-1">
               <div
-                className="w-14 h-14 rounded-2xl mb-5 flex items-center justify-center text-lg font-bold text-white shadow-lg"
-                style={{ backgroundColor: profissional.cor || '#5271ff', boxShadow: `0 8px 20px -6px ${profissional.cor || '#5271ff'}80` }}
+                className="w-14 h-14 rounded-[18px] mb-5 flex items-center justify-center text-lg font-extrabold text-white"
+                style={{ backgroundColor: profissional.cor || '#5271ff' }}
               >
                 {getInitials(profissional.nome)}
               </div>
-              <h2 className="text-sm text-zinc-500 font-medium mb-1">{empresa.nome}</h2>
-              <h1 className="text-2xl font-bold text-zinc-900 tracking-tight mb-6 md:mb-8">{profissional.nome}</h1>
+              <h2 className="text-[13px] text-zinc-300 font-semibold mb-1">{empresa.nome}</h2>
+              <h1 className="text-2xl font-extrabold text-white tracking-tight mb-6 md:mb-8">{profissional.nome}</h1>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-3 text-zinc-600">
-                  <Clock className="w-5 h-5 text-zinc-400 mt-0.5" />
+                <div className="flex items-start gap-3 text-zinc-200">
+                  <Clock className="w-5 h-5 text-brand-300 mt-0.5" />
                   <div>
-                    <div className="font-medium">Sessão de Atendimento</div>
-                    <div className="text-sm text-zinc-500">30 min</div>
+                    <div className="font-semibold">Sessão de atendimento</div>
+                    <div className="text-sm text-zinc-400">30 min</div>
                   </div>
                 </div>
 
                 {selectedDate && selectedTime && (
-                  <div className="flex items-start gap-3 text-brand-800 bg-brand-50 p-3 rounded-xl border border-brand-100 transition-all">
-                    <CalendarIcon className="w-5 h-5 mt-0.5 text-blue-500" />
+                  <div className="flex items-start gap-3 text-white bg-white/10 p-3 rounded-xl transition-all">
+                    <CalendarIcon className="w-5 h-5 mt-0.5 text-brand-300" />
                     <div>
                       <div className="font-semibold capitalize">{dayjs(selectedDate).format('dddd, D [de] MMMM')}</div>
                       <div className="text-sm font-medium">às {selectedTime}</div>
@@ -252,9 +251,9 @@ export default function BookingWizard({ empresa, profissional }: any) {
             </div>
 
             {/* Footer da lateral */}
-            <div className="hidden md:block mt-8 pt-6 border-t border-zinc-200/60">
+            <div className="hidden md:block mt-8 pt-6 border-t border-white/10">
               <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
-                Powered by <VoibiMark className="w-4 text-zinc-700" /> <span className="text-zinc-700 font-bold">Voibi Agenda</span>
+                Agendamento por <VoibiMark className="w-4 text-white" /> <span className="text-white font-bold">Voibi Agenda</span>
               </div>
             </div>
           </div>
@@ -280,13 +279,13 @@ export default function BookingWizard({ empresa, profissional }: any) {
               {/* Passo 1: Calendário e Horários */}
               {step === 1 && (
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-zinc-900 tracking-tight mb-6">Selecione uma data e horário</h3>
+                  <h3 className="text-xl font-extrabold text-zinc-900 tracking-tight mb-6">Escolha o dia e o horário</h3>
                   
                   <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
                     {/* Calendário */}
                     <div className="flex-1 max-w-[400px]">
                       <div className="flex items-center justify-between mb-6">
-                        <h4 className="font-semibold text-zinc-900 capitalize text-lg">{today.format('MMMM YYYY')}</h4>
+                        <h4 className="font-extrabold text-zinc-900 capitalize text-lg">{today.format('MMMM YYYY')}</h4>
                       </div>
                       <div className="grid grid-cols-7 gap-1 text-center mb-2">
                         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
@@ -303,10 +302,10 @@ export default function BookingWizard({ empresa, profissional }: any) {
                               key={i}
                               disabled={isPast}
                               onClick={() => { setSelectedDate(d.toDate()); setSelectedTime(null); }}
-                              className={`aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                                isSelected ? 'bg-brand-500 text-white font-semibold shadow-md shadow-brand-500/40' : 
+                              className={`aspect-square flex items-center justify-center rounded-xl text-sm transition-colors ${
+                                isSelected ? 'bg-brand-600 text-white font-extrabold shadow-md shadow-brand-600/30' : 
                                 isPast ? 'text-zinc-300 cursor-not-allowed' : 
-                                'bg-brand-50 text-brand-700 font-semibold hover:bg-brand-100'
+                                'bg-brand-50 text-brand-700 font-bold hover:bg-brand-100'
                               }`}
                             >
                               {d.date()}
@@ -326,10 +325,10 @@ export default function BookingWizard({ empresa, profissional }: any) {
                           <div key={time} className="flex gap-2">
                             <button
                               onClick={() => setSelectedTime(time)}
-                              className={`flex-1 p-3.5 rounded-xl border text-sm font-semibold transition-all ${
+                              className={`flex-1 p-3.5 rounded-xl border text-sm font-bold transition-all ${
                                 selectedTime === time 
-                                ? 'border-zinc-900 bg-zinc-900 text-white' 
-                                : 'border-brand-200 text-brand-700 bg-white hover:border-brand-500 hover:bg-brand-50'
+                                ? 'border-brand-600 bg-brand-50 text-brand-700 ring-2 ring-brand-600/20' 
+                                : 'border-zinc-200 text-zinc-900 bg-white hover:border-brand-500 hover:bg-brand-50'
                               }`}
                             >
                               {time}
@@ -337,7 +336,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                             {selectedTime === time && (
                               <button 
                                 onClick={handleNextStep}
-                                className="px-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold transition-colors shadow-md shadow-brand-500/30 text-sm"
+                                className="px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-extrabold transition-colors shadow-md shadow-brand-600/30 text-sm"
                               >
                                 Avançar
                               </button>
@@ -353,7 +352,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
               {/* Passo 2: Formulário */}
               {step === 2 && (
                 <div className="max-w-md w-full mx-auto md:mx-0 flex-1 flex flex-col justify-center">
-                  <h3 className="text-2xl font-bold text-zinc-900 mb-2">Quase lá!</h3>
+                  <h3 className="text-2xl font-extrabold tracking-tight text-zinc-900 mb-2">Quase lá!</h3>
                   <p className="text-zinc-500 mb-8">Preencha seus dados para confirmar o agendamento.</p>
                   
                   <div className="space-y-5">
@@ -433,7 +432,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                         isSubmitting ||
                         customFields.some((c:any) => c.obrigatorio && !customAnswers[c.id])
                       }
-                      className="w-full mt-6 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:hover:bg-brand-500 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2"
+                      className="w-full mt-6 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:hover:bg-brand-600 text-white py-3.5 rounded-xl font-extrabold transition-all shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -452,7 +451,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
                     <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-20"></div>
                     <CheckCircle2 className="w-12 h-12" />
                   </div>
-                  <h2 className="text-3xl font-bold text-zinc-900 mb-3">Agendamento Confirmado!</h2>
+                  <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 mb-3">Agendamento confirmado!</h2>
                   <p className="text-zinc-500 mb-8 max-w-md text-lg">
                     Olá <strong>{clientData.nome}</strong>, seu horário está reservado para o dia <strong>{dayjs(selectedDate).format('DD/MM/YYYY')}</strong> às <strong>{selectedTime}</strong>. 
                   </p>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { LayoutDashboard, Blocks, BarChart2 } from 'lucide-react';
 import VoibiLogo from '@/components/VoibiLogo';
 import NavLink from './NavLink';
-import { navIcon } from './navStyles';
+import { navIcon, sectionLabel } from './navStyles';
 import { getServiceSupabase } from '@/lib/supabase/client';
 import { notFound, redirect } from 'next/navigation';
 import { SESSION_COOKIE, decodeSession } from '@/lib/session';
@@ -10,6 +10,7 @@ import AutomationsDropdown from './AutomationsDropdown';
 import SidebarAgendas from './SidebarAgendas';
 import SettingsDropdown from './SettingsDropdown';
 import ProfileDropdown from './ProfileDropdown';
+import UnidadeSwitcher from './UnidadeSwitcher';
 import { cookies } from 'next/headers';
 
 export default async function DashboardLayout({ 
@@ -91,15 +92,19 @@ export default async function DashboardLayout({
   const baseUrl = `/dashboard/${empresa_id}`;
 
   return (
-    <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-white dark:bg-zinc-900/60 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
-        <div className="h-16 px-5 flex items-center border-b border-zinc-200/70 dark:border-zinc-800">
-          <VoibiLogo subtitle={empresa.nome} />
+    <div className="flex h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
+      {/* Menu lateral em "tinta" nos dois temas: a classe dark faz os componentes internos usarem o visual escuro */}
+      <aside className="dark w-[264px] shrink-0 bg-ink [html.dark_&]:bg-ink-deep text-zinc-300 border-r border-white/5 flex flex-col">
+        <div className="h-[76px] px-5 flex items-center shrink-0">
+          <VoibiLogo />
+        </div>
+
+        <div className="px-3.5 pb-3 shrink-0">
+          <UnidadeSwitcher variant="sidebar" empresaNome={empresa.nome} unidades={unidades} currentUnidadeId={currentUnidadeId} baseUrl={baseUrl} />
         </div>
         
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Menu</p>
+        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+          <p className={sectionLabel}>Menu</p>
 
           {hasCalendarAccess && (
             <NavLink href={`${baseUrl}/calendar`}>
@@ -118,7 +123,7 @@ export default async function DashboardLayout({
           <SidebarAgendas agendas={agendasFiltradas} baseUrl={baseUrl} empresaId={empresa_id} />
 
           {(hasAutomationsAccess || hasSettingsAccess) && (
-            <p className="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Administração</p>
+            <p className={`${sectionLabel} pt-5`}>Administração</p>
           )}
 
           {hasAutomationsAccess && <AutomationsDropdown baseUrl={baseUrl} />}
@@ -130,7 +135,7 @@ export default async function DashboardLayout({
           <div className="px-3 pb-3">
             <Link 
               href="/superadmin" 
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-500/20 text-sm font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-brand-200 hover:bg-white/[0.08] text-sm font-semibold transition-colors"
             >
               <Blocks className="w-4 h-4" />
               Painel SuperAdmin
@@ -142,7 +147,7 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-zinc-950 relative z-0 overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 bg-zinc-100 dark:bg-zinc-950 relative z-0 overflow-y-auto">
         {children}
       </main>
     </div>

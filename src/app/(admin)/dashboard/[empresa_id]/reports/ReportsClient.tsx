@@ -121,9 +121,9 @@ export default function ReportsClient({
   const statusAtendimentoOptions = ['agendado', 'aguardando', 'atendido', 'faltou', 'reagendou'];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-50/50 dark:bg-zinc-900/50">
+    <div className="flex-1 flex flex-col h-full">
       {/* Header & Tabs */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 px-6 pt-6">
+      <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 pt-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Relatórios</h1>

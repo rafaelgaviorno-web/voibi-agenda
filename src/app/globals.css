@@ -3,8 +3,8 @@
 
 /* Tokens semânticos — tema claro */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  --background: 228 33% 95%;
+  --foreground: 234 37% 10%;
 
   --card: 0 0% 100%;
   --card-foreground: 240 10% 3.9%;
@@ -35,13 +35,13 @@
 
 /* Tokens semânticos — tema escuro */
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
+  --background: 235 33% 6%;
+  --foreground: 232 45% 94%;
 
-  --card: 240 6% 7%;
-  --card-foreground: 0 0% 98%;
+  --card: 234 37% 11%;
+  --card-foreground: 232 45% 94%;
 
-  --popover: 240 6% 7%;
+  --popover: 234 37% 11%;
   --popover-foreground: 0 0% 98%;
 
   --primary: 229 100% 66%;
@@ -97,7 +97,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-app-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
@@ -142,34 +142,54 @@
   --color-indigo-800: #2b3aad;
   --color-indigo-900: #283488;
   --color-indigo-950: #181e4f;
+
+  /*
+   * Neutros com leve tom azulado (o "preto" da logo é um azul-noite).
+   * Substitui a escala zinc em todo o app: fundo da página #EEF0F7,
+   * superfícies escuras #121427 e fundo escuro #0B0C16.
+   */
+  --color-zinc-50: #f7f8fc;
+  --color-zinc-100: #eef0f7;
+  --color-zinc-200: #e3e6f0;
+  --color-zinc-300: #cdd2e2;
+  --color-zinc-400: #9498b5;
+  --color-zinc-500: #6b6f8a;
+  --color-zinc-600: #50546e;
+  --color-zinc-700: #2e3252;
+  --color-zinc-800: #23263f;
+  --color-zinc-900: #121427;
+  --color-zinc-950: #0b0c16;
+
+  /* Menu lateral e painéis em "tinta", o tom escuro da logo */
+  --color-ink: #0e1020;
+  --color-ink-deep: #080914;
 }
 
 /* FullCalendar — cores seguem os tokens nos dois temas (ver calendar.css) */
 .dark {
   --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #18181b;
-  --fc-neutral-text-color: #e4e4e7;
-  --fc-border-color: #27272a;
-  --fc-theme-standard-border-color: #27272a;
-  --fc-button-text-color: #e4e4e7;
-  --fc-button-bg-color: #27272a;
-  --fc-button-border-color: #3f3f46;
-  --fc-button-hover-bg-color: #3f3f46;
-  --fc-button-hover-border-color: #52525b;
-  --fc-button-active-bg-color: #52525b;
-  --fc-button-active-border-color: #71717a;
+  --fc-neutral-bg-color: #121427;
+  --fc-neutral-text-color: #e8eaf6;
+  --fc-border-color: #1b1e33;
+  --fc-theme-standard-border-color: #1b1e33;
+  --fc-button-text-color: #e8eaf6;
+  --fc-button-bg-color: #23263f;
+  --fc-button-border-color: #2e3252;
+  --fc-button-hover-bg-color: #2e3252;
+  --fc-button-hover-border-color: #50546e;
+  --fc-button-active-bg-color: #50546e;
+  --fc-button-active-border-color: #6b6f8a;
   --fc-today-bg-color: rgba(82, 113, 255, 0.06);
   --fc-now-indicator-color: #f43f5e;
 }
 .dark .fc {
-  color: #e4e4e7;
+  color: #e8eaf6;
 }
 
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  font-feature-settings: "cv11", "ss01";
+  font-family: var(--font-app-sans), Arial, Helvetica, sans-serif;
   @apply antialiased selection:bg-primary/25;
 }
 
@@ -186,10 +206,10 @@ body {
 /* Scrollbars discretas */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgb(161 161 170 / 0.35) transparent;
+  scrollbar-color: rgb(148 152 181 / 0.4) transparent;
 }
 .dark * {
-  scrollbar-color: rgb(82 82 91 / 0.6) transparent;
+  scrollbar-color: rgb(80 84 110 / 0.6) transparent;
 }
 
 .glass {
