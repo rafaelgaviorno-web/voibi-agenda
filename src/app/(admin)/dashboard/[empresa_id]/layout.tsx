@@ -10,7 +10,7 @@ import AutomationsDropdown from './AutomationsDropdown';
 import SidebarAgendas from './SidebarAgendas';
 import SettingsDropdown from './SettingsDropdown';
 import ProfileDropdown from './ProfileDropdown';
-import UnidadeSwitcher from './UnidadeSwitcher';
+import ClinicCard from './ClinicCard';
 import { cookies } from 'next/headers';
 
 export default async function DashboardLayout({ 
@@ -46,7 +46,7 @@ export default async function DashboardLayout({
       { id: 'un-2', nome: 'Filial Zona Sul', empresa_id: 'mock-clinic' }
     ];
     
-    currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : unidades[0].id;
+    currentUnidadeId = savedUnidadeId === 'all' || (savedUnidadeId && unidades.find(u => u.id === savedUnidadeId)) ? savedUnidadeId! : unidades[0].id;
 
     agendas = [
       { id: 'prof-1', nome: 'Dr. João Silva', cor: '#4285f4', unidade_id: 'un-1' },
@@ -68,7 +68,9 @@ export default async function DashboardLayout({
     unidades = unidadesRes.data || [];
     agendas = profissionaisRes.data || [];
     
-    currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
+    currentUnidadeId = savedUnidadeId === 'all' && unidades.length > 1
+      ? 'all'
+      : savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
     
     // Filtro de permissões de usuário
     if (currentUserRes.data && currentUserRes.data.role !== 'admin' && !isSuperAdmin) {
@@ -82,8 +84,8 @@ export default async function DashboardLayout({
     }
   }
 
-  // Filtrar agendas pela unidade selecionada
-  const agendasFiltradas = agendas.filter(a => a.unidade_id === currentUnidadeId);
+  // Filtrar agendas pela unidade selecionada ("all" mostra todas)
+  const agendasFiltradas = currentUnidadeId === 'all' ? agendas : agendas.filter(a => a.unidade_id === currentUnidadeId);
 
   if (!empresa) {
     notFound();
@@ -100,7 +102,7 @@ export default async function DashboardLayout({
         </div>
 
         <div className="px-3.5 pb-3 shrink-0">
-          <UnidadeSwitcher variant="sidebar" empresaNome={empresa.nome} unidades={unidades} currentUnidadeId={currentUnidadeId} baseUrl={baseUrl} />
+          <ClinicCard nome={empresa.nome} />
         </div>
         
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">

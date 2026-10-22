@@ -34,7 +34,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       ...customAgendas.map((a:any) => ({...a, unidade_id: a.unidade_id || 'un-1'}))
     ];
 
-    profissionais = allProfissionais.filter(p => p.unidade_id === currentUnidadeId);
+    profissionais = currentUnidadeId === 'all' ? allProfissionais : allProfissionais.filter(p => p.unidade_id === currentUnidadeId);
     
     // Gerar alguns eventos para a semana atual
     const today = new Date();
@@ -80,7 +80,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
         observacao: 'Reunião/Treinamento',
         profissional: allProfissionais[0]
       }
-    ].filter(e => !e.profissional || e.profissional.unidade_id === currentUnidadeId);
+    ].filter(e => currentUnidadeId === 'all' || !e.profissional || e.profissional.unidade_id === currentUnidadeId);
     // Mock procedimentos
     procedimentos = [
       { id: 'proc-1', nome: 'Consulta de Rotina', duracao_minutos: 30 },
@@ -115,10 +115,10 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       supabase.from('agend_agendamentos').select(`
         id, inicio, fim, status, status_atendimento, is_encaixe, observacao,
         cliente:agend_clientes_finais(id, nome, telefone),
-        profissional:agend_profissionais!inner(id, nome, cor, empresa_id),
+        profissional:agend_profissionais!inner(id, nome, cor, empresa_id, unidade_id),
         evento:agend_tipos_evento(id, nome)
       `).eq('profissional.empresa_id', empresa_id),
-      supabase.from('agend_profissionais').select('id, nome, cor, intervalo_minutos').eq('empresa_id', empresa_id),
+      supabase.from('agend_profissionais').select('id, nome, cor, intervalo_minutos, unidade_id').eq('empresa_id', empresa_id),
       supabase.from('agend_disponibilidade')
         .select('profissional_id, dia_semana, hora_inicio, hora_fim, agend_profissionais!inner(empresa_id)')
         .eq('agend_profissionais.empresa_id', empresa_id),
@@ -127,7 +127,10 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
     ]);
 
     unidades = uns || [];
-    currentUnidadeId = savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
+    // "all" = todas as unidades (só faz sentido com mais de uma)
+    currentUnidadeId = savedUnidadeId === 'all' && unidades.length > 1
+      ? 'all'
+      : savedUnidadeId && unidades.find(u => u.id === savedUnidadeId) ? savedUnidadeId : (unidades[0]?.id || '');
 
     agendamentos = agendamentosData || [];
     
@@ -145,7 +148,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
     }));
     agendamentos = [...agendamentos, ...bloqueios];
 
-    if (currentUnidadeId) {
+    if (currentUnidadeId && currentUnidadeId !== 'all') {
       profissionais = profissionais.filter(p => (p as any).unidade_id === currentUnidadeId || !(p as any).unidade_id);
       agendamentos = agendamentos.filter(a => !a.profissional || (a.profissional as any).unidade_id === currentUnidadeId || !(a.profissional as any).unidade_id);
     }

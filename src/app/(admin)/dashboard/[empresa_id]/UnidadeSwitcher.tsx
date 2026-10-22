@@ -1,100 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, ChevronDown, ChevronsUpDown, Check } from 'lucide-react';
+import { Building2, ChevronDown, Check, Layers } from 'lucide-react';
 
-const initialsOf = (name: string) =>
-  name.split(/\s+/).filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('').toUpperCase() || name.charAt(0).toUpperCase();
-
-export default function UnidadeSwitcher({
-  unidades,
-  currentUnidadeId,
-  baseUrl,
-  variant = 'compact',
-  empresaNome,
-}: {
-  unidades: any[];
-  currentUnidadeId: string;
-  baseUrl: string;
-  // "sidebar": cartão da clínica no topo do menu lateral
-  variant?: 'compact' | 'sidebar';
-  empresaNome?: string;
-}) {
+// Escolha da unidade no topo do calendário. "all" mostra as agendas de todas as unidades juntas.
+export default function UnidadeSwitcher({ unidades, currentUnidadeId }: { unidades: any[], currentUnidadeId: string, baseUrl?: string }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
+  // Fecha ao clicar fora
+  useEffect(() => {
+    if (!isOpen) return;
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [isOpen]);
+
+  if (!unidades || unidades.length < 2) return null;
+
+  const isAll = currentUnidadeId === 'all';
   const currentUnidade = unidades.find(u => u.id === currentUnidadeId) || unidades[0];
-  const canSwitch = unidades.length > 1;
 
   const handleSelect = (unidadeId: string) => {
-    // Set cookie that expires in 365 days
+    // Lembra a escolha por 1 ano
     document.cookie = `voibi_unidade_id=${unidadeId}; path=/; max-age=31536000`;
     setIsOpen(false);
-    // Refresh to apply changes server-side
     router.refresh();
   };
 
-  const menu = isOpen && (
-    <div className={`absolute top-full mt-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl shadow-zinc-900/10 z-50 overflow-hidden ${variant === 'sidebar' ? 'left-0 right-0' : 'right-0 w-60'}`}>
-      <div className="px-3 py-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800">
-        Alternar Unidade
-      </div>
-      <div className="max-h-60 overflow-y-auto">
-        {unidades.map(unidade => (
-          <button
-            key={unidade.id}
-            onClick={() => handleSelect(unidade.id)}
-            className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-          >
-            <span className={unidade.id === currentUnidadeId ? 'font-semibold text-brand-600 dark:text-brand-400' : 'text-zinc-700 dark:text-zinc-300 font-medium'}>
-              {unidade.nome}
-            </span>
-            {unidade.id === currentUnidadeId && <Check className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-
-  if (variant === 'sidebar') {
-    return (
-      <div className="relative">
-        <button
-          onClick={() => canSwitch && setIsOpen(!isOpen)}
-          disabled={!canSwitch}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-white/10 bg-white/[0.04] enabled:hover:bg-white/[0.07] text-left transition-colors disabled:cursor-default"
-          aria-label={canSwitch ? 'Alternar unidade' : undefined}
-        >
-          <span className="w-8 h-8 shrink-0 rounded-[9px] bg-brand-500 text-white flex items-center justify-center text-xs font-extrabold">
-            {initialsOf(empresaNome || 'Clínica')}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-bold text-white truncate">{empresaNome}</span>
-            {currentUnidade && <span className="block text-[11.5px] text-zinc-400 truncate">{currentUnidade.nome}</span>}
-          </span>
-          {canSwitch && <ChevronsUpDown className="w-4 h-4 text-zinc-400 shrink-0" />}
-        </button>
-        {menu}
-      </div>
-    );
-  }
-
-  if (!unidades || unidades.length === 0) return null;
+  const options = [{ id: 'all', nome: 'Todas as unidades' }, ...unidades];
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 max-w-[14rem] bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-zinc-200 dark:border-zinc-700"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className="h-10 flex items-center gap-2.5 max-w-[16rem] pl-3 pr-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-sm transition-colors"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Building2 className="w-4 h-4 text-zinc-500 dark:text-zinc-400 flex-shrink-0" />
-          <span className="truncate">{currentUnidade?.nome || 'Selecione uma unidade'}</span>
-        </div>
-        <ChevronDown className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+        <span className="w-6 h-6 shrink-0 rounded-md bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center">
+          {isAll ? <Layers className="w-3.5 h-3.5" /> : <Building2 className="w-3.5 h-3.5" />}
+        </span>
+        <span className="min-w-0 text-left leading-tight">
+          <span className="block text-[10.5px] font-bold uppercase tracking-[0.06em] text-zinc-500 dark:text-zinc-400">Unidade</span>
+          <span className="block font-bold text-zinc-900 dark:text-white truncate">{isAll ? 'Todas as unidades' : currentUnidade?.nome}</span>
+        </span>
+        <ChevronDown className={`w-4 h-4 text-zinc-400 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      {menu}
+
+      {isOpen && (
+        <div role="listbox" className="absolute top-full left-0 mt-1.5 w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl shadow-zinc-900/10 z-50 overflow-hidden py-1">
+          {options.map((unidade, i) => {
+            const selected = unidade.id === currentUnidadeId || (!isAll && unidade.id === currentUnidade?.id && i > 0);
+            return (
+              <button
+                key={unidade.id}
+                role="option"
+                aria-selected={selected}
+                onClick={() => handleSelect(unidade.id)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors ${i === 0 ? 'border-b border-zinc-100 dark:border-zinc-800' : ''}`}
+              >
+                <span className={`flex items-center gap-2 ${selected ? 'font-bold text-brand-700 dark:text-brand-300' : 'text-zinc-700 dark:text-zinc-300 font-medium'}`}>
+                  {i === 0 && <Layers className="w-4 h-4 opacity-70" />}
+                  {unidade.nome}
+                </span>
+                {selected && <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

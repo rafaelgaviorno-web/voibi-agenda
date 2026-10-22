@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import EventModal from './EventModal';
 import CalendarSidePanel from './CalendarSidePanel';
+import UnidadeSwitcher from '../UnidadeSwitcher';
 import { saveAppointment, deleteAppointment } from './actions';
 import '@/app/calendar.css';
 
@@ -571,7 +572,8 @@ Horário: ${arg.timeText}`);
     <div className="flex flex-col h-screen w-full font-sans text-sm bg-zinc-100 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 gap-5 p-4 lg:px-7 lg:py-6">
 
       {/* Cabeçalho */}
-      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 shrink-0">
+      <header className="flex flex-wrap items-end gap-x-4 gap-y-3 shrink-0">
+        <div className="min-w-0 mr-auto flex items-end gap-x-5 gap-y-3 flex-wrap">
         <div className="min-w-0">
           <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-zinc-900 dark:text-white truncate">
             {monthTitle || ' '}
@@ -585,6 +587,9 @@ Horário: ${arg.timeText}`);
               </>
             )}
           </p>
+        </div>
+
+        <UnidadeSwitcher unidades={unidades} currentUnidadeId={currentUnidadeId} baseUrl={baseUrl} />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
