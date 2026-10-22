@@ -254,7 +254,7 @@ export default function BookingWizard({ empresa, profissional }: any) {
             {/* Footer da lateral */}
             <div className="hidden md:block mt-8 pt-6 border-t border-zinc-200/60">
               <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
-                Powered by <VoibiMark className="w-4 text-zinc-700" /> <span className="text-zinc-700 font-bold">voibi</span>
+                Powered by <VoibiMark className="w-4 text-zinc-700" /> <span className="text-zinc-700 font-bold">Voibi Agenda</span>
               </div>
             </div>
           </div>

@@ -52,7 +52,7 @@ export default function AuthShell({
         <div className="relative flex items-center gap-2.5">
           <VoibiMark className="w-9 text-white" />
           <span className="text-2xl font-bold tracking-tight">
-            voibi <span className="text-brand-400 font-semibold">agenda</span>
+            Voibi <span className="text-brand-400 font-semibold">Agenda</span>
           </span>
         </div>
 
