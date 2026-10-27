@@ -1,6 +1,8 @@
 /* Tema Voibi para FullCalendar v6 — claro e escuro */
 
 :root {
+  --vc-card-base: #ffffff;
+  --vc-card-border: rgba(18, 19, 31, 0.08);
   --vc-border: #e9ebf3;
   --vc-border-soft: #f2f3f8;
   --vc-muted: #6b6f8a;
@@ -21,6 +23,8 @@
 }
 
 .dark {
+  --vc-card-base: #121427;
+  --vc-card-border: rgba(255, 255, 255, 0.1);
   --vc-border: #1b1e33;
   --vc-border-soft: #16182b;
   --vc-muted: #9a9ebe;
@@ -120,9 +124,10 @@
 
 /* Blocos de eventos */
 .fc-timegrid-event {
+  background-color: var(--vc-card-base);
   border-radius: 10px;
-  border: none;
-  box-shadow: none;
+  border: 1px solid var(--vc-card-border) !important;
+  box-shadow: 0 1px 3px rgba(18, 19, 31, 0.05);
   padding: 0;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
   cursor: pointer;
@@ -136,8 +141,9 @@
 }
 
 .fc-daygrid-event {
+  background-color: var(--vc-card-base);
   border-radius: 7px;
-  border: none;
+  border: 1px solid var(--vc-card-border) !important;
 }
 
 .vc-month-event {

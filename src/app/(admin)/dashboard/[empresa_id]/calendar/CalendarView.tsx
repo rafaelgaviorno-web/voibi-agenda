@@ -16,12 +16,10 @@ import '@/app/calendar.css';
 const escapeHtml = (value: string) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
-// Fundo suave na cor do agendamento; o texto segue o tema (ver .vc-event em calendar.css)
-const tint = (hex: string, alpha = 0.16) => {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+// Fundo suave e 100% OPACO na cor do agendamento (evita transparência quando cards coincidem ou se sobrepõem)
+const tint = (hex: string) => {
+  if (!hex || hex === 'transparent') return 'transparent';
+  return `color-mix(in srgb, ${hex} 18%, var(--vc-card-base, #ffffff))`;
 };
 
 export default function CalendarView({ rawEvents, profissionais: agendas, procedimentos, unidades, currentUnidadeId, baseUrl }: any) {
@@ -208,7 +206,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           // Bloqueios ficam no fundo da coluna e não dividem a largura com os agendamentos
           display: isBlock ? 'background' : 'block',
           backgroundColor: isBlock ? backgroundColor : tint(backgroundColor),
-          borderColor: 'transparent',
+          borderColor: isBlock ? 'transparent' : 'var(--vc-card-border, rgba(18, 19, 31, 0.08))',
           classNames: isBlock ? ['vc-block', isGlobalBlock ? 'vc-block-global' : ''] : [],
           extendedProps: {
             color: backgroundColor,
@@ -268,6 +266,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       locale: 'pt-br',
       events: events,
       eventDisplay: 'block',
+      slotEventOverlap: false,
       height: '100%',
       slotMinTime: slotRange.start,
       slotMaxTime: slotRange.end,
