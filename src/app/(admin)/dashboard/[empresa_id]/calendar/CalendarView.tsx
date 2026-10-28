@@ -6,7 +6,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Plus, UserCheck, Users } from 'lucide-react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import EventModal from './EventModal';
 import CalendarSidePanel from './CalendarSidePanel';
@@ -89,6 +89,23 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   const [currentView, setCurrentView] = useState('resourceTimeGridDay');
   // Período visível no calendário (usado no título, no resumo e no mini calendário)
   const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [dayFilterMode, setDayFilterMode] = useState<'all' | 'with_agenda'>('all');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('voibi_calendar_day_filter');
+      if (saved === 'with_agenda' || saved === 'all') {
+        setDayFilterMode(saved);
+      }
+    } catch {}
+  }, []);
+
+  const handleDayFilterChange = (mode: 'all' | 'with_agenda') => {
+    setDayFilterMode(mode);
+    try {
+      localStorage.setItem('voibi_calendar_day_filter', mode);
+    } catch {}
+  };
   
   const calendarRef = useRef<HTMLDivElement>(null);
   const calendarInstance = useRef<any>(null);
@@ -166,8 +183,51 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     return agendas.filter((a: any) => selectedAgendas.includes(a.id));
   }, [agendas, selectedAgendas]);
 
+  // Data e dia da semana atuais exibidos no calendário
+  const currentDayDate = useMemo(() => {
+    return visibleRange?.start || new Date();
+  }, [visibleRange]);
+
+  const currentDayOfWeek = currentDayDate.getDay();
+
+  // Verifica se o profissional tem horário de atendimento no dia da semana OU algum agendamento no dia
+  const hasAgendaOnCurrentDay = (agenda: any) => {
+    const hasDisponibilidade = (agenda.disponibilidade || []).some(
+      (d: any) => d.dia_semana === currentDayOfWeek
+    );
+    if (hasDisponibilidade) return true;
+
+    return localEvents.some((e: any) => {
+      if (e.status === 'cancelado') return false;
+      const profId = e.profissional?.id || e.agendaId;
+      if (profId !== agenda.id) return false;
+      const start = new Date(e.inicio || e.start);
+      return (
+        start.getFullYear() === currentDayDate.getFullYear() &&
+        start.getMonth() === currentDayDate.getMonth() &&
+        start.getDate() === currentDayDate.getDate()
+      );
+    });
+  };
+
+  const agendasWithAgendaCount = useMemo(() => {
+    return activeAgendas.filter(hasAgendaOnCurrentDay).length;
+  }, [activeAgendas, currentDayOfWeek, currentDayDate, localEvents]);
+
+  const displayedAgendas = useMemo(() => {
+    if (currentView !== 'resourceTimeGridDay' || dayFilterMode === 'all') {
+      return activeAgendas;
+    }
+    const withAgenda = activeAgendas.filter(hasAgendaOnCurrentDay);
+    return withAgenda.length > 0 ? withAgenda : activeAgendas;
+  }, [currentView, dayFilterMode, activeAgendas, currentDayOfWeek, currentDayDate, localEvents]);
+
+  const displayedAgendaIds = useMemo(() => {
+    return displayedAgendas.map((a: any) => a.id);
+  }, [displayedAgendas]);
+
   const resources = useMemo(() => {
-    return activeAgendas.map((a: any) => {
+    return displayedAgendas.map((a: any) => {
       const businessHours = (a.disponibilidade || []).map((d: any) => ({
         daysOfWeek: [d.dia_semana],
         startTime: d.hora_inicio,
@@ -185,7 +245,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         }
       };
     });
-  }, [activeAgendas]);
+  }, [displayedAgendas]);
 
   const events = useMemo(() => {
     return localEvents
@@ -200,7 +260,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         // Na visão por recursos do Dia, cada bloqueio fica na coluna do seu profissional!
         // Na semana/mês compartilhada, só mostra se a agenda for a única selecionada
         if (currentView !== 'resourceTimeGridDay' && selectedAgendas.length !== 1) return false;
-      } else if (!selectedAgendas.includes(e.profissional?.id)) {
+      } else if (!displayedAgendaIds.includes(e.profissional?.id)) {
         return false;
       }
       
@@ -227,7 +287,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         return {
           id: e.id,
           resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
-          resourceIds: isGlobalBlock ? activeAgendas.map((a: any) => a.id) : undefined,
+          resourceIds: isGlobalBlock ? displayedAgendas.map((a: any) => a.id) : undefined,
           title: isBlock ? (e.observacao || 'Bloqueio') : (e.cliente?.nome || e.nome || 'Agendamento'),
           start: e.start || e.inicio,
           end: e.end || e.fim,
@@ -246,7 +306,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           }
         };
     });
-  }, [localEvents, searchPatient, selectedAgendas, activeAgendas, currentView]);
+  }, [localEvents, searchPatient, selectedAgendas, displayedAgendaIds, displayedAgendas, currentView]);
 
   const minInterval = useMemo(() => {
     const active = agendas.filter((a: any) => selectedAgendas.includes(a.id));
@@ -721,7 +781,7 @@ Horário: ${arg.timeText}`);
             </button>
           </div>
 
-          <div className={`flex items-center p-1 ${control}`} role="tablist">
+                    <div className={`flex items-center p-1 ${control}`} role="tablist">
             {views.map(v => (
               <button
                 key={v.value}
@@ -738,6 +798,51 @@ Horário: ${arg.timeText}`);
               </button>
             ))}
           </div>
+
+          {currentView === 'resourceTimeGridDay' && (
+            <div className={`flex items-center p-1 ${control}`} role="group" aria-label="Filtrar agendas do dia">
+              <button
+                type="button"
+                onClick={() => handleDayFilterChange('with_agenda')}
+                className={`h-full px-3 rounded-lg text-[13px] transition-all flex items-center gap-1.5 ${
+                  dayFilterMode === 'with_agenda'
+                    ? 'bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 font-bold shadow-xs'
+                    : 'text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+                title="Visualizar somente as agendas que possuem atendimento ou agendamentos hoje"
+              >
+                <UserCheck className="w-3.5 h-3.5 shrink-0" />
+                <span>Com agenda no dia</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  dayFilterMode === 'with_agenda'
+                    ? 'bg-brand-200/80 dark:bg-brand-400/25 text-brand-900 dark:text-brand-200'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                }`}>
+                  {agendasWithAgendaCount}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDayFilterChange('all')}
+                className={`h-full px-3 rounded-lg text-[13px] transition-all flex items-center gap-1.5 ${
+                  dayFilterMode === 'all'
+                    ? 'bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 font-bold shadow-xs'
+                    : 'text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+                title="Visualizar todas as agendas do dia"
+              >
+                <Users className="w-3.5 h-3.5 shrink-0" />
+                <span>Todas do dia</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  dayFilterMode === 'all'
+                    ? 'bg-brand-200/80 dark:bg-brand-400/25 text-brand-900 dark:text-brand-200'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                }`}>
+                  {activeAgendas.length}
+                </span>
+              </button>
+            </div>
+          )}
 
           <button
             onClick={() => { setSelectedEventData(null); setIsModalOpen(true); }}

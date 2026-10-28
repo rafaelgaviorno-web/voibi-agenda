@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CalendarDays, ChevronDown, ArrowRightLeft, Search, Check } from 'lucide-react';
+import { CalendarDays, ChevronDown, ArrowRightLeft, Search, Check, X } from 'lucide-react';
 import { navIcon, navItem, navItemIdle } from './navStyles';
 import TransferModal from './calendar/TransferModal';
 import { transferAppointments } from './calendar/actions';
@@ -120,21 +120,26 @@ export default function SidebarAgendas({ agendas, baseUrl, empresaId }: { agenda
             </div>
           )}
 
-          <div className="flex items-center gap-3 px-1">
+          <div className="grid grid-cols-2 gap-1.5 pt-0.5">
             <button 
+              type="button"
               onClick={handleSelectAll} 
               disabled={isAllSelected}
-              className="text-[11px] font-medium text-zinc-500 hover:text-brand-600 dark:hover:text-brand-400 disabled:text-brand-600 dark:disabled:text-brand-400 transition-colors"
+              className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 shadow-xs bg-brand-50 hover:bg-brand-100 text-brand-700 border-brand-200/90 dark:bg-brand-500/20 dark:hover:bg-brand-500/30 dark:text-brand-300 dark:border-brand-500/40 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-50 dark:disabled:hover:bg-brand-500/20 active:scale-95"
+              title="Marcar todas as agendas"
             >
-              Marcar todas
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Marcar todas</span>
             </button>
-            <span className="text-zinc-300 dark:text-zinc-700">·</span>
             <button 
+              type="button"
               onClick={handleDeselectAll} 
               disabled={isNoneSelected}
-              className="text-[11px] font-medium text-zinc-500 hover:text-red-600 disabled:text-zinc-400 dark:disabled:text-zinc-600 transition-colors"
+              className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 shadow-xs bg-zinc-100 hover:bg-red-50 text-zinc-700 hover:text-red-600 border-zinc-200 hover:border-red-200 dark:bg-zinc-800/90 dark:hover:bg-red-950/40 dark:text-zinc-200 dark:hover:text-red-300 dark:border-zinc-700 dark:hover:border-red-800/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-zinc-100 dark:disabled:hover:bg-zinc-800/90 active:scale-95"
+              title="Desmarcar todas as agendas"
             >
-              Desmarcar todas
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Desmarcar todas</span>
             </button>
           </div>
 
