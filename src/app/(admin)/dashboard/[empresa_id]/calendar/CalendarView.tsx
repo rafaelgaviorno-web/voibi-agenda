@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
@@ -85,7 +86,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   
   const [searchPatient, setSearchPatient] = useState('');
   const [calendarTitle, setCalendarTitle] = useState('');
-  const [currentView, setCurrentView] = useState('timeGridWeek');
+  const [currentView, setCurrentView] = useState('resourceTimeGridDay');
   // Período visível no calendário (usado no título, no resumo e no mini calendário)
   const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
   
@@ -161,6 +162,30 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
 
 
+    const activeAgendas = useMemo(() => {
+    return agendas.filter((a: any) => selectedAgendas.includes(a.id));
+  }, [agendas, selectedAgendas]);
+
+  const resources = useMemo(() => {
+    return activeAgendas.map((a: any) => {
+      const businessHours = (a.disponibilidade || []).map((d: any) => ({
+        daysOfWeek: [d.dia_semana],
+        startTime: d.hora_inicio,
+        endTime: d.hora_fim
+      }));
+
+      return {
+        id: a.id,
+        title: a.nome,
+        businessHours: businessHours.length > 0 ? businessHours : undefined,
+        extendedProps: {
+          cor: a.cor || '#5271ff',
+          unidade_id: a.unidade_id
+        }
+      };
+    });
+  }, [activeAgendas]);
+
   const events = useMemo(() => {
     return localEvents
       .filter((e: any) => {
@@ -168,12 +193,12 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       if (searchPatient && !e.cliente?.nome.toLowerCase().includes(searchPatient.toLowerCase())) return false;
       // Bloqueios globais não estão vinculados a um profissional específico, então não filtramos
       if (e.status === 'bloqueio' && !e.profissional) {
-        // passa no filtro de agenda, continua validando
+        // Bloqueio global passa no filtro
       } else if (e.status === 'bloqueio' && e.profissional) {
-        // Bloqueio Específico: só aparece se a agenda afetada for a única selecionada no filtro
-        if (selectedAgendas.length !== 1 || !selectedAgendas.includes(e.profissional.id)) {
-          return false;
-        }
+        if (!selectedAgendas.includes(e.profissional.id)) return false;
+        // Na visão por recursos do Dia, cada bloqueio fica na coluna do seu profissional!
+        // Na semana/mês compartilhada, só mostra se a agenda for a única selecionada
+        if (currentView !== 'resourceTimeGridDay' && selectedAgendas.length !== 1) return false;
       } else if (!selectedAgendas.includes(e.profissional?.id)) {
         return false;
       }
@@ -200,6 +225,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
 
         return {
           id: e.id,
+          resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
+          resourceIds: isGlobalBlock ? activeAgendas.map((a: any) => a.id) : undefined,
           title: isBlock ? (e.observacao || 'Bloqueio') : (e.cliente?.nome || e.nome || 'Agendamento'),
           start: e.start || e.inicio,
           end: e.end || e.fim,
@@ -218,7 +245,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           }
         };
     });
-  }, [localEvents, searchPatient, selectedAgendas]);
+  }, [localEvents, searchPatient, selectedAgendas, activeAgendas, currentView]);
 
   const minInterval = useMemo(() => {
     const active = agendas.filter((a: any) => selectedAgendas.includes(a.id));
@@ -281,7 +308,28 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         setCalendarTitle(arg.view.title);
         setVisibleRange({ start: arg.view.currentStart, end: arg.view.currentEnd });
       },
+      resourceLabelContent: (arg: any) => {
+        const name = escapeHtml(arg.resource.title || 'Profissional');
+        const cor = escapeHtml(arg.resource.extendedProps?.cor || '#5271ff');
+        const cleanName = name.replace(/^(Dr\.|Dra\.|Prof\.)\s+/i, '');
+        const parts = cleanName.split(' ').filter(Boolean);
+        const initials = (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : cleanName.slice(0, 2)).toUpperCase();
+
+        return {
+          html: `
+            <div class="vc-resource-head">
+              <div class="vc-resource-avatar" style="background:${cor}">
+                <span>${initials}</span>
+              </div>
+              <span class="vc-resource-name" title="${name}">${name}</span>
+            </div>
+          `
+        };
+      },
       dayHeaderContent: (arg) => {
+        if (arg.view.type === 'resourceTimeGridDay') {
+          return { html: '' };
+        }
         const isMonthView = arg.view.type === 'dayGridMonth';
         const textStr = arg.text.split(' ');
         const weekday = textStr[0];
@@ -384,7 +432,7 @@ Horário: ${arg.timeText}`);
         if(original && original.status !== 'bloqueio') {
           setSelectedEventData({
             ...original,
-            agendaId: original.profissional?.id,
+            agendaId: (info as any).newResource?.id || original.profissional?.id,
             observacao: original.observacao
           });
           setIsModalOpen(true);
@@ -416,7 +464,7 @@ Horário: ${arg.timeText}`);
         const hours = String(dateObj.getHours()).padStart(2, '0');
         const mins = String(dateObj.getMinutes()).padStart(2, '0');
         
-        const targetAgendaId = agendas.length === 1 ? agendas[0].id : (selectedAgendas.length === 1 ? selectedAgendas[0] : '');
+        const targetAgendaId = (info as any).resource?.id || (agendas.length === 1 ? agendas[0].id : (selectedAgendas.length === 1 ? selectedAgendas[0] : ''));
         const targetAgenda = agendas.find((a: any) => a.id === targetAgendaId);
         const slotMinutes = targetAgenda?.intervalo_minutos || 30;
 
@@ -456,7 +504,7 @@ Horário: ${arg.timeText}`);
              data: adjustedData,
              horaInicio: adjustedHoraInicio,
              horaFim: adjustedHoraFim,
-             agendaId: original.profissional?.id,
+             agendaId: (info as any).newResource?.id || original.profissional?.id,
              procedimentoId: original.evento?.id,
              observacao: original.observacao,
              status: original.status,
@@ -501,6 +549,12 @@ Horário: ${arg.timeText}`);
     // Criado uma vez: as atualizações abaixo mantêm a semana e a rolagem atuais
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const calendar = calendarInstance.current;
+    if (!calendar) return;
+    calendar.setOption('resources', resources);
+  }, [resources]);
 
   // Atualiza os eventos no calendário existente, sem recriá-lo
   useEffect(() => {
@@ -548,7 +602,7 @@ Horário: ${arg.timeText}`);
   };
 
   const views = [
-    { value: 'timeGridDay', label: 'Dia' },
+    { value: 'resourceTimeGridDay', label: 'Dia' },
     { value: 'timeGridWeek', label: 'Semana' },
     { value: 'dayGridMonth', label: 'Mês' },
   ];
@@ -556,9 +610,18 @@ Horário: ${arg.timeText}`);
   const iconButton = 'w-8 h-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors';
   const control = 'h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800';
 
-  // Título "Outubro de 2026" e resumo do período visível
+  // Título do período no topo (ex: "Terça-feira, 27 de Outubro" no modo Dia ou "Outubro de 2026" na Semana/Mês)
   const monthTitle = visibleRange
     ? (() => {
+        if (currentView === 'resourceTimeGridDay') {
+          const d = visibleRange.start;
+          const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+          const day = d.getDate();
+          const month = d.toLocaleDateString('pt-BR', { month: 'long' });
+          const year = d.getFullYear();
+          const capWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+          return `${capWeekday}, ${day} de ${month.charAt(0).toUpperCase() + month.slice(1)} de ${year}`;
+        }
         const t = visibleRange.start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         return t.charAt(0).toUpperCase() + t.slice(1);
       })()

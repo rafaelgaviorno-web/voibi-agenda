@@ -13,6 +13,7 @@
     "@fullcalendar/daygrid": "^6.1.21",
     "@fullcalendar/interaction": "^6.1.21",
     "@fullcalendar/react": "^7.0.2",
+    "@fullcalendar/resource-timegrid": "^6.1.21",
     "@fullcalendar/timegrid": "^6.1.21",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@supabase/supabase-js": "^2.111.0",

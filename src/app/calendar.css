@@ -343,3 +343,73 @@
   color: var(--vc-today-num-bg);
   font-weight: 800;
 }
+
+/* Modo Dia: Colunas por Profissional (Resource TimeGrid) */
+.fc-resource-timegrid .fc-col-header-cell {
+  border-right: 1px solid var(--vc-border) !important;
+  border-bottom: 1px solid var(--vc-border) !important;
+  min-width: 140px;
+  background: var(--vc-card-base);
+}
+
+.fc-resource-timegrid .fc-timegrid-col {
+  min-width: 140px;
+  border-right: 1px solid var(--vc-border) !important;
+}
+
+.vc-resource-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  min-width: 120px;
+  user-select: none;
+}
+
+.vc-resource-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  flex-shrink: 0;
+}
+
+.vc-resource-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vc-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* Horários fora de expediente do profissional (sombreado suave de ausência) */
+.fc-timegrid .fc-non-business {
+  background-color: rgba(82, 113, 255, 0.04);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(148, 152, 181, 0.06) 0 8px,
+    transparent 8px 16px
+  );
+}
+
+.dark .fc-timegrid .fc-non-business {
+  background-color: rgba(0, 0, 0, 0.22);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.02) 0 8px,
+    transparent 8px 16px
+  );
+}
