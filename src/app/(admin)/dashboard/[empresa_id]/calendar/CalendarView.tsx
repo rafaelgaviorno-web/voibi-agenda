@@ -165,6 +165,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const errMsg = typeof res.error === 'string' ? res.error : ((res.error as any)?.message || "Erro ao salvar no banco de dados.");
         throw new Error(errMsg);
       }
+      router.refresh();
     }
   };
 
@@ -295,8 +296,10 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           title: isBlock ? (e.observacao || 'Bloqueio') : (e.cliente?.nome || e.nome || 'Agendamento'),
           start: e.start || e.inicio,
           end: e.end || e.fim,
-          // Bloqueios ficam no fundo da coluna e não dividem a largura com os agendamentos
           display: isBlock ? 'background' : 'block',
+          editable: !isBlock && !isCancelado,
+          startEditable: !isBlock && !isCancelado,
+          durationEditable: !isBlock && !isCancelado,
           backgroundColor: isBlock ? backgroundColor : tint(backgroundColor),
           borderColor: isBlock ? 'transparent' : 'var(--vc-card-border, rgba(18, 19, 31, 0.08))',
           classNames: isBlock ? ['vc-block', isGlobalBlock ? 'vc-block-global' : ''] : [],
@@ -573,6 +576,14 @@ Horário: ${arg.timeText}`);
       eventDrop: async (info) => {
         const eventId = info.event.id;
         const original = latestRef.current.localEvents.find((e:any) => String(e.id) === String(eventId));
+        if (!original || !info.event.start) return;
+
+        if (original.status === 'cancelado') {
+          alert('Agendamentos cancelados não podem ser arrastados. Abra o agendamento para reativá-lo ou alterá-lo.');
+          info.revert();
+          return;
+        }
+
         if (original && info.event.start) {
            const startDate = info.event.start;
            const endDate = info.event.end || new Date(startDate.getTime() + 30 * 60000);

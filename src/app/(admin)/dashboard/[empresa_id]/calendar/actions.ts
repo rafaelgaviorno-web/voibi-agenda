@@ -174,9 +174,10 @@ export async function saveAppointment(data: any, empresaId: string) {
     revalidatePath(`/dashboard/${empresaId}/calendar`);
     return { success: true };
     
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao salvar agendamento:", error);
-    return { success: false, error };
+    const errorMsg = error instanceof Error ? error.message : ((error as any)?.message || (typeof error === 'string' ? error : 'Erro ao salvar no banco de dados.'));
+    return { success: false, error: errorMsg };
   }
 }
 
