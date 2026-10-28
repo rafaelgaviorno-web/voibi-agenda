@@ -72,11 +72,26 @@ export async function saveAppointment(data: any, empresaId: string) {
        if (newClient) clienteId = newClient.id;
     }
 
-    // Preparar datas
-    const inicioStr = `${data.data}T${data.horaInicio}:00`;
-    const fimStr = `${data.data}T${data.horaFim}:00`;
-    const inicioIso = new Date(inicioStr).toISOString();
-    const fimIso = new Date(fimStr).toISOString();
+    // Preparar datas como string "hora de relógio" sem distorção de fuso horário
+    const inicioIso = `${data.data}T${data.horaInicio}:00`;
+    const fimIso = `${data.data}T${data.horaFim}:00`;
+
+    // Validação de agenda fechada no dia (a menos que seja encaixe)
+    if (!data.is_encaixe) {
+      const [y, m, d] = data.data.split('-').map(Number);
+      const dayOfWeek = new Date(y, m - 1, d, 12, 0, 0).getDay();
+      const { data: allDisps } = await supabase
+        .from('agend_disponibilidade')
+        .select('dia_semana')
+        .eq('profissional_id', data.agendaId);
+
+      if (allDisps && allDisps.length > 0) {
+        const hasDisp = allDisps.some((disp: any) => Number(disp.dia_semana) === dayOfWeek);
+        if (!hasDisp) {
+          return { success: false, error: 'A agenda deste profissional está fechada neste dia da semana. Marque como encaixe se desejar forçar o agendamento.' };
+        }
+      }
+    }
 
     // 2. Criar ou Atualizar Agendamento
     let bookingResult: any = null;

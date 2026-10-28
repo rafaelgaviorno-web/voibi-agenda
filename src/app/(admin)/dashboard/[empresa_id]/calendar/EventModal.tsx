@@ -120,6 +120,7 @@ export default function EventModal({
   };
 
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [isAgendaFechada, setIsAgendaFechada] = useState(false);
   
   useEffect(() => {
     if (formData.agendaId && formData.data) {
@@ -130,14 +131,24 @@ export default function EventModal({
        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
        const dayOfWeek = dateObj.getDay();
        
-       let disps = selectedAgenda?.disponibilidade?.filter((d:any) => Number(d.dia_semana) === dayOfWeek) || [];
-       
-       const slots: string[] = [];
-       
-       if (disps.length === 0) {
-         // Fallback availability if nothing is configured
+       const allDisps = selectedAgenda?.disponibilidade || [];
+       const hasConfiguredDisp = allDisps.length > 0;
+       let disps = allDisps.filter((d:any) => Number(d.dia_semana) === dayOfWeek);
+       const fechada = hasConfiguredDisp && disps.length === 0;
+
+       setIsAgendaFechada(fechada);
+
+       if (fechada && !formData.is_encaixe) {
+         setAvailableSlots([]);
+         return;
+       }
+
+       if (!hasConfiguredDisp && disps.length === 0) {
+         // Fallback availability APENAS se o profissional nunca cadastrou disponibilidade
          disps = [{ hora_inicio: '08:00', hora_fim: '18:00' }];
        }
+
+       const slots: string[] = [];
 
        disps.forEach((d:any) => {
           let current = new Date(`1970-01-01T${d.hora_inicio.substring(0,5)}:00`);
@@ -207,6 +218,11 @@ export default function EventModal({
       }
     }
 
+    if (isAgendaFechada && !formData.is_encaixe) {
+      alert("A agenda deste profissional está fechada nesta data. Marque a opção 'Encaixe' caso deseje forçar o agendamento.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await onSave(formData);
@@ -245,6 +261,12 @@ export default function EventModal({
 
         {/* Form Body */}
         <form id="event-form" onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
+          {isAgendaFechada && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl text-amber-800 dark:text-amber-300 text-xs font-medium flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <span>A agenda deste profissional está <strong>fechada</strong> nesta data. Marque a opção <strong>Encaixe</strong> caso deseje forçar o agendamento.</span>
+            </div>
+          )}
           
           {/* Status do Agendamento & Status do Atendimento */}
           <div className="space-y-3 p-3.5 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800">

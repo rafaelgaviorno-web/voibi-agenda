@@ -113,7 +113,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
   // (Removido toggleAgenda pois agora está na Sidebar Global)
 
   const handleSaveEvent = async (formData: any) => {
-    // Atualização otimista no front-end para evitar que o card volte à posição original (snap back)
+    // Atualização otimista no front-end para evitar snap back
     if (formData.id) {
        const updated = localEvents.map((e: any) => e.id === formData.id ? {
          ...e,
@@ -122,6 +122,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId) || e.evento,
          inicio: `${formData.data}T${formData.horaInicio}:00`,
          fim: `${formData.data}T${formData.horaFim}:00`,
+         start: `${formData.data}T${formData.horaInicio}:00`,
+         end: `${formData.data}T${formData.horaFim}:00`,
          observacao: formData.observacao,
          status: formData.status,
          status_atendimento: formData.status_atendimento,
@@ -142,6 +144,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
          evento: procedimentos?.find((p: any) => p.id === formData.procedimentoId),
          inicio: `${formData.data}T${formData.horaInicio}:00`,
          fim: `${formData.data}T${formData.horaFim}:00`,
+         start: `${formData.data}T${formData.horaInicio}:00`,
+         end: `${formData.data}T${formData.horaFim}:00`,
          status: formData.status || 'pendente',
          status_atendimento: formData.status_atendimento || 'agendado',
          observacao: formData.observacao,
@@ -155,11 +159,11 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     }
 
     if (empresaId !== 'mock-clinic') {
-      // A server action chama revalidatePath, que já devolve a tela atualizada
       const res = await saveAppointment(formData, empresaId);
       if (!res.success) {
-        const err = res.error as any;
-        throw new Error(err?.message || err?.details || "Erro ao salvar no banco de dados.");
+        setLocalEvents(rawEvents);
+        const errMsg = typeof res.error === 'string' ? res.error : ((res.error as any)?.message || "Erro ao salvar no banco de dados.");
+        throw new Error(errMsg);
       }
     }
   };
@@ -524,15 +528,26 @@ Horário: ${arg.timeText}`);
           return;
         }
 
-        const dateObj = info.date;
+                const dateObj = info.date;
+        const targetAgendaId = (info as any).resource?.id || (agendas.length === 1 ? agendas[0].id : (selectedAgendas.length === 1 ? selectedAgendas[0] : ''));
+        const targetAgenda = agendas.find((a: any) => a.id === targetAgendaId);
+
+        // Bloqueia abertura de agendamento em dia em que a agenda do profissional está fechada
+        const dayOfWeek = dateObj.getDay();
+        const disps = targetAgenda?.disponibilidade || [];
+        if (disps.length > 0) {
+          const hasDisp = disps.some((d: any) => Number(d.dia_semana) === dayOfWeek);
+          if (!hasDisp) {
+            alert(`A agenda do profissional ${targetAgenda?.nome || ''} está fechada neste dia.`);
+            return;
+          }
+        }
+
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
         const day = String(dateObj.getDate()).padStart(2, '0');
         const hours = String(dateObj.getHours()).padStart(2, '0');
         const mins = String(dateObj.getMinutes()).padStart(2, '0');
-        
-        const targetAgendaId = (info as any).resource?.id || (agendas.length === 1 ? agendas[0].id : (selectedAgendas.length === 1 ? selectedAgendas[0] : ''));
-        const targetAgenda = agendas.find((a: any) => a.id === targetAgendaId);
         const slotMinutes = targetAgenda?.intervalo_minutos || 30;
 
         const endDt = new Date(dateObj.getTime() + slotMinutes * 60000);
@@ -558,10 +573,28 @@ Horário: ${arg.timeText}`);
       eventDrop: async (info) => {
         const eventId = info.event.id;
         const original = latestRef.current.localEvents.find((e:any) => String(e.id) === String(eventId));
-        if (original && info.event.start && info.event.end) {
-           const adjustedData = `${info.event.start.getFullYear()}-${String(info.event.start.getMonth()+1).padStart(2,'0')}-${String(info.event.start.getDate()).padStart(2,'0')}`;
-           const adjustedHoraInicio = `${String(info.event.start.getHours()).padStart(2,'0')}:${String(info.event.start.getMinutes()).padStart(2,'0')}`;
-           const adjustedHoraFim = `${String(info.event.end.getHours()).padStart(2,'0')}:${String(info.event.end.getMinutes()).padStart(2,'0')}`;
+        if (original && info.event.start) {
+           const startDate = info.event.start;
+           const endDate = info.event.end || new Date(startDate.getTime() + 30 * 60000);
+           
+           const adjustedData = `${startDate.getFullYear()}-${String(startDate.getMonth()+1).padStart(2,'0')}-${String(startDate.getDate()).padStart(2,'0')}`;
+           const adjustedHoraInicio = `${String(startDate.getHours()).padStart(2,'0')}:${String(startDate.getMinutes()).padStart(2,'0')}`;
+           const adjustedHoraFim = `${String(endDate.getHours()).padStart(2,'0')}:${String(endDate.getMinutes()).padStart(2,'0')}`;
+
+           const targetAgendaId = (info as any).newResource?.id || original.profissional?.id || original.agendaId;
+           const targetAgenda = latestRef.current.agendas.find((a: any) => a.id === targetAgendaId);
+
+           // Se a agenda de destino estiver fechada no dia e não for encaixe, bloqueia
+           const dayOfWeek = startDate.getDay();
+           const disps = targetAgenda?.disponibilidade || [];
+           if (disps.length > 0 && !original.is_encaixe) {
+             const hasDispOnDay = disps.some((d: any) => Number(d.dia_semana) === dayOfWeek);
+             if (!hasDispOnDay) {
+               alert(`A agenda do profissional ${targetAgenda?.nome || ''} está fechada neste dia.`);
+               info.revert();
+               return;
+             }
+           }
 
            const formData = {
              id: original.id,
@@ -571,14 +604,20 @@ Horário: ${arg.timeText}`);
              data: adjustedData,
              horaInicio: adjustedHoraInicio,
              horaFim: adjustedHoraFim,
-             agendaId: (info as any).newResource?.id || original.profissional?.id,
+             agendaId: targetAgendaId,
              procedimentoId: original.evento?.id,
              observacao: original.observacao,
              status: original.status,
              status_atendimento: original.status_atendimento,
              is_encaixe: original.is_encaixe
            };
-           await latestRef.current.handleSaveEvent(formData);
+
+           try {
+             await latestRef.current.handleSaveEvent(formData);
+           } catch (err: any) {
+             alert(err?.message || 'Erro ao mover agendamento.');
+             info.revert();
+           }
         }
       },
       eventResize: async (info) => {
