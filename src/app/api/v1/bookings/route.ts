@@ -320,6 +320,78 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     clienteId = novoCliente.id;
   }
 
+  // 4.5. Validação de Expediente, Bloqueios e Conflitos do Profissional
+  const isEncaixe = body.is_encaixe === true || body.encaixe === true;
+
+  if (!isEncaixe) {
+    const [y, m, d] = rawInicio.slice(0, 10).split('-').map(Number);
+    const safeDate = new Date(y, m - 1, d, 12, 0, 0);
+    const dayOfWeek = safeDate.getDay();
+
+    // Verifica se o profissional tem expediente cadastrado no sistema
+    const { data: allRegrasProf } = await supabase
+      .from('agend_disponibilidade')
+      .select('hora_inicio, hora_fim, dia_semana')
+      .eq('profissional_id', resolvedProfId);
+
+    if (allRegrasProf && allRegrasProf.length > 0) {
+      const regrasDoDia = allRegrasProf.filter(r => r.dia_semana === dayOfWeek);
+      if (regrasDoDia.length === 0) {
+        const diasNomes = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+        return NextResponse.json({
+          error: `O profissional ${resolvedProf.nome} não possui atendimento em ${diasNomes[dayOfWeek]}s. Por favor, selecione uma data em que o profissional tenha expediente.`
+        }, { status: 400 });
+      }
+
+      // Verifica se o horário de início está dentro de algum intervalo do expediente
+      const startHhmm = format(startDate, 'HH:mm:ss');
+      const endHhmm = format(endDate, 'HH:mm:ss');
+      const cabeNoExpediente = regrasDoDia.some(r => {
+        const rInicio = r.hora_inicio.length === 5 ? `${r.hora_inicio}:00` : r.hora_inicio;
+        const rFim = r.hora_fim.length === 5 ? `${r.hora_fim}:00` : r.hora_fim;
+        return startHhmm >= rInicio && endHhmm <= rFim;
+      });
+
+      if (!cabeNoExpediente) {
+        return NextResponse.json({
+          error: `O horário solicitado (${format(startDate, 'HH:mm')} às ${format(endDate, 'HH:mm')}) está fora do expediente de atendimento do profissional ${resolvedProf.nome}.`
+        }, { status: 400 });
+      }
+    }
+
+    // Verifica se há bloqueios no período
+    const { data: bloqueios } = await supabase
+      .from('agend_bloqueios')
+      .select('id, motivo')
+      .eq('empresa_id', auth.empresa.id)
+      .or(`profissional_id.eq.${resolvedProfId},profissional_id.is.null`)
+      .lte('inicio', fimIso)
+      .gte('fim', inicioIso);
+
+    if (bloqueios && bloqueios.length > 0) {
+      return NextResponse.json({
+        error: `Horário indisponível devido a bloqueio na agenda: ${bloqueios[0].motivo || 'Agenda bloqueada'}.`
+      }, { status: 400 });
+    }
+
+    // Verifica se há conflito com outro agendamento se sobreposição não for permitida
+    if (!resolvedProf.permitir_sobreposicao) {
+      const { data: conflitos } = await supabase
+        .from('agend_agendamentos')
+        .select('id')
+        .eq('profissional_id', resolvedProfId)
+        .in('status', ['confirmado', 'pendente', 'remarcado'])
+        .lt('inicio', fimIso)
+        .gt('fim', inicioIso);
+
+      if (conflitos && conflitos.length > 0) {
+        return NextResponse.json({
+          error: `Já existe um agendamento neste horário para o profissional ${resolvedProf.nome}. Por favor, escolha outro horário.`
+        }, { status: 409 });
+      }
+    }
+  }
+
   // 5. Inserir Agendamento
   const obsFinal = observacao 
     ? (cleanNome && !observacao.includes(cleanNome) ? `${observacao} | Paciente: ${cleanNome}` : observacao)

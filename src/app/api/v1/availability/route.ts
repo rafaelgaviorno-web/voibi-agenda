@@ -117,15 +117,17 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     const allTimesSet = new Set<string>();
 
     for (const p of allProfs) {
-      const { data: regrasData } = await supabase
+      const { data: allRegrasProf } = await supabase
         .from('agend_disponibilidade')
-        .select('hora_inicio, hora_fim')
-        .eq('profissional_id', p.id)
-        .eq('dia_semana', dayOfWeek);
+        .select('hora_inicio, hora_fim, dia_semana')
+        .eq('profissional_id', p.id);
 
-      let regras = regrasData || [];
-      if (regras.length === 0 && dayOfWeek >= 1 && dayOfWeek <= 5) {
-        regras = [{ hora_inicio: '08:00:00', hora_fim: '18:00:00' }];
+      const hasConfiguredAvailability = allRegrasProf && allRegrasProf.length > 0;
+      let regras = (allRegrasProf || []).filter(r => r.dia_semana === dayOfWeek);
+
+      // Fallback padrão APENAS se o profissional nunca configurou regras em nenhum dia
+      if (!hasConfiguredAvailability && dayOfWeek >= 1 && dayOfWeek <= 5) {
+        regras = [{ hora_inicio: '08:00:00', hora_fim: '18:00:00', dia_semana: dayOfWeek }];
       }
 
       if (regras.length === 0) continue;
@@ -212,21 +214,20 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   const profId = resolvedProf.id;
 
   // 3. Obter Regras de Disponibilidade da Agenda
-  const { data: regrasData } = await supabase
+  const { data: allRegrasProf } = await supabase
     .from('agend_disponibilidade')
-    .select('hora_inicio, hora_fim')
-    .eq('profissional_id', profId)
-    .eq('dia_semana', dayOfWeek);
+    .select('hora_inicio, hora_fim, dia_semana')
+    .eq('profissional_id', profId);
 
-  let regras = regrasData || [];
+  const hasConfiguredAvailability = allRegrasProf && allRegrasProf.length > 0;
+  let regras = (allRegrasProf || []).filter(r => r.dia_semana === dayOfWeek);
 
-  // Fallback padrão se nenhuma regra foi configurada:
-  // Seg-Sex: 08h às 18h | Sábado: 08h às 12h
-  if (regras.length === 0) {
+  // Fallback padrão APENAS se o profissional nunca configurou regras em nenhum dia
+  if (!hasConfiguredAvailability) {
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      regras = [{ hora_inicio: '08:00:00', hora_fim: '18:00:00' }];
+      regras = [{ hora_inicio: '08:00:00', hora_fim: '18:00:00', dia_semana: dayOfWeek }];
     } else if (dayOfWeek === 6) {
-      regras = [{ hora_inicio: '08:00:00', hora_fim: '12:00:00' }];
+      regras = [{ hora_inicio: '08:00:00', hora_fim: '12:00:00', dia_semana: dayOfWeek }];
     }
   }
 
