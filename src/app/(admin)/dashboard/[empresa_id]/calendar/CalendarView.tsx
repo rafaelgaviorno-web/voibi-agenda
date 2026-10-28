@@ -180,7 +180,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         businessHours: businessHours.length > 0 ? businessHours : undefined,
         extendedProps: {
           cor: a.cor || '#5271ff',
-          unidade_id: a.unidade_id
+          unidade_id: a.unidade_id,
+          foto_url: a.foto_url || null
         }
       };
     });
@@ -314,16 +315,19 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       resourceLabelContent: (arg: any) => {
         const name = escapeHtml(arg.resource.title || 'Profissional');
         const cor = escapeHtml(arg.resource.extendedProps?.cor || '#5271ff');
+        const fotoUrl = arg.resource.extendedProps?.foto_url;
         const cleanName = name.replace(/^(Dr\.|Dra\.|Prof\.)\s+/i, '');
         const parts = cleanName.split(' ').filter(Boolean);
         const initials = (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : cleanName.slice(0, 2)).toUpperCase();
 
+        const avatarHtml = fotoUrl
+          ? `<img src="${escapeHtml(fotoUrl)}" alt="${name}" class="vc-resource-avatar" style="object-fit:cover;" />`
+          : `<div class="vc-resource-avatar" style="background:${cor}"><span>${initials}</span></div>`;
+
         return {
           html: `
             <div class="vc-resource-head">
-              <div class="vc-resource-avatar" style="background:${cor}">
-                <span>${initials}</span>
-              </div>
+              ${avatarHtml}
               <span class="vc-resource-name" title="${name}">${name}</span>
             </div>
           `

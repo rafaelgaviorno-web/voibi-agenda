@@ -59,7 +59,8 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
 
   async function saveBasico(data: { 
     nome: string; 
-    cor: string; 
+    cor: string;
+    foto_url?: string | null; 
     intervalo_minutos?: number;
     webhook_url?: string; 
     permitir_sobreposicao?: boolean; 
@@ -71,6 +72,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
       const { error } = await supabase.from('agend_profissionais').update({ 
         nome: data.nome, 
         cor: data.cor,
+        foto_url: data.foto_url !== undefined ? data.foto_url : null,
         intervalo_minutos: data.intervalo_minutos || 30,
         webhook_url: data.webhook_url || null,
         permitir_sobreposicao: !!data.permitir_sobreposicao,
@@ -157,12 +159,49 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
   }
 
 
+    async function uploadFoto(formData: FormData) {
+    'use server'
+    const file = formData.get('foto') as File;
+    if (!file || file.size === 0) {
+      throw new Error('Nenhum arquivo enviado');
+    }
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const filename = `${agenda_id}-${Date.now()}.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const supabase = getServiceSupabase();
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filename, buffer, {
+        contentType: file.type || 'image/jpeg',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Erro ao enviar foto para storage:', uploadError);
+      throw new Error('Erro ao salvar a foto: ' + uploadError.message);
+    }
+
+    const { data: pubData } = supabase.storage.from('avatars').getPublicUrl(filename);
+    const fotoUrl = pubData.publicUrl;
+
+    if (empresa_id !== 'mock-clinic') {
+      await supabase.from('agend_profissionais').update({ foto_url: fotoUrl }).eq('id', agenda_id);
+      revalidatePath(`/dashboard/${empresa_id}/calendar`);
+      revalidatePath(`/dashboard/${empresa_id}/agendas`);
+      revalidatePath(`/dashboard/${empresa_id}/agendas/${agenda_id}`);
+    }
+
+    return { success: true, foto_url: fotoUrl };
+  }
+
   return (
     <AgendaConfigClient 
        agenda={agenda}
        disponibilidadeInicial={disponibilidade}
        empresaId={empresa_id}
        onSaveBasico={saveBasico}
+       onUploadFoto={uploadFoto}
        onSaveDisponibilidade={saveDisponibilidade}
     />
   );

@@ -368,6 +368,12 @@
   user-select: none;
 }
 
+img.vc-resource-avatar {
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: var(--vc-card-base);
+}
+
 .vc-resource-avatar {
   width: 36px;
   height: 36px;

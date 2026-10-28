@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Clock, CalendarX, User, FormInput, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, CalendarX, User, FormInput, Plus, Trash2, Upload, Camera } from 'lucide-react';
 import Link from 'next/link';
 
 import CopyAgendaId from '../CopyAgendaId';
@@ -12,6 +12,7 @@ export default function AgendaConfigClient({
   disponibilidadeInicial, 
   empresaId, 
   onSaveBasico,
+  onUploadFoto,
   onSaveDisponibilidade
 }: any) {
   const [activeTab, setActiveTab] = useState('basico');
@@ -21,6 +22,8 @@ export default function AgendaConfigClient({
 
   // Estados locais
   const [nome, setNome] = useState(agenda.nome);
+  const [fotoUrl, setFotoUrl] = useState(agenda.foto_url || '');
+  const [isUploadingFoto, setIsUploadingFoto] = useState(false);
   const [cor, setCor] = useState(agenda.cor || '#4285f4');
   const [intervaloMinutos, setIntervaloMinutos] = useState<number>(agenda.intervalo_minutos || 30);
   const [webhookUrl, setWebhookUrl] = useState(agenda.webhook_url || '');
@@ -67,6 +70,43 @@ export default function AgendaConfigClient({
   });
 
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('A imagem deve ter no máximo 5MB.');
+      setTimeout(() => setErrorMessage(''), 4000);
+      return;
+    }
+
+    setIsUploadingFoto(true);
+    setErrorMessage('');
+    try {
+      if (onUploadFoto) {
+        const formData = new FormData();
+        formData.append('foto', file);
+        const res = await onUploadFoto(formData);
+        if (res?.foto_url) {
+          setFotoUrl(res.foto_url);
+          setSaveMessage('Foto enviada com sucesso!');
+          setTimeout(() => setSaveMessage(''), 3000);
+        }
+      } else {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setFotoUrl(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Erro ao enviar foto');
+      setTimeout(() => setErrorMessage(''), 4000);
+    } finally {
+      setIsUploadingFoto(false);
+    }
+  };
+
   const handleSaveBasico = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -75,7 +115,8 @@ export default function AgendaConfigClient({
     try {
       await onSaveBasico({ 
         nome, 
-        cor, 
+        cor,
+        foto_url: fotoUrl, 
         intervalo_minutos: intervaloMinutos,
         webhook_url: webhookUrl, 
         permitir_sobreposicao: permitirSobreposicao, 
@@ -195,6 +236,59 @@ export default function AgendaConfigClient({
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nome da Agenda</label>
                <input value={nome} onChange={e => setNome(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
             </div>
+                        {/* Foto do Profissional */}
+            <div className="pt-2">
+               <label className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">Foto do Profissional / Dentista</label>
+               <div className="flex items-center gap-5 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50">
+                 <div className="relative shrink-0">
+                   {fotoUrl ? (
+                     <img 
+                       src={fotoUrl} 
+                       alt={nome} 
+                       className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-zinc-800 shadow-md"
+                     />
+                   ) : (
+                     <div 
+                       className="w-16 h-16 rounded-full flex items-center justify-center text-white font-extrabold text-xl shadow-md border-2 border-white dark:border-zinc-800"
+                       style={{ backgroundColor: cor }}
+                     >
+                       {nome.replace(/^(Dr\.|Dra\.|Prof\.)\s+/i, '').slice(0, 2).toUpperCase()}
+                     </div>
+                   )}
+                 </div>
+
+                 <div className="flex-1 min-w-0 flex flex-col gap-2">
+                   <div className="flex items-center gap-2.5 flex-wrap">
+                     <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors shadow-sm">
+                       <Camera className="w-3.5 h-3.5 text-zinc-500" />
+                       {isUploadingFoto ? 'Enviando...' : (fotoUrl ? 'Alterar Foto' : 'Escolher Foto')}
+                       <input 
+                         type="file" 
+                         accept="image/png,image/jpeg,image/webp" 
+                         className="sr-only" 
+                         disabled={isUploadingFoto}
+                         onChange={handleFileChange} 
+                       />
+                     </label>
+
+                     {fotoUrl && (
+                       <button
+                         type="button"
+                         onClick={() => setFotoUrl('')}
+                         className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                       >
+                         <Trash2 className="w-3.5 h-3.5" />
+                         Remover
+                       </button>
+                     )}
+                   </div>
+                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                     A foto aparecerá no cabeçalho da coluna deste profissional no calendário.
+                   </p>
+                 </div>
+               </div>
+            </div>
+
             <div>
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Intervalo de Atendimento</label>
                <select 
