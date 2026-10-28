@@ -287,8 +287,11 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
     if (!calendarRef.current) return;
 
     const calendar = new Calendar(calendarRef.current, {
-      plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+      plugins: [dayGridPlugin, timeGridPlugin, resourceTimeGridPlugin, interactionPlugin],
+      schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
       initialView: currentView,
+      resources: resources,
+      datesAboveResources: false,
       headerToolbar: false, // Desabilitar toolbar nativa
       locale: 'pt-br',
       events: events,
