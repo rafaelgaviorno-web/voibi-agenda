@@ -19,11 +19,20 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Filter,
+  Building2,
   X
 } from 'lucide-react';
 import { ApiLogEntry } from '@/lib/api-logger';
 
-export default function LogsViewer({ empresa_id }: { empresa_id: string }) {
+export default function LogsViewer({ 
+  empresa_id, 
+  empresa_nome, 
+  empresa_slug 
+}: { 
+  empresa_id: string; 
+  empresa_nome?: string; 
+  empresa_slug?: string; 
+}) {
   const [logs, setLogs] = useState<ApiLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -103,7 +112,10 @@ export default function LogsViewer({ empresa_id }: { empresa_id: string }) {
         const inError = log.erro?.toLowerCase().includes(term) || false;
         const inBody = log.request_body ? JSON.stringify(log.request_body).toLowerCase().includes(term) : false;
         const inResponse = log.response_body ? JSON.stringify(log.response_body).toLowerCase().includes(term) : false;
-        return inEndpoint || inMethod || inError || inBody || inResponse;
+        const inEmpresa = (log.empresa_nome?.toLowerCase().includes(term) || false) || 
+                          (log.empresa_slug?.toLowerCase().includes(term) || false) || 
+                          (log.empresa_id?.toLowerCase().includes(term) || false);
+        return inEndpoint || inMethod || inError || inBody || inResponse || inEmpresa;
       }
 
       return true;
@@ -157,8 +169,12 @@ CREATE INDEX IF NOT EXISTS idx_agend_api_logs_created_at ON agend_api_logs(creat
               Tempo Real
             </span>
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Veja com precisão cirúrgica cada requisição que a IA do WhatsApp ou integração externa envia para a sua agenda.
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5 flex-wrap">
+            <span>Requisições isoladas para</span>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-semibold text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700">
+              <Building2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+              {empresa_nome || logs[0]?.empresa_nome || (empresa_id === 'mock-clinic' ? 'Clínica de Teste' : empresa_id)}
+            </span>
           </p>
         </div>
 
@@ -390,6 +406,17 @@ CREATE INDEX IF NOT EXISTS idx_agend_api_logs_created_at ON agend_api_logs(creat
                       {log.metodo}
                     </span>
 
+                    {/* Badge da Empresa */}
+                    <span 
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shrink-0"
+                      title={`Empresa: ${log.empresa_nome || empresa_nome || 'Identificada'} (${log.empresa_id || empresa_id})`}
+                    >
+                      <Building2 className="w-3 h-3 text-blue-500 shrink-0" />
+                      <span className="max-w-[120px] truncate">
+                        {log.empresa_nome || log.empresa_slug || empresa_nome || 'Empresa'}
+                      </span>
+                    </span>
+
                     {/* Endpoint e detalhes */}
                     <div className="min-w-0">
                       <div className="font-mono text-xs font-medium text-zinc-900 dark:text-zinc-100 truncate">
@@ -462,6 +489,31 @@ CREATE INDEX IF NOT EXISTS idx_agend_api_logs_created_at ON agend_api_logs(creat
 
             {/* Conteúdo do Modal */}
             <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs font-sans">
+              {/* Identificação da Empresa */}
+              <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                      Empresa Vinculada ao Log
+                    </div>
+                    <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                      {selectedLog.empresa_nome || empresa_nome || 'Empresa'}
+                      {(selectedLog.empresa_slug || empresa_slug) && (
+                        <span className="text-zinc-500 dark:text-zinc-400 font-normal ml-1">
+                          (@{selectedLog.empresa_slug || empresa_slug})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 font-mono text-[11px] text-zinc-400">
+                  ID: <span className="text-zinc-700 dark:text-zinc-300 select-all font-semibold">{selectedLog.empresa_id || empresa_id}</span>
+                </div>
+              </div>
+
               {/* Metadados rápidos */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-zinc-50 dark:bg-zinc-800/40 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
                 <div>

@@ -4,6 +4,8 @@ import { getServiceSupabase } from './supabase/client';
 export interface ApiLogEntry {
   id: string;
   empresa_id: string | null;
+  empresa_nome?: string | null;
+  empresa_slug?: string | null;
   metodo: string;
   endpoint: string;
   status_code: number;
@@ -17,10 +19,17 @@ export interface ApiLogEntry {
   created_at: string;
 }
 
+export interface EmpresaInfo {
+  id: string;
+  nome: string;
+  slug: string;
+}
+
 // Buffer circular em memória para acesso imediato e resiliência (máx 300 logs)
 declare global {
   var __VOIBI_API_LOGS__: ApiLogEntry[] | undefined;
   var __VOIBI_API_KEY_CACHE__: Map<string, string> | undefined;
+  var __VOIBI_EMPRESA_INFO_CACHE__: Map<string, EmpresaInfo> | undefined;
 }
 
 if (!globalThis.__VOIBI_API_LOGS__) {
@@ -31,14 +40,31 @@ if (!globalThis.__VOIBI_API_KEY_CACHE__) {
   globalThis.__VOIBI_API_KEY_CACHE__ = new Map<string, string>();
 }
 
-export function cacheApiKeyEmpresa(apiKey: string, empresaId: string) {
+if (!globalThis.__VOIBI_EMPRESA_INFO_CACHE__) {
+  globalThis.__VOIBI_EMPRESA_INFO_CACHE__ = new Map<string, EmpresaInfo>();
+}
+
+export function cacheApiKeyEmpresa(apiKey: string, empresaId: string, nome?: string, slug?: string) {
   if (globalThis.__VOIBI_API_KEY_CACHE__) {
     globalThis.__VOIBI_API_KEY_CACHE__.set(apiKey, empresaId);
+  }
+  if (nome && globalThis.__VOIBI_EMPRESA_INFO_CACHE__) {
+    globalThis.__VOIBI_EMPRESA_INFO_CACHE__.set(empresaId, { id: empresaId, nome, slug: slug || '' });
+  }
+}
+
+export function cacheEmpresaInfo(empresa: EmpresaInfo) {
+  if (globalThis.__VOIBI_EMPRESA_INFO_CACHE__) {
+    globalThis.__VOIBI_EMPRESA_INFO_CACHE__.set(empresa.id, empresa);
   }
 }
 
 export function getCachedEmpresaId(apiKey: string): string | undefined {
   return globalThis.__VOIBI_API_KEY_CACHE__?.get(apiKey);
+}
+
+export function getCachedEmpresaInfo(empresaId: string): EmpresaInfo | undefined {
+  return globalThis.__VOIBI_EMPRESA_INFO_CACHE__?.get(empresaId);
 }
 
 export function invalidateApiKeyCache(oldApiKey?: string) {
@@ -65,6 +91,8 @@ function maskHeaderValue(key: string, value: string): string {
 
 export async function recordApiLog(logData: {
   empresa_id?: string | null;
+  empresa_nome?: string | null;
+  empresa_slug?: string | null;
   metodo: string;
   endpoint: string;
   status_code: number;
@@ -76,9 +104,23 @@ export async function recordApiLog(logData: {
   response_body?: any;
   erro?: string | null;
 }) {
+  const empresaId = logData.empresa_id || null;
+  let empresaNome = logData.empresa_nome || null;
+  let empresaSlug = logData.empresa_slug || null;
+
+  if (empresaId && (!empresaNome || !empresaSlug)) {
+    const cached = getCachedEmpresaInfo(empresaId);
+    if (cached) {
+      if (!empresaNome) empresaNome = cached.nome;
+      if (!empresaSlug) empresaSlug = cached.slug;
+    }
+  }
+
   const entry: ApiLogEntry = {
     id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-    empresa_id: logData.empresa_id || null,
+    empresa_id: empresaId,
+    empresa_nome: empresaNome,
+    empresa_slug: empresaSlug,
     metodo: logData.metodo,
     endpoint: logData.endpoint,
     status_code: logData.status_code,
@@ -95,7 +137,7 @@ export async function recordApiLog(logData: {
   // 1. Grava no buffer de memória
   const memoryLogs = globalThis.__VOIBI_API_LOGS__ || [];
   memoryLogs.unshift(entry);
-  if (memoryLogs.length > 300) {
+  if (memoryLogs.length > 500) {
     memoryLogs.pop();
   }
   globalThis.__VOIBI_API_LOGS__ = memoryLogs;
@@ -129,33 +171,98 @@ export async function recordApiLog(logData: {
 export async function getApiLogs(empresaId: string, limit = 50): Promise<ApiLogEntry[]> {
   const supabase = getServiceSupabase();
 
+  // Informações de cache da empresa para enriquecer os logs
+  let empInfo = getCachedEmpresaInfo(empresaId);
+
   try {
-    const { data, error } = await supabase
+    // Busca dados no Supabase com join em agend_empresas para obter o nome e slug da empresa
+    let { data, error } = await supabase
       .from('agend_api_logs')
-      .select('*')
-      .or(`empresa_id.eq.${empresaId},empresa_id.is.null`)
+      .select('*, agend_empresas(id, nome, slug)')
+      .eq('empresa_id', empresaId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
+    // Fallback sem join caso a foreign key na tabela não esteja com o relacionamento mapeado no PostgREST
+    if (error) {
+      const fallbackRes = await supabase
+        .from('agend_api_logs')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      data = fallbackRes.data;
+      error = fallbackRes.error;
+    }
+
     if (!error && data && data.length > 0) {
-      return data as ApiLogEntry[];
+      if (!empInfo) {
+        const { data: empData } = await supabase
+          .from('agend_empresas')
+          .select('nome, slug')
+          .eq('id', empresaId)
+          .maybeSingle();
+        if (empData) {
+          empInfo = { id: empresaId, nome: empData.nome, slug: empData.slug };
+          cacheEmpresaInfo(empInfo);
+        }
+      }
+
+      return data.map((item: any) => ({
+        id: item.id,
+        empresa_id: item.empresa_id,
+        empresa_nome: item.agend_empresas?.nome || empInfo?.nome || null,
+        empresa_slug: item.agend_empresas?.slug || empInfo?.slug || null,
+        metodo: item.metodo,
+        endpoint: item.endpoint,
+        status_code: item.status_code,
+        ip: item.ip,
+        user_agent: item.user_agent,
+        duracao_ms: item.duracao_ms,
+        request_headers: item.request_headers,
+        request_body: item.request_body,
+        response_body: item.response_body,
+        erro: item.erro,
+        created_at: item.created_at,
+      })) as ApiLogEntry[];
     }
   } catch {
     // Tabela agend_api_logs pode não existir ainda
   }
 
-  // Fallback: Retorna do buffer de memória filtrado pela empresa (ou sem empresa_id para requisições com auth falha)
+  // Fallback: Retorna do buffer de memória filtrado ESTRITAMENTE pela empresa solicitada
+  if (!empInfo) {
+    try {
+      const { data: empData } = await supabase
+        .from('agend_empresas')
+        .select('nome, slug')
+        .eq('id', empresaId)
+        .maybeSingle();
+      if (empData) {
+        empInfo = { id: empresaId, nome: empData.nome, slug: empData.slug };
+        cacheEmpresaInfo(empInfo);
+      }
+    } catch {
+      // Ignora erro
+    }
+  }
+
   const memoryLogs = globalThis.__VOIBI_API_LOGS__ || [];
   return memoryLogs
-    .filter(log => !log.empresa_id || log.empresa_id === empresaId)
-    .slice(0, limit);
+    .filter(log => log.empresa_id === empresaId)
+    .slice(0, limit)
+    .map(log => ({
+      ...log,
+      empresa_nome: log.empresa_nome || empInfo?.nome || null,
+      empresa_slug: log.empresa_slug || empInfo?.slug || null,
+    }));
 }
 
 export async function clearApiLogs(empresaId: string): Promise<boolean> {
-  // Limpa da memória
+  // Limpa da memória estritamente os logs desta empresa
   if (globalThis.__VOIBI_API_LOGS__) {
     globalThis.__VOIBI_API_LOGS__ = globalThis.__VOIBI_API_LOGS__.filter(
-      log => log.empresa_id && log.empresa_id !== empresaId
+      log => log.empresa_id !== empresaId
     );
   }
 
@@ -203,37 +310,78 @@ export function withApiLogger<T extends (...args: any[]) => Promise<NextResponse
       }
     }
 
-    // Tenta identificar empresa_id pela API Key informada no Authorization ou headers alternativos
+    // Tenta identificar empresa_id pela API Key informada no Authorization ou headers/params alternativos
     let empresaId: string | null = null;
+    let empresaNome: string | null = null;
+    let empresaSlug: string | null = null;
     let token: string | null = null;
+
     const authHeader = request.headers.get('authorization');
     if (authHeader) {
       const trimmed = authHeader.trim();
       token = /^bearer\s+/i.test(trimmed) ? trimmed.replace(/^bearer\s+/i, '').trim() : trimmed;
     }
     if (!token) {
-      token = request.headers.get('x-api-key') || request.headers.get('apikey') || url.searchParams.get('api_key') || url.searchParams.get('apiKey');
+      token = request.headers.get('x-api-key') || 
+              request.headers.get('apikey') || 
+              request.headers.get('x-empresa-api-key') ||
+              url.searchParams.get('api_key') || 
+              url.searchParams.get('apiKey') ||
+              url.searchParams.get('token') ||
+              url.searchParams.get('key');
     }
 
     if (token) {
-      const cached = getCachedEmpresaId(token);
-      if (cached) {
-        empresaId = cached;
+      const cachedId = getCachedEmpresaId(token);
+      if (cachedId) {
+        empresaId = cachedId;
+        const info = getCachedEmpresaInfo(cachedId);
+        if (info) {
+          empresaNome = info.nome;
+          empresaSlug = info.slug;
+        }
       } else {
         try {
           const supabase = getServiceSupabase();
-          const { data: emp } = await supabase
-            .from('agend_empresas')
-            .select('id')
-            .eq('api_key', token)
-            .maybeSingle();
-          if (emp) {
-            empresaId = emp.id;
-            cacheApiKeyEmpresa(token, emp.id);
+          if (process.env.NODE_ENV !== 'production' && token === 'sk_test_voibi_1234567890abcdef') {
+            const { data: firstEmp } = await supabase
+              .from('agend_empresas')
+              .select('id, nome, slug')
+              .limit(1)
+              .maybeSingle();
+            if (firstEmp) {
+              empresaId = firstEmp.id;
+              empresaNome = firstEmp.nome;
+              empresaSlug = firstEmp.slug;
+              cacheApiKeyEmpresa(token, firstEmp.id, firstEmp.nome, firstEmp.slug);
+            }
+          } else {
+            const { data: emp } = await supabase
+              .from('agend_empresas')
+              .select('id, nome, slug')
+              .eq('api_key', token)
+              .maybeSingle();
+            if (emp) {
+              empresaId = emp.id;
+              empresaNome = emp.nome;
+              empresaSlug = emp.slug;
+              cacheApiKeyEmpresa(token, emp.id, emp.nome, emp.slug);
+            }
           }
         } catch {
           // Ignora
         }
+      }
+    }
+
+    // Tenta identificar via header direto ou parâmetros de URL ou body se ainda não identificado
+    if (!empresaId) {
+      const headerEmpresaId = request.headers.get('x-empresa-id') || request.headers.get('x-company-id');
+      const paramEmpresaId = url.searchParams.get('empresa_id') || url.searchParams.get('empresaId');
+      const bodyEmpresaId = requestBody?.empresa_id || requestBody?.empresaId;
+      const candidateId = headerEmpresaId || paramEmpresaId || bodyEmpresaId;
+      if (candidateId && typeof candidateId === 'string' && candidateId.length > 5) {
+        empresaId = candidateId;
       }
     }
 
@@ -243,6 +391,21 @@ export function withApiLogger<T extends (...args: any[]) => Promise<NextResponse
 
     try {
       response = await handler(request, ...rest);
+
+      // Se o handler autenticou a empresa e a guardou no request
+      const reqAny = request as any;
+      if (!empresaId && reqAny.__empresaId) {
+        empresaId = reqAny.__empresaId;
+      }
+      if (!empresaNome && reqAny.__empresaNome) {
+        empresaNome = reqAny.__empresaNome;
+      }
+      if (!empresaSlug && reqAny.__empresaSlug) {
+        empresaSlug = reqAny.__empresaSlug;
+      }
+      if (!empresaId && response.headers.get('x-empresa-id')) {
+        empresaId = response.headers.get('x-empresa-id');
+      }
       
       // Tenta ler o corpo da resposta clonando-a
       try {
@@ -268,9 +431,20 @@ export function withApiLogger<T extends (...args: any[]) => Promise<NextResponse
 
     const duracaoMs = Math.round(performance.now() - startTime);
 
+    // Se identificamos o ID mas ainda não temos os dados da empresa, busca no cache
+    if (empresaId && (!empresaNome || !empresaSlug)) {
+      const cached = getCachedEmpresaInfo(empresaId);
+      if (cached) {
+        if (!empresaNome) empresaNome = cached.nome;
+        if (!empresaSlug) empresaSlug = cached.slug;
+      }
+    }
+
     // Registra o log de forma não-bloqueante
     recordApiLog({
       empresa_id: empresaId,
+      empresa_nome: empresaNome,
+      empresa_slug: empresaSlug,
       metodo,
       endpoint,
       status_code: response.status,

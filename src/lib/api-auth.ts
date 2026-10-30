@@ -40,11 +40,17 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
   if (process.env.NODE_ENV !== 'production' && apiKey === 'sk_test_voibi_1234567890abcdef') {
     const { data: firstEmp } = await supabase
       .from('agend_empresas')
-      .select('id, slug, fuso_horario, webhook_url')
+      .select('id, nome, slug, fuso_horario, webhook_url')
       .limit(1)
       .maybeSingle();
 
     if (firstEmp) {
+      const { cacheApiKeyEmpresa } = await import('./api-logger');
+      cacheApiKeyEmpresa(apiKey, firstEmp.id, firstEmp.nome, firstEmp.slug);
+      const reqAny = request as any;
+      reqAny.__empresaId = firstEmp.id;
+      reqAny.__empresaNome = firstEmp.nome;
+      reqAny.__empresaSlug = firstEmp.slug;
       return { empresa: firstEmp, apiKey };
     }
   }
@@ -52,7 +58,7 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
   try {
     const { data: empresa, error } = await supabase
       .from('agend_empresas')
-      .select('id, slug, fuso_horario, webhook_url')
+      .select('id, nome, slug, fuso_horario, webhook_url')
       .eq('api_key', apiKey)
       .maybeSingle();
 
@@ -61,7 +67,11 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
     }
 
     const { cacheApiKeyEmpresa } = await import('./api-logger');
-    cacheApiKeyEmpresa(apiKey, empresa.id);
+    cacheApiKeyEmpresa(apiKey, empresa.id, empresa.nome, empresa.slug);
+    const reqAny = request as any;
+    reqAny.__empresaId = empresa.id;
+    reqAny.__empresaNome = empresa.nome;
+    reqAny.__empresaSlug = empresa.slug;
 
     return { empresa, apiKey };
   } catch {

@@ -7,11 +7,15 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
   
   let apiKey = '';
   let webhookUrl = '';
+  let empresaNome = '';
+  let empresaSlug = '';
   let initialLembretes: any[] = [];
 
   if (empresa_id === 'mock-clinic') {
     apiKey = 'sk_test_voibi_1234567890abcdef';
     webhookUrl = 'https://n8n.minhaclinica.com/webhook/agendamento';
+    empresaNome = 'Clínica de Teste Voibi';
+    empresaSlug = 'mock-clinic';
     initialLembretes = [
       {
         id: 'mock_1',
@@ -24,7 +28,7 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
   } else {
     const supabase = getServiceSupabase();
     const [{ data }, { data: regras }] = await Promise.all([
-      supabase.from('agend_empresas').select('api_key, webhook_url').eq('id', empresa_id).single(),
+      supabase.from('agend_empresas').select('nome, slug, api_key, webhook_url').eq('id', empresa_id).single(),
       supabase
         .from('agend_regras_lembretes')
         .select('*')
@@ -34,6 +38,8 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
     if (data) {
       apiKey = data.api_key;
       webhookUrl = data.webhook_url || '';
+      empresaNome = data.nome || '';
+      empresaSlug = data.slug || '';
     }
 
     initialLembretes = regras || [];
@@ -180,6 +186,8 @@ export default async function AutomationsPage({ params }: { params: Promise<{ em
         updateWebhook={updateWebhook} 
         regenerateApiKey={regenerateApiKey}
         empresa_id={empresa_id}
+        empresa_nome={empresaNome}
+        empresa_slug={empresaSlug}
         initialLembretes={initialLembretes}
         saveLembreteAction={saveLembreteAction}
         deleteLembreteAction={deleteLembreteAction}

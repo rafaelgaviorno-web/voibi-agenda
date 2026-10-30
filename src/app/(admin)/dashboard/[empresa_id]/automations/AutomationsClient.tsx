@@ -27,6 +27,8 @@ export default function AutomationsClient({
   updateWebhook,
   regenerateApiKey,
   empresa_id,
+  empresa_nome,
+  empresa_slug,
   initialLembretes = [],
   saveLembreteAction,
   deleteLembreteAction,
@@ -37,6 +39,8 @@ export default function AutomationsClient({
   updateWebhook: (data: FormData) => Promise<void>,
   regenerateApiKey?: () => Promise<{ success: boolean; newApiKey?: string; error?: string }>,
   empresa_id: string,
+  empresa_nome?: string,
+  empresa_slug?: string,
   initialLembretes?: LembreteRegra[],
   saveLembreteAction?: (regra: any) => Promise<{ success: boolean; data?: any; error?: string }>,
   deleteLembreteAction?: (id: string) => Promise<{ success: boolean; error?: string }>,
@@ -1693,7 +1697,11 @@ Após localizar o ID da consulta e o paciente confirmar o cancelamento:
 
       {/* Conteúdo: Logs da API */}
       {activeTab === 'logs' && (
-        <LogsViewer empresa_id={empresa_id} />
+        <LogsViewer 
+          empresa_id={empresa_id} 
+          empresa_nome={empresa_nome} 
+          empresa_slug={empresa_slug} 
+        />
       )}
 
     </div>
