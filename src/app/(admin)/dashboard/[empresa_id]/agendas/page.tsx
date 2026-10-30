@@ -89,43 +89,59 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
 
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm mb-8">
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Nova Agenda</h2>
-        <form action={createAgenda} className="flex flex-col lg:flex-row gap-6 items-end">
+        <form action={createAgenda} className="space-y-5">
           <input type="hidden" name="empresa_id" value={empresa_id} />
           
-          <div className="flex-1 min-w-[200px] space-y-1.5">
-             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome da Agenda</label>
-             <input required name="nome" className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="Ex: Dr. Carlos / Sala de Raio-X" />
-          </div>
-
-          <div className="flex-1 min-w-[150px] space-y-1.5">
-             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Intervalo de Atendimento</label>
-             <select name="intervalo_minutos" defaultValue="30" className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
-               <option value="10">10 em 10 min</option>
-               <option value="15">15 em 15 min</option>
-               <option value="20">20 em 20 min</option>
-               <option value="30">30 em 30 min (Padrão)</option>
-               <option value="40">40 em 40 min</option>
-               <option value="45">45 em 45 min</option>
-               <option value="50">50 em 50 min</option>
-               <option value="60">60 em 60 min (1 hora)</option>
-             </select>
-          </div>
-
-          {unidades.length > 0 && (
-            <div className="flex-1 min-w-[150px] space-y-1.5">
-               <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Unidade</label>
-               <select name="unidade_id" required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
-                 <option value="">Selecione...</option>
-                 {unidades.map(u => (
-                   <option key={u.id} value={u.id}>{u.nome}</option>
-                 ))}
-               </select>
+          <div className={`grid grid-cols-1 gap-4 ${unidades.length > 0 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome da Agenda</label>
+              <input 
+                required 
+                name="nome" 
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+                placeholder="Ex: Dr. Carlos / Sala de Raio-X" 
+              />
             </div>
-          )}
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Intervalo de Atendimento</label>
+              <select 
+                name="intervalo_minutos" 
+                defaultValue="30" 
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+              >
+                <option value="10">10 em 10 min</option>
+                <option value="15">15 em 15 min</option>
+                <option value="20">20 em 20 min</option>
+                <option value="30">30 em 30 min (Padrão)</option>
+                <option value="40">40 em 40 min</option>
+                <option value="45">45 em 45 min</option>
+                <option value="50">50 em 50 min</option>
+                <option value="60">60 em 60 min (1 hora)</option>
+              </select>
+            </div>
+
+            {unidades.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Unidade</label>
+                <select 
+                  name="unidade_id" 
+                  required 
+                  className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                >
+                  <option value="">Selecione...</option>
+                  {unidades.map(u => (
+                    <option key={u.id} value={u.id}>{u.nome}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
           
-          <div className="space-y-1.5">
-             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cor no Calendário</label>
-             <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cor no Calendário</label>
+              <div className="flex flex-wrap items-center gap-2">
                 {[
                   '#1d4ed8', '#3b82f6', '#60a5fa', // Azuis
                   '#6d28d9', '#8b5cf6', '#a78bfa', // Roxos
@@ -136,15 +152,16 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
                 ].map(c => (
                   <label key={c} className="cursor-pointer">
                     <input type="radio" name="cor" value={c} className="peer sr-only" required defaultChecked={c === '#3b82f6'} />
-                    <div className="w-8 h-8 rounded-full border-2 border-transparent peer-checked:ring-2 peer-checked:ring-offset-1 peer-checked:ring-zinc-900 transition-all shadow-sm hover:scale-110" style={{ backgroundColor: c }}></div>
+                    <div className="w-7 h-7 rounded-full border-2 border-transparent peer-checked:ring-2 peer-checked:ring-offset-1 peer-checked:ring-zinc-900 dark:peer-checked:ring-zinc-100 transition-all shadow-sm hover:scale-110" style={{ backgroundColor: c }}></div>
                   </label>
                 ))}
-             </div>
+              </div>
+            </div>
+            
+            <button type="submit" className="w-full sm:w-auto shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors">
+              Criar Agenda
+            </button>
           </div>
-          
-          <button type="submit" className="w-full lg:w-auto shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors">
-            Criar Agenda
-          </button>
         </form>
       </div>
 
