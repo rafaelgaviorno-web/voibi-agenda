@@ -27,14 +27,16 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   } else if (rawPhone) {
     // Busca agendamento ativo mais recente por telefone
     const cleanPhone = String(rawPhone).trim();
-    const phoneNoDDI = cleanPhone.startsWith('55') && cleanPhone.length > 11 ? cleanPhone.slice(2) : cleanPhone;
+    const digits = cleanPhone.replace(/\D/g, '');
+    const with55 = digits.startsWith('55') ? digits : `55${digits}`;
+    const without55 = digits.startsWith('55') ? digits.slice(2) : digits;
 
     // Busca o cliente
     const { data: clients } = await supabase
       .from('agend_clientes_finais')
       .select('id')
       .eq('empresa_id', auth.empresa.id)
-      .or(`telefone.eq.${cleanPhone},telefone.eq.${phoneNoDDI}`);
+      .or(`telefone.eq.${digits},telefone.eq.${with55},telefone.eq.${without55},telefone.ilike.%${without55}%`);
 
     if (clients && clients.length > 0) {
       const clientIds = clients.map(c => c.id);
@@ -98,6 +100,6 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     result: cancelMsg,
     response: cancelMsg,
     resposta: cancelMsg,
-    data
+    data: data
   });
 });
