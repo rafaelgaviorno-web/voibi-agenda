@@ -192,6 +192,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
+      output: inlineTexto,
+      retorno: inlineTexto,
+      horarios_texto: inlineTexto,
       text: sugestoesTexto,
       message: sugestoesTexto,
       content: sugestoesTexto,
@@ -307,6 +310,9 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ 
+    output: inlineTexto,
+    retorno: inlineTexto,
+    horarios_texto: inlineTexto,
     text: sugestoesTexto,
     message: sugestoesTexto,
     content: sugestoesTexto,
