@@ -241,21 +241,46 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   const resolvedProfId = resolvedProf.id;
 
   // 3. Calcular Horário de Término (se não enviado)
-  const startDate = parseISO(rawInicio);
+  // Preserva a hora de relógio da clínica, mesmo se a IA enviar com timezone offset (ex: -03:00 ou Z)
+  function toClinicClockDate(rawStr: string, tz?: string | null): Date {
+    const hasTzOffset = /([+-]\d{2}:?\d{2}|Z)$/i.test(rawStr.trim());
+    if (!hasTzOffset) {
+      return parseISO(rawStr);
+    }
+    const d = new Date(rawStr);
+    const zone = tz || 'America/Sao_Paulo';
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+        .formatToParts(d)
+        .map(p => [p.type, p.value])
+    );
+    return new Date(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  }
+
+  const startDate = toClinicClockDate(rawInicio, auth.empresa.fuso_horario);
   if (isNaN(startDate.getTime())) {
     return NextResponse.json({ error: 'Formato de data/hora inválido para o campo inicio. Use o formato ISO: YYYY-MM-DDTHH:mm:ss' }, { status: 400 });
   }
 
   let endDate: Date;
   if (rawFim) {
-    endDate = parseISO(rawFim);
+    endDate = toClinicClockDate(rawFim, auth.empresa.fuso_horario);
   } else {
     const duracao = eventType?.duracao_minutos || 30;
     endDate = addMinutes(startDate, duracao);
   }
 
-  const inicioIso = startDate.toISOString();
-  const fimIso = endDate.toISOString();
+  const inicioIso = format(startDate, "yyyy-MM-dd'T'HH:mm:ss");
+  const fimIso = format(endDate, "yyyy-MM-dd'T'HH:mm:ss");
 
   // 4. Criar ou buscar cliente final
   let clienteId = null;
@@ -393,9 +418,11 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   }
 
   // 5. Inserir Agendamento
-  const obsFinal = observacao 
-    ? (cleanNome && !observacao.includes(cleanNome) ? `${observacao} | Paciente: ${cleanNome}` : observacao)
-    : (cleanNome ? `Agendado pela IA | Paciente: ${cleanNome}` : 'Agendado pela IA');
+  const obsFinal = observacao === 'Agendado pela IA'
+    ? 'Agendado pela IA'
+    : (observacao 
+        ? (cleanNome && !observacao.includes(cleanNome) ? `${observacao} | Paciente: ${cleanNome}` : observacao)
+        : 'Agendado pela IA');
 
   const { data: booking, error: errBooking } = await supabase
     .from('agend_agendamentos')
