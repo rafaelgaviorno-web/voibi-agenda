@@ -241,39 +241,22 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   const resolvedProfId = resolvedProf.id;
 
   // 3. Calcular Horário de Término (se não enviado)
-  // Preserva a hora de relógio da clínica, mesmo se a IA enviar com timezone offset (ex: -03:00 ou Z)
-  function toClinicClockDate(rawStr: string, tz?: string | null): Date {
-    const hasTzOffset = /([+-]\d{2}:?\d{2}|Z)$/i.test(rawStr.trim());
-    if (!hasTzOffset) {
-      return parseISO(rawStr);
-    }
-    const d = new Date(rawStr);
-    const zone = tz || 'America/Sao_Paulo';
-    const parts = Object.fromEntries(
-      new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        hourCycle: 'h23',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      })
-        .formatToParts(d)
-        .map(p => [p.type, p.value])
-    );
-    return new Date(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  // Preserva a hora de relógio da clínica: o horário enviado é SEMPRE tratado como hora local da clínica.
+  // O sufixo de fuso (Z, -03:00, -0400...) é descartado, nunca convertido — o próprio /availability devolve
+  // a hora local com "Z" (ex: 08:00 local => "...T08:00:00.000Z"), e a IA reenvia esse valor como veio.
+  function toClinicClockDate(rawStr: string): Date {
+    const clockOnly = rawStr.trim().replace(/(\.\d+)?([+-]\d{2}:?\d{2}|Z)$/i, '');
+    return parseISO(clockOnly);
   }
 
-  const startDate = toClinicClockDate(rawInicio, auth.empresa.fuso_horario);
+  const startDate = toClinicClockDate(rawInicio);
   if (isNaN(startDate.getTime())) {
     return NextResponse.json({ error: 'Formato de data/hora inválido para o campo inicio. Use o formato ISO: YYYY-MM-DDTHH:mm:ss' }, { status: 400 });
   }
 
   let endDate: Date;
   if (rawFim) {
-    endDate = toClinicClockDate(rawFim, auth.empresa.fuso_horario);
+    endDate = toClinicClockDate(rawFim);
   } else {
     const duracao = eventType?.duracao_minutos || 30;
     endDate = addMinutes(startDate, duracao);
