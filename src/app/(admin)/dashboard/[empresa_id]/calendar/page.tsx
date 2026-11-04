@@ -125,7 +125,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       supabase.from('agend_disponibilidade')
         .select('profissional_id, dia_semana, hora_inicio, hora_fim, agend_profissionais!inner(empresa_id)')
         .eq('agend_profissionais.empresa_id', empresa_id),
-      supabase.from('agend_bloqueios').select('id, inicio, fim, motivo, profissional_id').eq('empresa_id', empresa_id),
+      supabase.from('agend_bloqueios').select('*').eq('empresa_id', empresa_id),
       supabase.from('agend_tipos_evento').select('id, nome, duracao_minutos').eq('empresa_id', empresa_id),
       getSession().then((session) => getAllowedAgendaIds(supabase, session, empresa_id))
     ]);
@@ -146,6 +146,12 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       id: b.id,
       inicio: b.inicio,
       fim: b.fim,
+      tipo: b.tipo || 'data',
+      dias_semana: b.dias_semana || null,
+      hora_inicio: b.hora_inicio || null,
+      hora_fim: b.hora_fim || null,
+      data_fim_recorrencia: b.data_fim_recorrencia || null,
+      unidade_id: b.unidade_id || null,
       status: 'bloqueio',
       observacao: b.motivo,
       profissional: profissionais.find(p => p.id === b.profissional_id)

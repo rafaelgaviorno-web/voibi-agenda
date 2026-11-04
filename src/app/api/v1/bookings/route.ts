@@ -4,6 +4,7 @@ import { authenticateApiKey } from '@/lib/api-auth';
 import { parseISO, addMinutes, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
 import { clinicNow } from '@/lib/timezone';
+import { checkBlockConflict } from '@/lib/availability/blocks';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -367,18 +368,19 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       }
     }
 
-    // Verifica se há bloqueios no período
-    const { data: bloqueios } = await supabase
-      .from('agend_bloqueios')
-      .select('id, motivo')
-      .eq('empresa_id', auth.empresa.id)
-      .or(`profissional_id.eq.${resolvedProfId},profissional_id.is.null`)
-      .lte('inicio', fimIso)
-      .gte('fim', inicioIso);
+    // Verifica se há bloqueios no período (pontual ou recorrente)
+    const blockCheck = await checkBlockConflict(
+      supabase,
+      auth.empresa.id,
+      resolvedProfId,
+      (resolvedProf as any).unidade_id || null,
+      inicioIso,
+      fimIso
+    );
 
-    if (bloqueios && bloqueios.length > 0) {
+    if (blockCheck.blocked) {
       return NextResponse.json({
-        error: `Horário indisponível devido a bloqueio na agenda: ${bloqueios[0].motivo || 'Agenda bloqueada'}.`
+        error: `Horário indisponível devido a bloqueio na agenda: ${blockCheck.motivo || 'Agenda bloqueada'}.`
       }, { status: 400 });
     }
 

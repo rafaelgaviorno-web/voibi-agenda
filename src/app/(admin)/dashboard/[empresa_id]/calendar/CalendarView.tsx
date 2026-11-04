@@ -289,6 +289,55 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
           isPendente ? '#d97706' : // Âmbar para pendente
           e.profissional?.cor || e.agendaCor || '#4285f4';
 
+        if (isBlock && e.tipo === 'recorrente') {
+          const startTime = e.hora_inicio 
+            ? (e.hora_inicio.length === 5 ? `${e.hora_inicio}:00` : e.hora_inicio)
+            : '00:00:00';
+          const endTime = e.hora_fim
+            ? (e.hora_fim.length === 5 ? `${e.hora_fim}:00` : e.hora_fim)
+            : '24:00:00';
+
+          const startRecur = e.inicio ? new Date(e.inicio).toISOString().split('T')[0] : undefined;
+          
+          let endRecur: string | undefined = undefined;
+          const fimLimite = e.data_fim_recorrencia || e.fim;
+          if (fimLimite) {
+            const d = new Date(fimLimite);
+            d.setDate(d.getDate() + 1);
+            endRecur = d.toISOString().split('T')[0];
+          }
+
+          return {
+            id: e.id,
+            resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
+            resourceIds: isGlobalBlock ? displayedAgendas.map((a: any) => a.id) : undefined,
+            title: e.observacao || 'Bloqueio Recorrente',
+            daysOfWeek: Array.isArray(e.dias_semana) ? e.dias_semana : [],
+            startTime: startTime,
+            endTime: endTime,
+            startRecur: startRecur,
+            endRecur: endRecur,
+            display: 'background',
+            editable: false,
+            startEditable: false,
+            durationEditable: false,
+            backgroundColor: backgroundColor,
+            borderColor: 'transparent',
+            classNames: ['vc-block', isGlobalBlock ? 'vc-block-global' : ''],
+            extendedProps: {
+              status: 'bloqueio',
+              tipo: 'recorrente',
+              dias_semana: e.dias_semana,
+              hora_inicio: e.hora_inicio,
+              hora_fim: e.hora_fim,
+              startRecur,
+              endRecur,
+              observacao: e.observacao,
+              unidade_id: e.unidade_id
+            }
+          };
+        }
+
         return {
           id: e.id,
           resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
@@ -514,15 +563,37 @@ Horário: ${arg.timeText}`);
       },
       dateClick: (info) => {
         const clickedTime = info.date.getTime();
+        const clickedDate = info.date;
+        const clickedDayOfWeek = clickedDate.getDay();
+        const clickedDateStr = clickedDate.toISOString().split('T')[0];
+        const clickedHours = clickedDate.getHours();
+        const clickedMinutes = clickedDate.getMinutes();
+        const clickedMinOfDay = clickedHours * 60 + clickedMinutes;
         
-        // Verificar se clicou em cima de um bloqueio visível
+        // Verificar se clicou em cima de um bloqueio visível (pontual ou recorrente)
         const { events, agendas, selectedAgendas } = latestRef.current;
         const isBlocked = events.some((e:any) => {
           if (e.extendedProps?.status !== 'bloqueio') return false;
           
+          if (e.extendedProps?.tipo === 'recorrente' || e.daysOfWeek) {
+            const dias = e.extendedProps?.dias_semana || e.daysOfWeek || [];
+            if (!dias.includes(clickedDayOfWeek)) return false;
+
+            if (e.startRecur && clickedDateStr < e.startRecur) return false;
+            if (e.endRecur && clickedDateStr >= e.endRecur) return false;
+
+            if (e.extendedProps?.hora_inicio && e.extendedProps?.hora_fim) {
+              const [sH, sM] = e.extendedProps.hora_inicio.split(':').map(Number);
+              const [eH, eM] = e.extendedProps.hora_fim.split(':').map(Number);
+              const sMin = sH * 60 + sM;
+              const eMin = eH * 60 + eM;
+              return clickedMinOfDay >= sMin && clickedMinOfDay < eMin;
+            }
+            return true;
+          }
+
           const start = new Date(e.start).getTime();
           const end = new Date(e.end).getTime();
-          // Verifica se o tempo clicado cai dentro do bloqueio
           return clickedTime >= start && clickedTime < end;
         });
 
