@@ -55,10 +55,19 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     ? statusParam 
     : null;
 
-  if (resolvedStatusAgendamento && resolvedStatusAgendamento !== 'all') {
+  const statusAtivos = ['confirmado', 'pendente', 'remarcado'];
+  const pedeAtivos = resolvedStatusAgendamento && ['ativo', 'ativos', 'ativas'].includes(resolvedStatusAgendamento.toLowerCase());
+  // Busca das consultas de um paciente (por telefone/e-mail) com status=confirmado: os prompts das IAs usam
+  // "confirmado" no sentido de "consulta marcada", mas o que a IA agenda nasce "pendente". Sem isso a IA não
+  // encontrava a consulta antiga ao remarcar e deixava o horário ocupado.
+  const confirmadoDoPaciente = resolvedStatusAgendamento?.toLowerCase() === 'confirmado' && !!(telefone || email);
+
+  if (pedeAtivos || confirmadoDoPaciente) {
+    query = query.in('status', statusAtivos);
+  } else if (resolvedStatusAgendamento && resolvedStatusAgendamento !== 'all') {
     query = query.eq('status', resolvedStatusAgendamento);
   } else if (!resolvedStatusAgendamento && !resolvedStatusAtendimento) {
-    query = query.in('status', ['confirmado', 'pendente', 'remarcado']);
+    query = query.in('status', statusAtivos);
   }
 
   if (resolvedStatusAtendimento && resolvedStatusAtendimento !== 'all') {
@@ -187,6 +196,10 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
 
   let rawFim = body.fim || body.end || body.end_time;
 
+  // Reagendamento: id da consulta anterior, que é cancelada (liberando o horário) depois que a nova for criada
+  const reagendarDeRaw = body.reagendar_de || body.reagendamento_de || body.remarcar_de || body.substituir_id || body.cancelar_id;
+  const reagendarDe = typeof reagendarDeRaw === 'string' && reagendarDeRaw.trim() ? reagendarDeRaw.trim() : null;
+
   if (!rawInicio || !nome || (!telefone && !email)) {
     return NextResponse.json({ 
       error: 'Campos obrigatórios ausentes: inicio (data e hora), nome e (telefone ou email) são obrigatórios.' 
@@ -265,6 +278,23 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
 
   const inicioIso = format(startDate, "yyyy-MM-dd'T'HH:mm:ss");
   const fimIso = format(endDate, "yyyy-MM-dd'T'HH:mm:ss");
+
+  // 3.1 Reagendamento: a consulta anterior precisa ser desta empresa. Se ela já estiver cancelada, segue sem cancelar de novo.
+  let anterior: { id: string; inicio: string; status: string; observacao: string | null } | null = null;
+  if (reagendarDe) {
+    const { data: ant } = await supabase
+      .from('agend_agendamentos')
+      .select('id, inicio, status, observacao, agend_profissionais!inner(empresa_id)')
+      .eq('id', reagendarDe)
+      .eq('agend_profissionais.empresa_id', auth.empresa.id)
+      .maybeSingle();
+    if (!ant) {
+      return NextResponse.json({
+        error: 'Consulta anterior (reagendar_de) não encontrada. Busque de novo as consultas do paciente pelo telefone e use o id retornado.'
+      }, { status: 400 });
+    }
+    anterior = ant;
+  }
 
   // 4. Criar ou buscar cliente final
   let clienteId = null;
@@ -386,13 +416,16 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
 
     // Verifica se há conflito com outro agendamento se sobreposição não for permitida
     if (!resolvedProf.permitir_sobreposicao) {
-      const { data: conflitos } = await supabase
+      let conflitoQuery = supabase
         .from('agend_agendamentos')
         .select('id')
         .eq('profissional_id', resolvedProfId)
         .in('status', ['confirmado', 'pendente', 'remarcado'])
         .lt('inicio', fimIso)
         .gt('fim', inicioIso);
+      // A consulta que está sendo remarcada não conta como conflito (ex.: mover 15 min com o mesmo profissional)
+      if (anterior) conflitoQuery = conflitoQuery.neq('id', anterior.id);
+      const { data: conflitos } = await conflitoQuery;
 
       if (conflitos && conflitos.length > 0) {
         return NextResponse.json({
@@ -447,7 +480,36 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   triggerBookingWebhook('booking.created', booking, auth.empresa.id).catch(console.error);
 
   const dataFormatada = format(startDate, "dd/MM/yyyy 'às' HH:mm");
-  const confirmMsg = `Agendamento confirmado com sucesso com ${resolvedProf.nome} para ${dataFormatada}!`;
+
+  // 6.1 Reagendamento: cancela a consulta anterior só depois que a nova foi criada, liberando o horário antigo
+  let reagendamento: { anterior_id: string; anterior_inicio: string; cancelado: boolean; erro?: string } | null = null;
+  if (anterior) {
+    if (['cancelado'].includes(anterior.status)) {
+      reagendamento = { anterior_id: anterior.id, anterior_inicio: anterior.inicio, cancelado: true };
+    } else {
+      const obsCancel = `Cancelado: remarcado para ${dataFormatada} (novo agendamento ${booking.id})`;
+      const { data: cancelada, error: errCancel } = await supabase
+        .from('agend_agendamentos')
+        .update({
+          status: 'cancelado',
+          status_atendimento: 'reagendou',
+          observacao: anterior.observacao ? `${anterior.observacao} | ${obsCancel}` : obsCancel,
+        })
+        .eq('id', anterior.id)
+        .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais(*)')
+        .single();
+      reagendamento = { anterior_id: anterior.id, anterior_inicio: anterior.inicio, cancelado: !errCancel };
+      if (errCancel) {
+        reagendamento.erro = errCancel.message;
+      } else if (cancelada) {
+        triggerBookingWebhook('booking.cancelled', { ...cancelada, motivo: obsCancel }, auth.empresa.id).catch(console.error);
+      }
+    }
+  }
+
+  const confirmMsg = reagendamento?.cancelado
+    ? `Reagendamento concluído com sucesso: nova consulta com ${resolvedProf.nome} para ${dataFormatada}. A consulta anterior foi cancelada e o horário liberado.`
+    : `Agendamento confirmado com sucesso com ${resolvedProf.nome} para ${dataFormatada}!`;
 
   const formattedBooking = {
     ...booking,
@@ -456,8 +518,9 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     status_atendimento: booking.status_atendimento || 'agendado',
   };
 
-  return NextResponse.json({ 
+  return NextResponse.json({
     data: formattedBooking,
+    ...(reagendamento ? { reagendamento } : {}),
     text: confirmMsg,
     message: confirmMsg,
     content: confirmMsg,

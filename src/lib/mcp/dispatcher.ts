@@ -130,6 +130,10 @@ export const VOIBI_MCP_TOOLS = [
           type: 'string',
           description: 'Observações do agendamento.',
         },
+        reagendar_de: {
+          type: 'string',
+          description: 'Use ao REMARCAR: ID da consulta anterior do paciente. Depois que a nova for criada, a anterior é cancelada e o horário dela fica livre.',
+        },
       },
       required: ['nome', 'inicio'],
     },
@@ -332,6 +336,7 @@ export async function handleCallTool(
           agenda: args.agenda,
           procedimento: args.procedimento,
           observacao: args.observacao,
+          reagendar_de: args.reagendar_de,
         };
         const req = new NextRequest(`${safeBase}/api/v1/bookings`, {
           method: 'POST',

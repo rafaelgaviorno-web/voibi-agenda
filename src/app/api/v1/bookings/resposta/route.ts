@@ -203,12 +203,14 @@ async function handleResposta(request: NextRequest, isGet = false) {
     eventoWebhook = 'booking.updated';
     mensagemRetorno = `Agendamento de ${nomePaciente} confirmado com sucesso!`;
   } else if (acao === 'reagendar') {
+    // Paciente não vem mais nesse horário: cancela a consulta para liberar a vaga (a nova é marcada à parte)
     const obs = `Solicitado reagendamento via Chat para o paciente: ${nomePaciente} (${horaAtualFmt})`;
     updatePayload = {
+      status: 'cancelado',
       status_atendimento: 'reagendou',
       observacao: existing.observacao ? `${existing.observacao} | ${obs}` : obs
     };
-    eventoWebhook = 'booking.updated';
+    eventoWebhook = 'booking.cancelled';
     mensagemRetorno = `Solicitação de reagendamento de ${nomePaciente} registrada!`;
   } else if (acao === 'cancelar') {
     const obs = `Cancelado via Chat para o paciente: ${nomePaciente} (${horaAtualFmt})`;
