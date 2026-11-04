@@ -7,6 +7,9 @@ import { withApiLogger } from '@/lib/api-logger';
 import { getBlocksForProfessional } from '@/lib/availability/blocks';
 import { clinicNow } from '@/lib/timezone';
 
+// Hora local da clínica SEM sufixo de fuso: com "Z" a IA tenta converter fuso e erra o horário.
+const LOCAL_ISO = "yyyy-MM-dd'T'HH:mm:ss";
+
 export const GET = withApiLogger(async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -136,7 +139,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
         .from('agend_agendamentos')
         .select('inicio, fim')
         .eq('profissional_id', p.id)
-        .in('status', ['confirmado', 'remarcado'])
+        .in('status', ['confirmado', 'pendente', 'remarcado'])
         .gte('inicio', diaInicio)
         .lte('fim', diaFim);
 
@@ -165,8 +168,8 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
         profTimes.forEach(t => allTimesSet.add(t));
         slots.forEach(s => {
           allFormattedSlots.push({
-            start: s.start.toISOString(),
-            end: s.end.toISOString(),
+            start: format(s.start, LOCAL_ISO),
+            end: format(s.end, LOCAL_ISO),
             time: format(s.start, 'HH:mm'),
             agenda: { id: p.id, nome: p.nome }
           });
@@ -261,7 +264,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     .from('agend_agendamentos')
     .select('inicio, fim')
     .eq('profissional_id', profId)
-    .in('status', ['confirmado', 'remarcado'])
+    .in('status', ['confirmado', 'pendente', 'remarcado'])
     .gte('inicio', diaInicio)
     .lte('fim', diaFim);
 
@@ -292,8 +295,8 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   );
 
   const formattedSlots = slots.map(s => ({
-    start: s.start.toISOString(),
-    end: s.end.toISOString(),
+    start: format(s.start, LOCAL_ISO),
+    end: format(s.end, LOCAL_ISO),
     time: format(s.start, 'HH:mm')
   }));
 
