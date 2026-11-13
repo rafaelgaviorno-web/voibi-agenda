@@ -161,7 +161,10 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
 
     if (currentUnidadeId && currentUnidadeId !== 'all') {
       profissionais = profissionais.filter(p => (p as any).unidade_id === currentUnidadeId || !(p as any).unidade_id);
-      agendamentos = agendamentos.filter(a => !a.profissional || (a.profissional as any).unidade_id === currentUnidadeId || !(a.profissional as any).unidade_id);
+      agendamentos = agendamentos.filter(a => {
+        if (a.status === 'bloqueio' && (a as any).unidade_id && (a as any).unidade_id !== currentUnidadeId) return false;
+        return !a.profissional || (a.profissional as any).unidade_id === currentUnidadeId || !(a.profissional as any).unidade_id;
+      });
     }
 
     procedimentos = procData || [];

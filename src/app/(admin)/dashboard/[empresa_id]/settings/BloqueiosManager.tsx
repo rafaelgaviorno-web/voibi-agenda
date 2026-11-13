@@ -511,6 +511,12 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                 </button>
               </div>
             </div>
+
+            {!isDiaTodoPontual && novoPontual.inicio && novoPontual.fim && novoPontual.inicio.slice(0, 10) !== novoPontual.fim.slice(0, 10) && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-200">
+                <strong>Atenção:</strong> O bloqueio pontual bloqueia a agenda <strong>continuamente</strong> das {novoPontual.inicio.slice(11, 16) || '00:00'} de {formatDateBR(novoPontual.inicio)} até as {novoPontual.fim.slice(11, 16) || '23:59'} de {formatDateBR(novoPontual.fim)} (24h/dia no período). Se deseja bloquear apenas uma faixa de horário em vários dias, use a aba <strong>Dias da Semana (Recorrente)</strong>.
+              </div>
+            )}
           </div>
         ) : (
           /* MODO: DIAS DA SEMANA (RECORRENTE) */
@@ -904,17 +910,29 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                           </div>
                         ) : (
                           <div>
-                            <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                              {b.inicio ? new Date(b.inicio).toLocaleDateString('pt-BR') : '-'}
-                              {b.fim && new Date(b.inicio).toDateString() !== new Date(b.fim).toDateString() 
-                                ? ` até ${new Date(b.fim).toLocaleDateString('pt-BR')}` 
-                                : ''}
-                            </p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {b.inicio && b.fim
-                                ? `${new Date(b.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às ${new Date(b.fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
-                                : '-'}
-                            </p>
+                            {b.inicio && b.fim && new Date(b.inicio).toDateString() !== new Date(b.fim).toDateString() ? (
+                              <>
+                                <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                                  {new Date(b.inicio).toLocaleDateString('pt-BR')} ({new Date(b.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})
+                                  {' até '}
+                                  {new Date(b.fim).toLocaleDateString('pt-BR')} ({new Date(b.fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})
+                                </p>
+                                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                  Bloqueio contínuo no período
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                                  {b.inicio ? new Date(b.inicio).toLocaleDateString('pt-BR') : '-'}
+                                </p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                  {b.inicio && b.fim
+                                    ? `${new Date(b.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às ${new Date(b.fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                                    : '-'}
+                                </p>
+                              </>
+                            )}
                           </div>
                         )}
                       </td>
