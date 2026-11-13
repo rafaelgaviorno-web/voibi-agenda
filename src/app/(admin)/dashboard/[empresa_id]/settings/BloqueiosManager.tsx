@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Calendar, Repeat, Clock, CalendarDays, Trash2, CheckCircle2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Calendar, Repeat, Clock, CalendarDays, Pencil, CalendarCheck, X } from 'lucide-react';
 
 const DIAS_DA_SEMANA = [
   { num: 0, label: 'Dom', full: 'Domingo' },
@@ -16,8 +16,14 @@ const DIAS_DA_SEMANA = [
 export default function BloqueiosManager({ initialBloqueios, agendas, unidades, saveBloqueio }: any) {
   const [bloqueios, setBloqueios] = useState(initialBloqueios || []);
   const [tipoBloqueio, setTipoBloqueio] = useState<'data' | 'recorrente'>('data');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [erroMsg, setErroMsg] = useState('');
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Controle rápido de "Abrir dia específico" na tabela
+  const [openDayTargetId, setOpenDayTargetId] = useState<string | null>(null);
+  const [quickOpenDate, setQuickOpenDate] = useState('');
 
   // Estado para Bloqueio Pontual (por Data Específica)
   const [novoPontual, setNovoPontual] = useState({
@@ -32,27 +38,108 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
   // Estado para Bloqueio Recorrente (por Dias da Semana)
   const todayStr = new Date().toISOString().split('T')[0];
   const [novoRecorrente, setNovoRecorrente] = useState({
-    dias_semana: [1] as number[], // Default: Segunda-feira
+    dias_semana: [1] as number[],
     isDiaTodo: false,
     hora_inicio: '14:00',
     hora_fim: '18:00',
     data_inicio: todayStr,
     temDataFim: false,
     data_fim: '',
+    datas_liberadas: [] as string[],
     motivo: '',
     profissional_id: '',
     unidade_id: ''
   });
+  const [formOpenDateInput, setFormOpenDateInput] = useState('');
+
+  const resetForms = () => {
+    setEditingId(null);
+    setErroMsg('');
+    setIsDiaTodoPontual(false);
+    setNovoPontual({ inicio: '', fim: '', motivo: '', profissional_id: '', unidade_id: '' });
+    setNovoRecorrente({
+      dias_semana: [1],
+      isDiaTodo: false,
+      hora_inicio: '14:00',
+      hora_fim: '18:00',
+      data_inicio: todayStr,
+      temDataFim: false,
+      data_fim: '',
+      datas_liberadas: [],
+      motivo: '',
+      profissional_id: '',
+      unidade_id: ''
+    });
+    setFormOpenDateInput('');
+  };
+
+  const formatToDatetimeLocal = (isoStr: string) => {
+    if (!isoStr) return '';
+    // Se já vier como YYYY-MM-DDTHH:mm...
+    const clean = String(isoStr).replace(' ', 'T');
+    if (clean.length >= 16 && !clean.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(clean)) {
+      return clean.slice(0, 16);
+    }
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day}T${h}:${min}`;
+  };
+
+  const handleStartEdit = (b: any) => {
+    setErroMsg('');
+    setEditingId(b.id);
+
+    if (b.tipo === 'recorrente') {
+      setTipoBloqueio('recorrente');
+      const isFullDay =
+        (!b.hora_inicio && !b.hora_fim) ||
+        (String(b.hora_inicio).startsWith('00:00') && String(b.hora_fim).startsWith('23:59'));
+      const fimLimite = b.data_fim_recorrencia || (b.fim ? String(b.fim).slice(0, 10) : '');
+
+      setNovoRecorrente({
+        dias_semana: Array.isArray(b.dias_semana) ? [...b.dias_semana].sort((a, c) => a - c) : [],
+        isDiaTodo: isFullDay,
+        hora_inicio: b.hora_inicio && !isFullDay ? String(b.hora_inicio).slice(0, 5) : '14:00',
+        hora_fim: b.hora_fim && !isFullDay ? String(b.hora_fim).slice(0, 5) : '18:00',
+        data_inicio: b.inicio ? String(b.inicio).slice(0, 10) : todayStr,
+        temDataFim: Boolean(fimLimite),
+        data_fim: fimLimite ? String(fimLimite).slice(0, 10) : '',
+        datas_liberadas: Array.isArray(b.datas_liberadas)
+          ? b.datas_liberadas.map((d: any) => String(d).slice(0, 10)).sort()
+          : [],
+        motivo: b.motivo || '',
+        profissional_id: b.profissional_id || '',
+        unidade_id: b.unidade_id || ''
+      });
+    } else {
+      setTipoBloqueio('data');
+      const iniLocal = formatToDatetimeLocal(b.inicio);
+      const fimLocal = formatToDatetimeLocal(b.fim);
+      const isFullDay = iniLocal.endsWith('T00:00') && fimLocal.endsWith('T23:59');
+      setIsDiaTodoPontual(isFullDay);
+      setNovoPontual({
+        inicio: isFullDay ? iniLocal.slice(0, 10) : iniLocal,
+        fim: isFullDay ? fimLocal.slice(0, 10) : fimLocal,
+        motivo: b.motivo || '',
+        profissional_id: b.profissional_id || '',
+        unidade_id: b.unidade_id || ''
+      });
+    }
+
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const toggleDiaSemana = (num: number) => {
     setNovoRecorrente(prev => {
       const exists = prev.dias_semana.includes(num);
-      let updated: number[];
-      if (exists) {
-        updated = prev.dias_semana.filter(d => d !== num);
-      } else {
-        updated = [...prev.dias_semana, num].sort((a, b) => a - b);
-      }
+      const updated = exists
+        ? prev.dias_semana.filter(d => d !== num)
+        : [...prev.dias_semana, num].sort((a, b) => a - b);
       return { ...prev, dias_semana: updated };
     });
   };
@@ -76,8 +163,37 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
     }));
   };
 
-  const handleAddBloqueio = async () => {
+  const addLiberatedDateToForm = () => {
+    if (!formOpenDateInput) return;
+    if (novoRecorrente.datas_liberadas.includes(formOpenDateInput)) {
+      setFormOpenDateInput('');
+      return;
+    }
+    const [y, m, d] = formOpenDateInput.split('-').map(Number);
+    const dow = new Date(y, m - 1, d).getDay();
+    if (!novoRecorrente.dias_semana.includes(dow)) {
+      const labelDia = DIAS_DA_SEMANA.find(item => item.num === dow)?.full || '';
+      setErroMsg(`A data ${formOpenDateInput.split('-').reverse().join('/')} (${labelDia}) não faz parte dos dias da semana bloqueados.`);
+      return;
+    }
     setErroMsg('');
+    setNovoRecorrente(prev => ({
+      ...prev,
+      datas_liberadas: [...prev.datas_liberadas, formOpenDateInput].sort()
+    }));
+    setFormOpenDateInput('');
+  };
+
+  const removeLiberatedDateFromForm = (dateStr: string) => {
+    setNovoRecorrente(prev => ({
+      ...prev,
+      datas_liberadas: prev.datas_liberadas.filter(d => d !== dateStr)
+    }));
+  };
+
+  const handleSaveBloqueio = async () => {
+    setErroMsg('');
+    const action = editingId ? 'update' : 'add';
 
     if (tipoBloqueio === 'data') {
       if (!novoPontual.inicio || !novoPontual.fim) {
@@ -94,8 +210,14 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
         fimFinal = `${novoPontual.fim}T23:59:59`;
       }
 
-      const blockData = {
+      const blockData: any = {
+        ...(editingId ? { id: editingId } : {}),
         tipo: 'data',
+        dias_semana: null,
+        hora_inicio: null,
+        hora_fim: null,
+        data_fim_recorrencia: null,
+        datas_liberadas: [],
         inicio: inicioFinal,
         fim: fimFinal,
         motivo: novoPontual.motivo,
@@ -103,16 +225,19 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
         unidade_id: novoPontual.unidade_id === '' ? null : novoPontual.unidade_id
       };
 
-      const result = await saveBloqueio(blockData, 'add');
+      const result = await saveBloqueio(blockData, action);
       if (result && !result.error) {
-        setBloqueios([...bloqueios, result]);
-        setNovoPontual({ inicio: '', fim: '', motivo: '', profissional_id: '', unidade_id: '' });
+        if (editingId) {
+          setBloqueios(bloqueios.map((b: any) => (b.id === editingId ? result : b)));
+        } else {
+          setBloqueios([...bloqueios, result]);
+        }
+        resetForms();
       } else if (result?.error) {
         setErroMsg(result.error);
       }
       setIsSaving(false);
     } else {
-      // Recorrente por dia da semana
       if (novoRecorrente.dias_semana.length === 0) {
         setErroMsg('Selecione ao menos um dia da semana para o bloqueio recorrente.');
         return;
@@ -133,7 +258,8 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
       const horaInicioFinal = novoRecorrente.isDiaTodo ? '00:00:00' : `${novoRecorrente.hora_inicio}:00`;
       const horaFimFinal = novoRecorrente.isDiaTodo ? '23:59:59' : `${novoRecorrente.hora_fim}:00`;
 
-      const blockData = {
+      const blockData: any = {
+        ...(editingId ? { id: editingId } : {}),
         tipo: 'recorrente',
         dias_semana: novoRecorrente.dias_semana,
         hora_inicio: horaInicioFinal,
@@ -141,26 +267,20 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
         inicio: novoRecorrente.data_inicio ? `${novoRecorrente.data_inicio}T00:00:00` : `${todayStr}T00:00:00`,
         fim: (novoRecorrente.temDataFim && novoRecorrente.data_fim) ? `${novoRecorrente.data_fim}T23:59:59` : null,
         data_fim_recorrencia: (novoRecorrente.temDataFim && novoRecorrente.data_fim) ? novoRecorrente.data_fim : null,
+        datas_liberadas: novoRecorrente.datas_liberadas,
         motivo: novoRecorrente.motivo,
         profissional_id: novoRecorrente.profissional_id === '' ? null : novoRecorrente.profissional_id,
         unidade_id: novoRecorrente.unidade_id === '' ? null : novoRecorrente.unidade_id
       };
 
-      const result = await saveBloqueio(blockData, 'add');
+      const result = await saveBloqueio(blockData, action);
       if (result && !result.error) {
-        setBloqueios([...bloqueios, result]);
-        setNovoRecorrente({
-          dias_semana: [1],
-          isDiaTodo: false,
-          hora_inicio: '14:00',
-          hora_fim: '18:00',
-          data_inicio: todayStr,
-          temDataFim: false,
-          data_fim: '',
-          motivo: '',
-          profissional_id: '',
-          unidade_id: ''
-        });
+        if (editingId) {
+          setBloqueios(bloqueios.map((b: any) => (b.id === editingId ? result : b)));
+        } else {
+          setBloqueios([...bloqueios, result]);
+        }
+        resetForms();
       } else if (result?.error) {
         setErroMsg(result.error);
       }
@@ -168,10 +288,61 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
     }
   };
 
+  // Ação rápida na tabela: liberar ou re-bloquear uma data específica dentro de um bloqueio recorrente
+  const handleQuickAddLiberatedDate = async (b: any) => {
+    if (!quickOpenDate) return;
+    setErroMsg('');
+
+    const [y, m, d] = quickOpenDate.split('-').map(Number);
+    const dow = new Date(y, m - 1, d).getDay();
+    const dias = Array.isArray(b.dias_semana) ? b.dias_semana : [];
+    if (!dias.includes(dow)) {
+      const labelDia = DIAS_DA_SEMANA.find(item => item.num === dow)?.full || '';
+      setErroMsg(`A data ${quickOpenDate.split('-').reverse().join('/')} (${labelDia}) não está bloqueada por esta regra recorrente.`);
+      return;
+    }
+
+    const atuais: string[] = Array.isArray(b.datas_liberadas)
+      ? b.datas_liberadas.map((x: any) => String(x).slice(0, 10))
+      : [];
+    if (atuais.includes(quickOpenDate)) {
+      setQuickOpenDate('');
+      return;
+    }
+
+    const novaLista = [...atuais, quickOpenDate].sort();
+    setIsSaving(true);
+    const result = await saveBloqueio({ ...b, datas_liberadas: novaLista }, 'update');
+    if (result && !result.error) {
+      setBloqueios(bloqueios.map((item: any) => (item.id === b.id ? result : item)));
+      setQuickOpenDate('');
+    } else if (result?.error) {
+      setErroMsg(result.error);
+    }
+    setIsSaving(false);
+  };
+
+  const handleQuickRemoveLiberatedDate = async (b: any, dateStr: string) => {
+    const atuais: string[] = Array.isArray(b.datas_liberadas)
+      ? b.datas_liberadas.map((x: any) => String(x).slice(0, 10))
+      : [];
+    const novaLista = atuais.filter(d => d !== dateStr);
+
+    setIsSaving(true);
+    const result = await saveBloqueio({ ...b, datas_liberadas: novaLista }, 'update');
+    if (result && !result.error) {
+      setBloqueios(bloqueios.map((item: any) => (item.id === b.id ? result : item)));
+    } else if (result?.error) {
+      setErroMsg(result.error);
+    }
+    setIsSaving(false);
+  };
+
   const handleRemoveBloqueio = async (id: string) => {
     setIsSaving(true);
     await saveBloqueio({ id }, 'remove');
     setBloqueios(bloqueios.filter((b: any) => b.id !== id));
+    if (editingId === id) resetForms();
     setIsSaving(false);
   };
 
@@ -184,11 +355,33 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
       .join(', ');
   };
 
+  const formatDateBR = (dateStr: string) => {
+    const clean = String(dateStr).slice(0, 10);
+    const parts = clean.split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : clean;
+  };
+
   return (
-    <div className="p-5">
+    <div className="p-5" ref={formRef}>
       <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-        Configure períodos de bloqueio para impedir novos agendamentos. Você pode bloquear datas pontuais (feriados/folgas) ou definir bloqueios recorrentes por dias da semana e horários específicos.
+        Configure períodos de bloqueio para impedir novos agendamentos. Você pode bloquear datas pontuais, criar bloqueios recorrentes por dias da semana, editar regras existentes ou liberar dias específicos dentro de um bloqueio recorrente.
       </p>
+
+      {editingId && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center justify-between">
+          <span className="text-xs font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
+            <Pencil className="w-3.5 h-3.5" />
+            Editando bloqueio selecionado
+          </span>
+          <button
+            type="button"
+            onClick={resetForms}
+            className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline"
+          >
+            Cancelar edição
+          </button>
+        </div>
+      )}
 
       {/* Tabs para alternar o Tipo de Bloqueio */}
       <div className="flex items-center gap-2 mb-4 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
@@ -224,7 +417,7 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
         </div>
       )}
 
-      {/* Formulário de Adição */}
+      {/* Formulário de Adição / Edição */}
       <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 mb-8 space-y-4">
         
         {tipoBloqueio === 'data' ? (
@@ -310,11 +503,11 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
 
               <div className="w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
                 <button 
-                  onClick={handleAddBloqueio} 
+                  onClick={handleSaveBloqueio} 
                   disabled={isSaving || !novoPontual.inicio || !novoPontual.fim} 
                   className="w-full sm:w-auto bg-zinc-900 hover:bg-black text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 h-[38px] flex items-center justify-center gap-1.5"
                 >
-                  {isSaving ? 'Salvando...' : 'Adicionar Bloqueio'}
+                  {isSaving ? 'Salvando...' : (editingId ? 'Salvar Alterações' : 'Adicionar Bloqueio')}
                 </button>
               </div>
             </div>
@@ -458,7 +651,56 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
               </div>
             </div>
 
-            {/* 3. Vigência e Duração (Se repete e por quanto tempo) */}
+            {/* 3. Exceções: Abrir dias específicos dentro do bloqueio */}
+            <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80">
+              <label className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <CalendarCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Dias Abertos / Exceções (Opcional)
+              </label>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2.5">
+                Precisa atender em um dia específico que cai dentro deste bloqueio recorrente? Adicione a data abaixo para liberá-la sem desfazer o bloqueio.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <input
+                  type="date"
+                  value={formOpenDateInput}
+                  onChange={e => setFormOpenDateInput(e.target.value)}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={addLiberatedDateToForm}
+                  disabled={!formOpenDateInput}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 transition-colors"
+                >
+                  Abrir este dia
+                </button>
+              </div>
+
+              {novoRecorrente.datas_liberadas.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {novoRecorrente.datas_liberadas.map(d => (
+                    <span
+                      key={d}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-medium"
+                    >
+                      {formatDateBR(d)}
+                      <button
+                        type="button"
+                        onClick={() => removeLiberatedDateFromForm(d)}
+                        className="hover:text-emerald-900 dark:hover:text-emerald-100"
+                        title="Remover liberação (voltar a bloquear)"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 4. Vigência e Duração */}
             <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80">
               <label className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider block mb-3">
                 Vigência do Bloqueio (Duração da Repetição)
@@ -529,11 +771,11 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
 
                 <div className="w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
                   <button 
-                    onClick={handleAddBloqueio} 
+                    onClick={handleSaveBloqueio} 
                     disabled={isSaving || novoRecorrente.dias_semana.length === 0} 
                     className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 h-[38px] flex items-center justify-center gap-1.5 shadow-sm"
                   >
-                    {isSaving ? 'Salvando...' : 'Adicionar Bloqueio Recorrente'}
+                    {isSaving ? 'Salvando...' : (editingId ? 'Salvar Alterações' : 'Adicionar Bloqueio Recorrente')}
                   </button>
                 </div>
               </div>
@@ -564,7 +806,7 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                   <th className="px-4 py-3">Vigência</th>
                   <th className="px-4 py-3">Agenda Afetada</th>
                   <th className="px-4 py-3">Motivo</th>
-                  <th className="px-4 py-3 text-right">Ação</th>
+                  <th className="px-4 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -573,9 +815,13 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                   const agendaAfetada = b.profissional_id 
                     ? agendas.find((a: any) => a.id === b.profissional_id)?.nome 
                     : 'Geral (Clínica toda)';
+                  const liberadas: string[] = Array.isArray(b.datas_liberadas)
+                    ? b.datas_liberadas.map((d: any) => String(d).slice(0, 10)).sort()
+                    : [];
+                  const isQuickOpenExpanded = openDayTargetId === b.id;
 
                   return (
-                    <tr key={b.id} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50">
+                    <tr key={b.id} className="border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 align-top">
                       {/* Tipo */}
                       <td className="px-4 py-3">
                         {isRecorrente ? (
@@ -594,17 +840,67 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                       {/* Dias / Horários */}
                       <td className="px-4 py-3">
                         {isRecorrente ? (
-                          <div>
-                            <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                              {formatDiasSemana(b.dias_semana)}
-                            </p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                              {b.hora_inicio && b.hora_fim 
-                                ? (b.hora_inicio.startsWith('00:00') && b.hora_fim.startsWith('23:59')
-                                    ? 'Dia todo' 
-                                    : `${b.hora_inicio.slice(0, 5)} às ${b.hora_fim.slice(0, 5)}`)
-                                : 'Dia todo'}
-                            </p>
+                          <div className="space-y-1.5">
+                            <div>
+                              <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                                {formatDiasSemana(b.dias_semana)}
+                              </p>
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                {b.hora_inicio && b.hora_fim 
+                                  ? (b.hora_inicio.startsWith('00:00') && b.hora_fim.startsWith('23:59')
+                                      ? 'Dia todo' 
+                                      : `${b.hora_inicio.slice(0, 5)} às ${b.hora_fim.slice(0, 5)}`)
+                                  : 'Dia todo'}
+                              </p>
+                            </div>
+
+                            {liberadas.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-0.5">
+                                {liberadas.map(d => (
+                                  <span
+                                    key={d}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium"
+                                  >
+                                    Aberto: {formatDateBR(d)}
+                                    <button
+                                      type="button"
+                                      disabled={isSaving}
+                                      onClick={() => handleQuickRemoveLiberatedDate(b, d)}
+                                      className="hover:text-emerald-900 dark:hover:text-emerald-100"
+                                      title="Voltar a bloquear este dia"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {isQuickOpenExpanded && (
+                              <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                                <input
+                                  type="date"
+                                  value={quickOpenDate}
+                                  onChange={e => setQuickOpenDate(e.target.value)}
+                                  className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded px-2 py-1 text-xs text-zinc-900 dark:text-zinc-100"
+                                />
+                                <button
+                                  type="button"
+                                  disabled={isSaving || !quickOpenDate}
+                                  onClick={() => handleQuickAddLiberatedDate(b)}
+                                  className="px-2.5 py-1 rounded text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40"
+                                >
+                                  Liberar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setOpenDayTargetId(null); setQuickOpenDate(''); }}
+                                  className="px-2 py-1 rounded text-xs text-zinc-500 hover:text-zinc-700"
+                                >
+                                  Fechar
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div>
@@ -628,11 +924,11 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                         {isRecorrente ? (
                           <div className="space-y-0.5">
                             <p className="text-zinc-700 dark:text-zinc-300">
-                              A partir de: {b.inicio ? new Date(b.inicio).toLocaleDateString('pt-BR') : 'Criação'}
+                              A partir de: {b.inicio ? formatDateBR(b.inicio) : 'Criação'}
                             </p>
                             <p className="text-zinc-500 dark:text-zinc-400">
                               {b.data_fim_recorrencia || b.fim 
-                                ? `Até: ${new Date(b.data_fim_recorrencia || b.fim).toLocaleDateString('pt-BR')}`
+                                ? `Até: ${formatDateBR(b.data_fim_recorrencia || b.fim)}`
                                 : 'Sem data final (Contínuo)'}
                             </p>
                           </div>
@@ -657,15 +953,41 @@ export default function BloqueiosManager({ initialBloqueios, agendas, unidades, 
                       {/* Motivo */}
                       <td className="px-4 py-3">{b.motivo || '-'}</td>
 
-                      {/* Ação */}
-                      <td className="px-4 py-3 text-right">
-                        <button 
-                          onClick={() => handleRemoveBloqueio(b.id)} 
-                          disabled={isSaving}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                        >
-                          Remover
-                        </button>
+                      {/* Ações */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1">
+                          {isRecorrente && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenDayTargetId(isQuickOpenExpanded ? null : b.id);
+                                setQuickOpenDate('');
+                                setErroMsg('');
+                              }}
+                              disabled={isSaving}
+                              className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium text-xs px-2 py-1 rounded hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                              title="Abrir/liberar um dia específico dentro deste bloqueio recorrente"
+                            >
+                              Abrir dia
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(b)}
+                            disabled={isSaving}
+                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                          >
+                            Editar
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => handleRemoveBloqueio(b.id)} 
+                            disabled={isSaving}
+                            className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                          >
+                            Remover
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

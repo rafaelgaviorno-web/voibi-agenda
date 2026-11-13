@@ -255,11 +255,14 @@ export default async function SettingsPage(props: {
     return { error: null };
   }
 
-  async function saveBloqueio(data: any, action: 'add' | 'remove') {
+  async function saveBloqueio(data: any, action: 'add' | 'update' | 'remove') {
     'use server'
     if (empresa_id === 'mock-clinic') {
       if (action === 'add') {
-        return { id: 'mock-' + Date.now(), inicio: data.inicio, fim: data.fim, motivo: data.motivo, profissional_id: data.profissional_id };
+        return { id: 'mock-' + Date.now(), ...data };
+      }
+      if (action === 'update') {
+        return { ...data };
       }
       return null;
     }
@@ -272,21 +275,23 @@ export default async function SettingsPage(props: {
       revalidatePath(`/dashboard/${empresa_id}/calendar`);
       return null;
     }
-    if (action === 'add') {
-      const payload: any = {
-        empresa_id,
-        tipo: data.tipo || 'data',
-        dias_semana: data.dias_semana || null,
-        hora_inicio: data.hora_inicio || null,
-        hora_fim: data.hora_fim || null,
-        data_fim_recorrencia: data.data_fim_recorrencia || null,
-        inicio: data.inicio || null,
-        fim: data.fim || null,
-        motivo: data.motivo || '',
-        profissional_id: data.profissional_id,
-        unidade_id: data.unidade_id || null
-      };
 
+    const payload: any = {
+      empresa_id,
+      tipo: data.tipo || 'data',
+      dias_semana: data.dias_semana || null,
+      hora_inicio: data.hora_inicio || null,
+      hora_fim: data.hora_fim || null,
+      data_fim_recorrencia: data.data_fim_recorrencia || null,
+      datas_liberadas: Array.isArray(data.datas_liberadas) ? data.datas_liberadas : [],
+      inicio: data.inicio || null,
+      fim: data.fim || null,
+      motivo: data.motivo || '',
+      profissional_id: data.profissional_id ?? null,
+      unidade_id: data.unidade_id || null
+    };
+
+    if (action === 'add') {
       const { data: newBlock, error: blockError } = await supabase.from('agend_bloqueios').insert(payload).select().single();
       if (blockError) {
         console.error('Erro ao criar bloqueio:', blockError);
@@ -296,6 +301,25 @@ export default async function SettingsPage(props: {
       revalidatePath(`/dashboard/${empresa_id}/settings`);
       revalidatePath(`/dashboard/${empresa_id}/calendar`);
       return newBlock;
+    }
+
+    if (action === 'update') {
+      const { data: updatedBlock, error: blockError } = await supabase
+        .from('agend_bloqueios')
+        .update(payload)
+        .eq('id', data.id)
+        .eq('empresa_id', empresa_id)
+        .select()
+        .single();
+
+      if (blockError) {
+        console.error('Erro ao atualizar bloqueio:', blockError);
+        return { error: blockError.message };
+      }
+
+      revalidatePath(`/dashboard/${empresa_id}/settings`);
+      revalidatePath(`/dashboard/${empresa_id}/calendar`);
+      return updatedBlock;
     }
   }
 

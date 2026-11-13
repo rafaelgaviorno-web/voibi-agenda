@@ -151,6 +151,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ empre
       hora_inicio: b.hora_inicio || null,
       hora_fim: b.hora_fim || null,
       data_fim_recorrencia: b.data_fim_recorrencia || null,
+      datas_liberadas: b.datas_liberadas || [],
       unidade_id: b.unidade_id || null,
       status: 'bloqueio',
       observacao: b.motivo,

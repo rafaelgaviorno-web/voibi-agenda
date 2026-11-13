@@ -1,3 +1,15 @@
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getReleasedDates(b: any): string[] {
+  if (!Array.isArray(b.datas_liberadas)) return [];
+  return b.datas_liberadas.map((d: any) => String(d).slice(0, 10));
+}
+
 // Bloqueios que afetam um profissional num intervalo:
 // os dele próprio + os gerais da empresa (feriados/exceções), respeitando a unidade quando definida.
 export async function getBlocksForProfessional(
@@ -33,6 +45,8 @@ export async function getBlocksForProfessional(
     if (b.tipo === 'recorrente') {
       if (!Array.isArray(b.dias_semana) || b.dias_semana.length === 0) continue;
 
+      const liberadas = getReleasedDates(b);
+
       // Percorre os dias do intervalo especificado
       const curr = new Date(rStart);
       curr.setHours(0, 0, 0, 0);
@@ -42,27 +56,26 @@ export async function getBlocksForProfessional(
 
       while (curr <= loopEnd) {
         const dayOfWeek = curr.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+        const currDateStr = toLocalDateStr(curr);
 
-        if (b.dias_semana.includes(dayOfWeek)) {
+        if (b.dias_semana.includes(dayOfWeek) && !liberadas.includes(currDateStr)) {
           // Validação de vigência do bloqueio recorrente
           let inVigencia = true;
 
-          const currDateStr = curr.toISOString().split('T')[0];
-
           if (b.inicio) {
-            const startDateStr = new Date(b.inicio).toISOString().split('T')[0];
+            const startDateStr = String(b.inicio).slice(0, 10);
             if (currDateStr < startDateStr) inVigencia = false;
           }
 
           const fimLimite = b.data_fim_recorrencia || b.fim;
           if (inVigencia && fimLimite) {
-            const endDateStr = new Date(fimLimite).toISOString().split('T')[0];
+            const endDateStr = String(fimLimite).slice(0, 10);
             if (currDateStr > endDateStr) inVigencia = false;
           }
 
           if (inVigencia) {
-            let blockStart = new Date(curr);
-            let blockEnd = new Date(curr);
+            const blockStart = new Date(curr);
+            const blockEnd = new Date(curr);
 
             if (b.hora_inicio && b.hora_fim) {
               const [sH, sM] = b.hora_inicio.split(':').map(Number);
@@ -132,21 +145,23 @@ export async function checkBlockConflict(
       const dayOfWeek = reqStart.getDay();
       if (!b.dias_semana.includes(dayOfWeek)) continue;
 
-      const targetDateStr = reqStart.toISOString().split('T')[0];
+      const targetDateStr = toLocalDateStr(reqStart);
+      const liberadas = getReleasedDates(b);
+      if (liberadas.includes(targetDateStr)) continue;
 
       if (b.inicio) {
-        const startDateStr = new Date(b.inicio).toISOString().split('T')[0];
+        const startDateStr = String(b.inicio).slice(0, 10);
         if (targetDateStr < startDateStr) continue;
       }
 
       const fimLimite = b.data_fim_recorrencia || b.fim;
       if (fimLimite) {
-        const endDateStr = new Date(fimLimite).toISOString().split('T')[0];
+        const endDateStr = String(fimLimite).slice(0, 10);
         if (targetDateStr > endDateStr) continue;
       }
 
-      let bStart = new Date(reqStart);
-      let bEnd = new Date(reqStart);
+      const bStart = new Date(reqStart);
+      const bEnd = new Date(reqStart);
 
       if (b.hora_inicio && b.hora_fim) {
         const [sH, sM] = b.hora_inicio.split(':').map(Number);

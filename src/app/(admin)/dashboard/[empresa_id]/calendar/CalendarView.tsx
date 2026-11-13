@@ -271,7 +271,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
       
       return true;
     })
-    .map((e: any) => {
+    .flatMap((e: any) => {
         const isBlock = e.status === 'bloqueio';
         const isGlobalBlock = isBlock && !e.profissional;
 
@@ -297,17 +297,69 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
             ? (e.hora_fim.length === 5 ? `${e.hora_fim}:00` : e.hora_fim)
             : '24:00:00';
 
-          const startRecur = e.inicio ? new Date(e.inicio).toISOString().split('T')[0] : undefined;
+          const startRecur = e.inicio ? String(e.inicio).slice(0, 10) : undefined;
           
           let endRecur: string | undefined = undefined;
           const fimLimite = e.data_fim_recorrencia || e.fim;
           if (fimLimite) {
-            const d = new Date(fimLimite);
+            const parts = String(fimLimite).slice(0, 10).split('-').map(Number);
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
             d.setDate(d.getDate() + 1);
-            endRecur = d.toISOString().split('T')[0];
+            endRecur = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           }
 
-          return {
+          const liberadas: string[] = Array.isArray(e.datas_liberadas)
+            ? e.datas_liberadas.map((d: any) => String(d).slice(0, 10))
+            : [];
+
+          // Se houver datas liberadas (exceções), expandimos as ocorrências no período visível pulando os dias liberados
+          if (liberadas.length > 0) {
+            const dias = Array.isArray(e.dias_semana) ? e.dias_semana : [];
+            const rangeS = visibleRange ? new Date(visibleRange.start) : new Date(Date.now() - 15 * 86400000);
+            const rangeE = visibleRange ? new Date(visibleRange.end) : new Date(Date.now() + 60 * 86400000);
+            const curr = new Date(rangeS.getFullYear(), rangeS.getMonth(), rangeS.getDate());
+            const occurrences: any[] = [];
+
+            while (curr <= rangeE) {
+              const dateStr = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
+              const inStart = !startRecur || dateStr >= startRecur;
+              const inEnd = !endRecur || dateStr < endRecur;
+
+              if (inStart && inEnd && dias.includes(curr.getDay()) && !liberadas.includes(dateStr)) {
+                occurrences.push({
+                  id: `${e.id}_${dateStr}`,
+                  resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
+                  resourceIds: isGlobalBlock ? displayedAgendas.map((a: any) => a.id) : undefined,
+                  title: e.observacao || 'Bloqueio Recorrente',
+                  start: `${dateStr}T${startTime}`,
+                  end: `${dateStr}T${endTime === '24:00:00' ? '23:59:59' : endTime}`,
+                  display: 'background',
+                  editable: false,
+                  startEditable: false,
+                  durationEditable: false,
+                  backgroundColor: backgroundColor,
+                  borderColor: 'transparent',
+                  classNames: ['vc-block', isGlobalBlock ? 'vc-block-global' : ''],
+                  extendedProps: {
+                    status: 'bloqueio',
+                    tipo: 'recorrente',
+                    dias_semana: e.dias_semana,
+                    hora_inicio: e.hora_inicio,
+                    hora_fim: e.hora_fim,
+                    datas_liberadas: liberadas,
+                    startRecur,
+                    endRecur,
+                    observacao: e.observacao,
+                    unidade_id: e.unidade_id
+                  }
+                });
+              }
+              curr.setDate(curr.getDate() + 1);
+            }
+            return occurrences;
+          }
+
+          return [{
             id: e.id,
             resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
             resourceIds: isGlobalBlock ? displayedAgendas.map((a: any) => a.id) : undefined,
@@ -330,15 +382,16 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
               dias_semana: e.dias_semana,
               hora_inicio: e.hora_inicio,
               hora_fim: e.hora_fim,
+              datas_liberadas: liberadas,
               startRecur,
               endRecur,
               observacao: e.observacao,
               unidade_id: e.unidade_id
             }
-          };
+          }];
         }
 
-        return {
+        return [{
           id: e.id,
           resourceId: isGlobalBlock ? undefined : (e.profissional?.id || undefined),
           resourceIds: isGlobalBlock ? displayedAgendas.map((a: any) => a.id) : undefined,
@@ -360,9 +413,9 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
             status_atendimento: statusAtendimento,
             is_encaixe: e.is_encaixe || false
           }
-        };
+        }];
     });
-  }, [localEvents, searchPatient, selectedAgendas, displayedAgendaIds, displayedAgendas, currentView]);
+  }, [localEvents, searchPatient, selectedAgendas, displayedAgendaIds, displayedAgendas, currentView, visibleRange]);
 
   const minInterval = useMemo(() => {
     const active = agendas.filter((a: any) => selectedAgendas.includes(a.id));
@@ -565,7 +618,7 @@ Horário: ${arg.timeText}`);
         const clickedTime = info.date.getTime();
         const clickedDate = info.date;
         const clickedDayOfWeek = clickedDate.getDay();
-        const clickedDateStr = clickedDate.toISOString().split('T')[0];
+        const clickedDateStr = `${clickedDate.getFullYear()}-${String(clickedDate.getMonth() + 1).padStart(2, '0')}-${String(clickedDate.getDate()).padStart(2, '0')}`;
         const clickedHours = clickedDate.getHours();
         const clickedMinutes = clickedDate.getMinutes();
         const clickedMinOfDay = clickedHours * 60 + clickedMinutes;
@@ -578,6 +631,11 @@ Horário: ${arg.timeText}`);
           if (e.extendedProps?.tipo === 'recorrente' || e.daysOfWeek) {
             const dias = e.extendedProps?.dias_semana || e.daysOfWeek || [];
             if (!dias.includes(clickedDayOfWeek)) return false;
+
+            const liberadas: string[] = Array.isArray(e.extendedProps?.datas_liberadas)
+              ? e.extendedProps.datas_liberadas.map((d: any) => String(d).slice(0, 10))
+              : [];
+            if (liberadas.includes(clickedDateStr)) return false;
 
             if (e.startRecur && clickedDateStr < e.startRecur) return false;
             if (e.endRecur && clickedDateStr >= e.endRecur) return false;
