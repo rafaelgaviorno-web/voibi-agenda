@@ -59,6 +59,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
 
   async function saveBasico(data: { 
     nome: string; 
+    tipo_agenda: string;
     cor: string;
     foto_url?: string | null; 
     intervalo_minutos?: number;
@@ -67,10 +68,16 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
     campos_personalizados?: any[]; 
   }) {
     'use server'
+    const tipoAgenda = String(data.tipo_agenda || '').trim();
+    if (!tipoAgenda) {
+      throw new Error('O tipo da agenda é obrigatório.');
+    }
+
     if (empresa_id !== 'mock-clinic') {
       const supabase = getServiceSupabase();
       const { error } = await supabase.from('agend_profissionais').update({ 
         nome: data.nome, 
+        tipo_agenda: tipoAgenda,
         cor: data.cor,
         foto_url: data.foto_url !== undefined ? data.foto_url : null,
         intervalo_minutos: data.intervalo_minutos || 30,
@@ -98,6 +105,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
         customAgendas[idx] = {
           ...customAgendas[idx],
           nome: data.nome,
+          tipo_agenda: tipoAgenda,
           cor: data.cor,
           intervalo_minutos: data.intervalo_minutos || 30,
           webhook_url: data.webhook_url,
@@ -108,6 +116,7 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
         customAgendas.push({
           id: agenda_id,
           nome: data.nome,
+          tipo_agenda: tipoAgenda,
           cor: data.cor,
           intervalo_minutos: data.intervalo_minutos || 30,
           webhook_url: data.webhook_url,

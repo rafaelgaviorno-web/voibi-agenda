@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import CopyAgendaId from '../CopyAgendaId';
 import DeleteAgendaButton from '../DeleteAgendaButton';
+import TipoAgendaSelect from '../TipoAgendaSelect';
 
 export default function AgendaConfigClient({ 
   agenda, 
@@ -22,6 +23,7 @@ export default function AgendaConfigClient({
 
   // Estados locais
   const [nome, setNome] = useState(agenda.nome);
+  const [tipoAgenda, setTipoAgenda] = useState(agenda.tipo_agenda || '');
   const [fotoUrl, setFotoUrl] = useState(agenda.foto_url || '');
   const [isUploadingFoto, setIsUploadingFoto] = useState(false);
   const [cor, setCor] = useState(agenda.cor || '#4285f4');
@@ -109,12 +111,18 @@ export default function AgendaConfigClient({
 
   const handleSaveBasico = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tipoAgenda.trim()) {
+      setErrorMessage('O tipo da agenda é obrigatório.');
+      setTimeout(() => setErrorMessage(''), 4000);
+      return;
+    }
     setIsSaving(true);
     setSaveMessage('');
     setErrorMessage('');
     try {
       await onSaveBasico({ 
         nome, 
+        tipo_agenda: tipoAgenda.trim(),
         cor,
         foto_url: fotoUrl, 
         intervalo_minutos: intervaloMinutos,
@@ -235,6 +243,15 @@ export default function AgendaConfigClient({
             <div>
                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Nome da Agenda</label>
                <input value={nome} onChange={e => setNome(e.target.value)} required className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+            </div>
+            <div>
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                 Tipo da Agenda <span className="text-red-500">*</span>
+               </label>
+               <TipoAgendaSelect value={tipoAgenda} onChange={setTipoAgenda} required />
+               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                 Define a especialidade/categoria desta agenda (ex: Avaliação, Orto, Implante) para automações e templates.
+               </p>
             </div>
                         {/* Foto do Profissional */}
             <div className="pt-2">

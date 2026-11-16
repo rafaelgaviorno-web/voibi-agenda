@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import CopyAgendaId from './CopyAgendaId';
 import DeleteAgendaButton from './DeleteAgendaButton';
+import TipoAgendaSelect from './TipoAgendaSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,22 +42,34 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
   async function createAgenda(formData: FormData) {
     'use server'
     const supabase = getServiceSupabase();
-    const nome = formData.get('nome') as string;
+    const nome = String(formData.get('nome') || '').trim();
+    const tipo_agenda = String(formData.get('tipo_agenda') || '').trim();
     const cor = formData.get('cor') as string;
     const emp_id = formData.get('empresa_id') as string;
     const unidade_id = formData.get('unidade_id') as string;
     const intervalo_raw = formData.get('intervalo_minutos') as string;
     const intervalo_minutos = parseInt(intervalo_raw || '30', 10);
     const validInterval = isNaN(intervalo_minutos) ? 30 : intervalo_minutos;
+
+    if (!nome) {
+      throw new Error('O nome da agenda é obrigatório.');
+    }
+    if (!tipo_agenda) {
+      throw new Error('O tipo da agenda é obrigatório.');
+    }
     
     if (emp_id !== 'mock-clinic') {
-      await supabase.from('agend_profissionais').insert({ 
+      const { error } = await supabase.from('agend_profissionais').insert({ 
         nome, 
+        tipo_agenda,
         cor, 
         empresa_id: emp_id,
         unidade_id: unidade_id || null,
         intervalo_minutos: validInterval
       });
+      if (error) {
+        throw new Error(error.message || 'Erro ao criar agenda');
+      }
       revalidatePath(`/dashboard/${emp_id}/layout`);
       revalidatePath(`/dashboard/${emp_id}/agendas`);
     } else {
@@ -68,6 +81,7 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
       customAgendas.push({
         id: 'prof-mock-' + Date.now(),
         nome,
+        tipo_agenda,
         cor,
         empresa_id: emp_id,
         unidade_id,
@@ -92,7 +106,7 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
         <form action={createAgenda} className="space-y-5">
           <input type="hidden" name="empresa_id" value={empresa_id} />
           
-          <div className={`grid grid-cols-1 gap-4 ${unidades.length > 0 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          <div className={`grid grid-cols-1 gap-4 ${unidades.length > 0 ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'}`}>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome da Agenda</label>
               <input 
@@ -101,6 +115,13 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
                 className="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
                 placeholder="Ex: Dr. Carlos / Sala de Raio-X" 
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                Tipo da Agenda <span className="text-red-500">*</span>
+              </label>
+              <TipoAgendaSelect name="tipo_agenda" required />
             </div>
 
             <div className="space-y-1.5">
@@ -186,7 +207,12 @@ export default async function AgendasPage({ params }: { params: Promise<{ empres
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 transition-colors" title={agenda.nome}>{agenda.nome}</h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    {agenda.tipo_agenda && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-900/50">
+                        🏷️ {agenda.tipo_agenda}
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/50">
                       ⏱️ {agenda.intervalo_minutos || 30}/{agenda.intervalo_minutos || 30} min
                     </span>

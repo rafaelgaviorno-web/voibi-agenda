@@ -33,7 +33,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       created_at,
       agend_clientes_finais(id, nome, email, telefone),
       agend_tipos_evento(id, nome, duracao_minutos),
-      agend_profissionais!inner(id, nome, cor, empresa_id)
+      agend_profissionais!inner(id, nome, tipo_agenda, cor, empresa_id, unidade_id)
     `)
     .eq('agend_profissionais.empresa_id', auth.empresa.id)
     .order('inicio', { ascending: true })
@@ -464,7 +464,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       created_at,
       agend_clientes_finais(id, nome, email, telefone),
       agend_tipos_evento(id, nome, duracao_minutos),
-      agend_profissionais(id, nome, cor, webhook_url)
+      agend_profissionais(id, nome, tipo_agenda, cor, unidade_id, webhook_url)
     `)
     .single();
 

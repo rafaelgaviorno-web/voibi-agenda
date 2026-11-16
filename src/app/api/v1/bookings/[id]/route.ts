@@ -11,19 +11,19 @@ export const GET = withApiLogger(async function GET(request: NextRequest, { para
   const supabase = getServiceSupabase();
   const { data, error } = await supabase
     .from('agend_agendamentos')
-    .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais!inner(id, nome, cor, empresa_id)')
+    .select('*, agend_clientes_finais(*), agend_tipos_evento(*), agend_profissionais!inner(id, nome, tipo_agenda, cor, empresa_id, unidade_id)')
     .eq('id', id)
     .eq('agend_profissionais.empresa_id', auth.empresa.id)
     .single();
 
   if (error || !data) return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 });
-  return NextResponse.json({ 
+  return NextResponse.json({
     data: {
       ...data,
       status: data.status || 'pendente',
       status_agendamento: data.status || 'pendente',
       status_atendimento: data.status_atendimento || 'agendado',
-    } 
+    }
   });
 });
 
@@ -119,9 +119,9 @@ export const DELETE = withApiLogger(async function DELETE(request: NextRequest, 
     triggerBookingWebhook('booking.cancelled', { ...data, motivo: motivo || null }, auth.empresa.id).catch(console.error);
   }
 
-  return NextResponse.json({ 
-    success: true, 
-    message: 'Agendamento cancelado com sucesso', 
-    data 
+  return NextResponse.json({
+    success: true,
+    message: 'Agendamento cancelado com sucesso',
+    data
   });
 });
