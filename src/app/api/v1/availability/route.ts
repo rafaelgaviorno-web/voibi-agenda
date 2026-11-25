@@ -6,6 +6,7 @@ import { parseISO, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
 import { getBlocksForProfessional } from '@/lib/availability/blocks';
 import { clinicNow } from '@/lib/timezone';
+import { getGoogleBusy } from '@/lib/google-calendar';
 
 // Hora local da clínica SEM sufixo de fuso: com "Z" a IA tenta converter fuso e erra o horário.
 const LOCAL_ISO = "yyyy-MM-dd'T'HH:mm:ss";
@@ -143,7 +144,10 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
         .gte('inicio', diaInicio)
         .lte('fim', diaFim);
 
-      const parsedBlocks = await getBlocksForProfessional(supabase, p.id, diaInicio, diaFim);
+      const parsedBlocks = [
+        ...(await getBlocksForProfessional(supabase, p.id, diaInicio, diaFim)),
+        ...(await getGoogleBusy(p.id, dateStr, auth.empresa.fuso_horario)),
+      ];
 
       const parsedBookings = (bookings || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
       const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));
@@ -269,7 +273,11 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
     .lte('fim', diaFim);
 
   // 5. Obter Bloqueios do Dia
-  const parsedBlocks = await getBlocksForProfessional(supabase, profId, diaInicio, diaFim);
+  // Compromissos do Google Agenda conectado também ocupam a agenda
+  const parsedBlocks = [
+    ...(await getBlocksForProfessional(supabase, profId, diaInicio, diaFim)),
+    ...(await getGoogleBusy(profId, dateStr, auth.empresa.fuso_horario)),
+  ];
 
   const parsedBookings = (bookings || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
   const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));

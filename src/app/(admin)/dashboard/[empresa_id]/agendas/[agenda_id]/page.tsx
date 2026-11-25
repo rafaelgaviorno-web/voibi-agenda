@@ -5,8 +5,10 @@ import AgendaConfigClient from './AgendaConfigClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AgendaConfigPage({ params }: { params: Promise<{ empresa_id: string, agenda_id: string }> }) {
+export default async function AgendaConfigPage({ params, searchParams }: { params: Promise<{ empresa_id: string, agenda_id: string }>, searchParams: Promise<{ google?: string }> }) {
   const { empresa_id, agenda_id } = await params;
+  const { google: googleStatus } = await searchParams;
+  let googleConta: any = null;
   
   let agenda = null;
   let disponibilidade = [];
@@ -53,6 +55,14 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
     if (!agendaData) notFound();
     agenda = agendaData;
     disponibilidade = dispData || [];
+
+    // Só os campos de exibição: o refresh_token do Google nunca vai para o navegador
+    const { data: contaData } = await supabase
+      .from('agend_google_contas')
+      .select('email, conectado_em, bloquear_ocupados, criar_meet, ultimo_erro, ultimo_erro_em')
+      .eq('profissional_id', agenda_id)
+      .maybeSingle();
+    googleConta = contaData || null;
   }
 
   // === Server Actions ===
@@ -204,9 +214,50 @@ export default async function AgendaConfigPage({ params }: { params: Promise<{ e
     return { success: true, foto_url: fotoUrl };
   }
 
+  async function checkGoogleAccess() {
+    const { getSession, canAccessEmpresa } = await import('@/lib/session');
+    const { canUseAgendas } = await import('@/lib/permissions');
+    const session = await getSession();
+    if (!canAccessEmpresa(session, empresa_id) || !(await canUseAgendas(getServiceSupabase(), session, empresa_id, [agenda_id]))) {
+      throw new Error('Acesso negado.');
+    }
+  }
+
+  async function disconnectGoogle() {
+    'use server'
+    if (empresa_id === 'mock-clinic') return;
+    await checkGoogleAccess();
+    const supabase = getServiceSupabase();
+    const { data: conta } = await supabase.from('agend_google_contas').select('refresh_token').eq('profissional_id', agenda_id).maybeSingle();
+    if (conta?.refresh_token) {
+      // Revoga o acesso no Google (se falhar, apagar o token já desliga a integração)
+      await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(conta.refresh_token)}`, { method: 'POST' }).catch(() => {});
+    }
+    await supabase.from('agend_google_contas').delete().eq('profissional_id', agenda_id);
+    revalidatePath(`/dashboard/${empresa_id}/agendas/${agenda_id}`);
+  }
+
+  async function saveGoogleOpcoes(opcoes: { bloquear_ocupados: boolean; criar_meet: boolean }) {
+    'use server'
+    if (empresa_id === 'mock-clinic') return;
+    await checkGoogleAccess();
+    await getServiceSupabase().from('agend_google_contas').update({
+      bloquear_ocupados: !!opcoes.bloquear_ocupados,
+      criar_meet: !!opcoes.criar_meet,
+    }).eq('profissional_id', agenda_id);
+    revalidatePath(`/dashboard/${empresa_id}/agendas/${agenda_id}`);
+  }
+
+  const { googleConfigured } = await import('@/lib/google-calendar');
+
   return (
     <AgendaConfigClient 
        agenda={agenda}
+       googleConta={googleConta}
+       googleDisponivel={googleConfigured()}
+       googleStatus={googleStatus || null}
+       onDisconnectGoogle={disconnectGoogle}
+       onSaveGoogleOpcoes={saveGoogleOpcoes}
        disponibilidadeInicial={disponibilidade}
        empresaId={empresa_id}
        onSaveBasico={saveBasico}

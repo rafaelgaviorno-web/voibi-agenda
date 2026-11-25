@@ -97,5 +97,5 @@ export async function POST(request: NextRequest) {
   }));
   const json = await res.json().catch(() => ({}));
   if (!res.ok) return NextResponse.json({ error: json.error || 'Não foi possível agendar' }, { status: res.status });
-  return NextResponse.json({ id: json.data?.id, inicio: json.data?.inicio }, { status: 201 });
+  return NextResponse.json({ id: json.data?.id, inicio: json.data?.inicio, meet_link: json.meet_link || null }, { status: 201 });
 }

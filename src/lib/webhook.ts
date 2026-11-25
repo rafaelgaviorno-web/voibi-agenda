@@ -15,6 +15,13 @@ export async function triggerBookingWebhook(
   booking: any,
   empresaId?: string
 ) {
+  // Google Agenda primeiro: o webhook já sai com o link do Meet. Nunca lança erro.
+  if (booking?.id) {
+    const { syncBookingToGoogle } = await import('./google-calendar');
+    const google = await syncBookingToGoogle(event, booking.id, booking);
+    if (google) booking = { ...booking, ...google };
+  }
+
   try {
     const supabase = getServiceSupabase();
     let agendaWebhookUrl: string | null = null;

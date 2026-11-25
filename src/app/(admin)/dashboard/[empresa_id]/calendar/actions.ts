@@ -207,6 +207,10 @@ export async function deleteAppointment(id: string, empresaId: string) {
     return { success: false, error: 'Você não tem acesso a este agendamento.' };
   }
 
+  // Apaga o evento do Google Agenda enquanto a linha ainda existe (ela guarda o google_event_id)
+  const { syncBookingToGoogle } = await import('@/lib/google-calendar');
+  await syncBookingToGoogle('booking.cancelled', id);
+
   await supabase.from('agend_agendamentos').delete().eq('id', id);
 
   if (booking) {

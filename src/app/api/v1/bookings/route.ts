@@ -475,9 +475,14 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     return NextResponse.json({ error: errBooking.message }, { status: 400 });
   }
 
+  // 5.1 Google Agenda: cria o evento (com Meet) antes de responder, para a IA já receber o link
+  const { syncBookingToGoogle } = await import('@/lib/google-calendar');
+  const google = await syncBookingToGoogle('booking.created', booking.id);
+  const bookingComGoogle = google ? { ...booking, ...google } : booking;
+
   // 6. Disparar Webhook assincronamente (prioriza webhook da agenda, fallback para empresa)
   const { triggerBookingWebhook } = await import('@/lib/webhook');
-  triggerBookingWebhook('booking.created', booking, auth.empresa.id).catch(console.error);
+  triggerBookingWebhook('booking.created', bookingComGoogle, auth.empresa.id).catch(console.error);
 
   const dataFormatada = format(startDate, "dd/MM/yyyy 'às' HH:mm");
 
@@ -507,12 +512,15 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
     }
   }
 
-  const confirmMsg = reagendamento?.cancelado
+  const meetLink = google?.meet_link || null;
+  const confirmMsgBase = reagendamento?.cancelado
     ? `Reagendamento concluído com sucesso: nova consulta com ${resolvedProf.nome} para ${dataFormatada}. A consulta anterior foi cancelada e o horário liberado.`
     : `Agendamento confirmado com sucesso com ${resolvedProf.nome} para ${dataFormatada}!`;
+  const confirmMsg = meetLink ? `${confirmMsgBase} Link da reunião (Google Meet): ${meetLink}` : confirmMsgBase;
 
   const formattedBooking = {
-    ...booking,
+    ...bookingComGoogle,
+    meet_link: meetLink,
     status: booking.status || 'pendente',
     status_agendamento: booking.status || 'pendente',
     status_atendimento: booking.status_atendimento || 'agendado',
@@ -521,6 +529,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   return NextResponse.json({
     data: formattedBooking,
     ...(reagendamento ? { reagendamento } : {}),
+    meet_link: meetLink,
     text: confirmMsg,
     message: confirmMsg,
     content: confirmMsg,

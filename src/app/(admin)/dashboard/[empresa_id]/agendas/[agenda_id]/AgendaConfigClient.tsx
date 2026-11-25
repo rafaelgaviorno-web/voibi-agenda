@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Clock, CalendarX, User, FormInput, Plus, Trash2, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, Clock, CalendarX, User, FormInput, Plus, Trash2, Upload, Camera, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import CopyAgendaId from '../CopyAgendaId';
 import DeleteAgendaButton from '../DeleteAgendaButton';
 import TipoAgendaSelect from '../TipoAgendaSelect';
+import GoogleAgendaCard from './GoogleAgendaCard';
 
 export default function AgendaConfigClient({ 
   agenda, 
@@ -14,9 +15,14 @@ export default function AgendaConfigClient({
   empresaId, 
   onSaveBasico,
   onUploadFoto,
-  onSaveDisponibilidade
+  onSaveDisponibilidade,
+  googleConta,
+  googleDisponivel,
+  googleStatus,
+  onDisconnectGoogle,
+  onSaveGoogleOpcoes
 }: any) {
-  const [activeTab, setActiveTab] = useState('basico');
+  const [activeTab, setActiveTab] = useState(googleStatus ? 'google' : 'basico');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -223,7 +229,27 @@ export default function AgendaConfigClient({
           <FormInput className="w-4 h-4" />
           Formulário do Cliente
         </button>
+
+        <button 
+          onClick={() => setActiveTab('google')}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'google' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600'}`}
+        >
+          <CalendarCheck className="w-4 h-4" />
+          Google Agenda
+        </button>
       </div>
+
+      {activeTab === 'google' && (
+        <GoogleAgendaCard
+          empresaId={empresaId}
+          agendaId={agenda.id}
+          conta={googleConta}
+          disponivel={googleDisponivel}
+          status={googleStatus}
+          onDisconnect={onDisconnectGoogle}
+          onSaveOpcoes={onSaveGoogleOpcoes}
+        />
+      )}
 
       {/* Content: Dados Básicos */}
       {activeTab === 'basico' && (
