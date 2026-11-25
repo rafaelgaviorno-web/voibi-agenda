@@ -90,7 +90,18 @@ export default function PrivacidadePage() {
         </a>, incluindo os requisitos de Uso Limitado.
       </p>
 
-      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.7 Google user data (English summary)</h3>
+      <p>
+        Versão completa em inglês: <a href="/privacy">agenda.voibi.com.br/privacy</a>.
+      </p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.7 Nenhuma geração de imagens ou conteúdo por IA</h3>
+      <p>
+        O Voibi Agenda não gera, edita nem distribui imagens, vídeos ou qualquer outra mídia, e não usa as APIs do Google
+        nem dados de usuário do Google para criar conteúdo com inteligência artificial. Em especial, o Voibi Agenda não
+        produz e não produzirá imagens íntimas não consensuais (NCII) de nenhum tipo.
+      </p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.8 Google user data (English summary)</h3>
       <p>
         Voibi Agenda accesses Google user data only after a professional connects their Google account. We access: the
         account email address (to show which account is connected); Google Calendar events created by Voibi Agenda (to

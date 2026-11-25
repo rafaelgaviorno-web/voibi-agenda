@@ -88,6 +88,36 @@ export default function Home() {
           </div>
         </section>
 
+        <section lang="en" className="max-w-5xl mx-auto px-5 pt-12">
+          <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-white">About Voibi Agenda (English)</h2>
+          <div className="mt-4 space-y-3 text-[15px] leading-relaxed max-w-3xl">
+            <p>
+              <strong>Voibi Agenda</strong> is an online appointment scheduling application for clinics and medical/dental
+              offices, made by {E.marca}. Clinics use it to manage their professionals&apos; schedules and to receive
+              appointments from their patients through a booking page, the clinic&apos;s admin panel, or the clinic&apos;s
+              virtual assistant on WhatsApp.
+            </p>
+            <p>
+              <strong>How Voibi Agenda uses Google APIs:</strong> each professional can optionally connect their Google
+              Calendar. With their permission, Voibi Agenda uses the Google Calendar API only to (1) create, update and
+              delete one calendar event for each appointment booked in Voibi Agenda, including a Google Meet link for
+              online appointments, and (2) read free/busy time ranges so that busy times are not offered to patients.
+              Voibi Agenda does not read the content of other calendar events, does not sell or share Google user data,
+              and does not use it for advertising or to train AI models. Users can disconnect at any time.
+            </p>
+            <p>
+              <strong>No image generation:</strong> Voibi Agenda does not generate, edit or distribute images, videos or
+              any other media, does not use Google APIs to create AI-generated content, and does not and will not produce
+              non-consensual intimate imagery (NCII).
+            </p>
+            <p>
+              See our <Link href="/privacy" className="text-brand-600 underline">Privacy Policy</Link> and{' '}
+              <Link href="/terms" className="text-brand-600 underline">Terms of Service</Link>. Contact:{' '}
+              <a href={`mailto:${E.email}`} className="text-brand-600 underline">{E.email}</a>.
+            </p>
+          </div>
+        </section>
+
         <section className="max-w-5xl mx-auto px-5 py-12 flex items-start gap-3">
           <ShieldCheck className="w-6 h-6 text-brand-600 shrink-0" />
           <p className="text-[15px] leading-relaxed">
@@ -100,9 +130,11 @@ export default function Home() {
       <footer className="border-t border-zinc-200 dark:border-zinc-800">
         <div className="max-w-5xl mx-auto px-5 py-6 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-500">
           <span>Voibi Agenda · {E.razaoSocial} · CNPJ {E.cnpj}</span>
-          <nav className="flex gap-4">
+          <nav className="flex flex-wrap gap-x-4 gap-y-1">
             <Link href="/privacidade" className="hover:text-zinc-900 dark:hover:text-white">Política de Privacidade</Link>
             <Link href="/termos" className="hover:text-zinc-900 dark:hover:text-white">Termos de Serviço</Link>
+            <Link href="/privacy" className="hover:text-zinc-900 dark:hover:text-white">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-zinc-900 dark:hover:text-white">Terms of Service</Link>
             <a href={`mailto:${E.email}`} className="hover:text-zinc-900 dark:hover:text-white">{E.email}</a>
           </nav>
         </div>
