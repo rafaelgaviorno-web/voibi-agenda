@@ -17,7 +17,7 @@ const getInitials = (nome: string) =>
     .map((p) => p[0]!.toUpperCase())
     .join('');
 
-export default function BookingWizard({ empresa, profissional }: any) {
+export default function BookingWizard({ empresa, profissional, empresaId }: any) {
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -64,10 +64,33 @@ export default function BookingWizard({ empresa, profissional }: any) {
 
   // Cálculo de horários dinâmicos
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const isMock = empresa.nome === 'Clínica de Teste Voibi';
+
+  const fetchSlots = async (date: Date) => {
+    setSlotsLoading(true);
+    try {
+      const qs = new URLSearchParams({ empresa: empresaId, agenda: profissional.id, date: dayjs(date).format('YYYY-MM-DD') });
+      const res = await fetch(`/api/public/agendar?${qs}`, { cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      setAvailableSlots(res.ok && Array.isArray(json.times) ? json.times : []);
+    } catch {
+      setAvailableSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedDate) {
       setAvailableSlots([]);
+      return;
+    }
+
+    // Agendas reais: horários vêm do servidor (expediente, bloqueios e agendamentos já marcados)
+    if (!isMock) {
+      fetchSlots(selectedDate);
       return;
     }
 
@@ -148,6 +171,54 @@ export default function BookingWizard({ empresa, profissional }: any) {
 
   const handleConfirm = async () => {
     setIsSubmitting(true);
+    setSubmitError(null);
+
+    if (!isMock) {
+      const respostas = Object.entries(customAnswers)
+        .map(([k, v]) => {
+          const field = customFields.find((f: any) => f.id === k);
+          return field && v ? `${field.titulo}: ${v}` : '';
+        })
+        .filter(Boolean)
+        .join(' | ');
+      try {
+        const res = await fetch('/api/public/agendar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            empresa: empresaId,
+            agenda: profissional.id,
+            date: dayjs(selectedDate).format('YYYY-MM-DD'),
+            time: selectedTime,
+            nome: clientData.nome,
+            telefone: clientData.whatsapp,
+            observacao: respostas,
+          }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setSubmitError(
+            res.status === 409
+              ? 'Esse horário acabou de ser preenchido. Escolha outro horário.'
+              : (json.error || 'Não foi possível concluir o agendamento. Tente de novo.')
+          );
+          if (res.status === 409 && selectedDate) {
+            setSelectedTime(null);
+            fetchSlots(selectedDate);
+            setStep(1);
+          }
+          setIsSubmitting(false);
+          return;
+        }
+        setIsSubmitting(false);
+        setStep(3);
+      } catch {
+        setSubmitError('Sem conexão. Verifique a internet e tente de novo.');
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     // Simula tempo de rede
     await new Promise(r => setTimeout(r, 1500));
 
@@ -320,8 +391,15 @@ export default function BookingWizard({ empresa, profissional }: any) {
                       <h4 className="font-medium text-zinc-700 mb-4 flex items-center gap-2">
                         <span className="capitalize">{selectedDate ? dayjs(selectedDate).format('dddd, D') : ''}</span>
                       </h4>
+                      {submitError && step === 1 && (
+                        <p className="mb-3 text-sm font-semibold text-red-600">{submitError}</p>
+                      )}
+                      {slotsLoading && <p className="text-sm text-zinc-500">Carregando horários...</p>}
+                      {!slotsLoading && selectedDate && availableSlots.length === 0 && (
+                        <p className="text-sm text-zinc-500">Sem horários livres neste dia. Escolha outra data.</p>
+                      )}
                       <div className="grid grid-cols-2 xl:grid-cols-1 gap-2 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
-                        {availableSlots.map(time => (
+                        {!slotsLoading && availableSlots.map(time => (
                           <div key={time} className="flex gap-2">
                             <button
                               onClick={() => setSelectedTime(time)}
@@ -424,7 +502,10 @@ export default function BookingWizard({ empresa, profissional }: any) {
                       </div>
                     )}
 
-                    <button 
+                    {submitError && (
+                      <p className="mt-4 text-sm font-semibold text-red-600">{submitError}</p>
+                    )}
+                    <button
                       onClick={handleConfirm}
                       disabled={
                         !clientData.nome || 
