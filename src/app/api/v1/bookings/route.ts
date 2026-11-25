@@ -4,6 +4,7 @@ import { authenticateApiKey } from '@/lib/api-auth';
 import { parseISO, addMinutes, startOfDay, endOfDay, format } from 'date-fns';
 import { withApiLogger } from '@/lib/api-logger';
 import { clinicNow } from '@/lib/timezone';
+import { rotuloPessoa } from '@/lib/rotulo-pessoa';
 import { checkBlockConflict } from '@/lib/availability/blocks';
 
 export const GET = withApiLogger(async function GET(request: NextRequest) {
@@ -437,10 +438,16 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   }
 
   // 5. Inserir Agendamento
+  const { data: profTipo } = await supabase
+    .from('agend_profissionais')
+    .select('tipo_agenda')
+    .eq('id', resolvedProfId)
+    .maybeSingle();
+  const rotulo = rotuloPessoa(profTipo?.tipo_agenda);
   const obsFinal = observacao === 'Agendado pela IA'
     ? 'Agendado pela IA'
     : (observacao 
-        ? (cleanNome && !observacao.includes(cleanNome) ? `${observacao} | Paciente: ${cleanNome}` : observacao)
+        ? (cleanNome && !observacao.includes(cleanNome) ? `${observacao} | ${rotulo}: ${cleanNome}` : observacao)
         : 'Agendado pela IA');
 
   const { data: booking, error: errBooking } = await supabase

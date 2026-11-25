@@ -13,6 +13,7 @@ import CalendarSidePanel from './CalendarSidePanel';
 import UnidadeSwitcher from '../UnidadeSwitcher';
 import { saveAppointment, deleteAppointment } from './actions';
 import '@/app/calendar.css';
+import { rotuloPessoa } from '@/lib/rotulo-pessoa';
 
 const escapeHtml = (value: string) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -411,7 +412,8 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
             servico: e.evento?.nome || e.servico || '',
             status: e.status || 'pendente',
             status_atendimento: statusAtendimento,
-            is_encaixe: e.is_encaixe || false
+            is_encaixe: e.is_encaixe || false,
+            rotulo: rotuloPessoa(e.profissional?.tipo_agenda)
           }
         }];
     });
@@ -537,7 +539,7 @@ export default function CalendarView({ rawEvents, profissionais: agendas, proced
         const statusAtendimento = arg.event.extendedProps.status_atendimento || 'agendado';
         const servico = escapeHtml(arg.event.extendedProps.servico || 'Agendamento');
         
-        const tooltipText = escapeHtml(`Paciente: ${arg.event.title}
+        const tooltipText = escapeHtml(`${arg.event.extendedProps.rotulo || 'Paciente'}: ${arg.event.title}
 Agendamento: ${statusAgendamento.toUpperCase()}
 Atendimento: ${statusAtendimento.toUpperCase()}
 WhatsApp: ${arg.event.extendedProps.whatsapp || 'Não informado'}
