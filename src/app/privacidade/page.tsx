@@ -33,40 +33,77 @@ export default function PrivacidadePage() {
         <li><strong>Dados do Google</strong>, somente quando um profissional conecta a sua conta Google (ver seção 3).</li>
       </ul>
 
-      <h2>3. Dados recebidos do Google (Google Agenda e Google Meet)</h2>
+      <h2>3. Dados de usuário do Google</h2>
       <p>
-        A integração com o Google é opcional e ativada pelo próprio profissional, na tela de configuração da sua agenda.
-        Ao conectar, ele autoriza o Voibi Agenda a acessar a sua conta Google com as seguintes permissões:
+        A integração com o Google é opcional. Ela só é ativada quando um profissional, na tela de configuração da sua
+        agenda no Voibi Agenda, clica em &quot;Conectar Google Agenda&quot; e autoriza o acesso na tela de consentimento do
+        Google. Esta seção descreve exatamente quais dados do Google acessamos e o que fazemos com eles.
       </p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.1 Quais dados do Google acessamos</h3>
       <ul>
-        <li><strong>Eventos do Google Agenda</strong> (calendar.events): para criar, atualizar e excluir, no calendário do profissional, os eventos correspondentes aos agendamentos feitos no Voibi Agenda, com link do Google Meet.</li>
-        <li><strong>Disponibilidade</strong> (calendar.freebusy): para consultar apenas os períodos em que o profissional está ocupado, de modo que esses horários não sejam oferecidos para novos agendamentos. Essa consulta não acessa títulos, descrições, participantes ou qualquer outro conteúdo dos eventos.</li>
-        <li><strong>Endereço de e-mail</strong> (openid e email): para mostrar no painel qual conta Google está conectada.</li>
+        <li><strong>Endereço de e-mail da conta Google</strong> (escopos openid e email): para mostrar ao profissional qual conta está conectada.</li>
+        <li><strong>Eventos do Google Agenda criados pelo Voibi Agenda</strong> (escopo calendar.events): criamos, alteramos e excluímos apenas os eventos que correspondem a agendamentos feitos no Voibi Agenda. Não listamos, lemos nem alteramos outros eventos do calendário.</li>
+        <li><strong>Informação de livre/ocupado</strong> (escopo calendar.freebusy): apenas os intervalos de início e fim em que o profissional está ocupado. Essa informação não inclui título, descrição, local, participantes ou qualquer outro conteúdo dos eventos.</li>
       </ul>
-      <p>Guardamos somente o necessário para a integração funcionar:</p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.2 Como usamos esses dados</h3>
       <ul>
-        <li>o e-mail da conta conectada;</li>
-        <li>o token de autorização fornecido pelo Google, armazenado em servidor, em tabela de acesso restrito e nunca enviado ao navegador;</li>
-        <li>para cada agendamento, o identificador do evento criado no Google e o link do Google Meet.</li>
+        <li>Quando um agendamento é criado no Voibi Agenda (pela página de agendamento, pelo painel ou pelo assistente virtual da clínica), criamos um evento no Google Agenda do profissional, com data, horário, nome e contato do cliente, observações do agendamento e um link do Google Meet para o atendimento online.</li>
+        <li>Quando o agendamento é remarcado ou cancelado, atualizamos ou excluímos esse mesmo evento.</li>
+        <li>Ao calcular os horários livres para novos agendamentos, consultamos os intervalos ocupados para não oferecer horários em que o profissional já tem compromisso.</li>
+        <li>O link do Google Meet é enviado ao cliente do agendamento (por exemplo, na confirmação pelo WhatsApp) para que ele possa entrar na reunião.</li>
       </ul>
+      <p>Os dados do Google não são usados para nenhuma outra finalidade.</p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.3 Como armazenamos e protegemos</h3>
+      <ul>
+        <li>Guardamos o e-mail da conta conectada, o token de autorização fornecido pelo Google e, para cada agendamento, o identificador do evento criado e o link do Google Meet.</li>
+        <li>O token fica em banco de dados com acesso restrito ao servidor da aplicação, nunca é enviado ao navegador e trafega somente por conexões criptografadas (HTTPS).</li>
+        <li>Os intervalos de livre/ocupado são consultados no momento do cálculo de horários e não são armazenados.</li>
+      </ul>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.4 Compartilhamento</h3>
       <p>
-        Não lemos, copiamos nem armazenamos o conteúdo de outros eventos do calendário do profissional. Os dados recebidos
-        do Google <strong>não são vendidos, não são usados para publicidade, não são usados para treinar modelos de
-        inteligência artificial</strong> e não são compartilhados com terceiros, exceto quando necessário para prestar a
-        funcionalidade solicitada, para cumprir a lei ou mediante consentimento expresso do usuário.
+        Não vendemos, não alugamos e não compartilhamos dados de usuário do Google com terceiros. Eles não são usados para
+        publicidade, para criar perfis de usuários nem para treinar ou melhorar modelos de inteligência artificial.
+        Pessoas da nossa equipe não leem esses dados, exceto com autorização do usuário, quando necessário por segurança
+        ou para cumprir a lei. O único dado do Google que sai do sistema é o link do Google Meet, enviado ao cliente do
+        próprio agendamento.
       </p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.5 Retenção e exclusão</h3>
+      <ul>
+        <li>O profissional pode desconectar a conta Google a qualquer momento, na aba &quot;Google Agenda&quot; da configuração da agenda. Ao desconectar, revogamos a autorização junto ao Google e apagamos o token imediatamente.</li>
+        <li>O acesso também pode ser removido em <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">myaccount.google.com/permissions</a>.</li>
+        <li>Os identificadores de evento e links do Meet ficam junto dos agendamentos enquanto a clínica usar o serviço e são excluídos com eles.</li>
+        <li>Para pedir a exclusão de qualquer dado, escreva para <a href={`mailto:${E.email}`}>{E.email}</a>. Atendemos em até 15 dias.</li>
+        <li>Os eventos criados no Google Agenda pertencem ao profissional e permanecem no calendário dele até que ele os exclua.</li>
+      </ul>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.6 Política de Dados do Usuário dos Serviços de API do Google</h3>
       <p>
-        O uso e a transferência, pelo Voibi Agenda, de informações recebidas das APIs do Google seguem a{' '}
+        O uso e a transferência, pelo Voibi Agenda, de informações recebidas das APIs do Google para qualquer outro app
+        seguirão a{' '}
         <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">
           Política de Dados do Usuário dos Serviços de API do Google
         </a>, incluindo os requisitos de Uso Limitado.
       </p>
+
+      <h3 className="font-semibold text-zinc-900 dark:text-white mt-6">3.7 Google user data (English summary)</h3>
       <p>
-        O profissional pode desconectar a conta Google a qualquer momento na aba &quot;Google Agenda&quot; da configuração da
-        agenda. Ao desconectar, revogamos a autorização junto ao Google e apagamos o token armazenado. O acesso também pode
-        ser removido diretamente em{' '}
-        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">myaccount.google.com/permissions</a>.
-        Os eventos já criados permanecem no calendário do profissional, que pode excluí-los quando quiser.
+        Voibi Agenda accesses Google user data only after a professional connects their Google account. We access: the
+        account email address (to show which account is connected); Google Calendar events created by Voibi Agenda (to
+        create, update and delete one event per appointment booked in Voibi Agenda, with a Google Meet link); and
+        free/busy time ranges (to avoid offering times when the professional is busy). We do not read other calendar
+        events. We store only the account email, the OAuth token (server-side, never sent to the browser), and the event
+        ID and Meet link of each appointment. We do not sell, share or transfer Google user data to third parties, and we
+        do not use it for advertising or to train AI models. Users can disconnect at any time, which revokes the token and
+        deletes it; deletion requests: {E.email}. Voibi Agenda&apos;s use and transfer of information received from Google
+        APIs to any other app will adhere to the{' '}
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">
+          Google API Services User Data Policy
+        </a>, including the Limited Use requirements.
       </p>
 
       <h2>4. Para que usamos os dados</h2>
