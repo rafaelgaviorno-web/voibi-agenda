@@ -290,12 +290,9 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
       .eq('id', reagendarDe)
       .eq('agend_profissionais.empresa_id', auth.empresa.id)
       .maybeSingle();
-    if (!ant) {
-      return NextResponse.json({
-        error: 'Consulta anterior (reagendar_de) não encontrada. Busque de novo as consultas do paciente pelo telefone e use o id retornado.'
-      }, { status: 400 });
-    }
-    anterior = ant;
+    // Se a consulta anterior não existe mais (ex.: apagada pelo painel), segue como agendamento novo:
+    // a IA só consegue mandar uma ação por mensagem, então um erro aqui deixaria o paciente sem horário.
+    anterior = ant ?? null;
   }
 
   // 4. Criar ou buscar cliente final
