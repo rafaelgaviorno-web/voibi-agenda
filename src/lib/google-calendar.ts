@@ -116,9 +116,23 @@ type Conta = {
   criar_meet: boolean;
 };
 
+// Liberado pelo superadmin para a empresa (agend_empresas.google_agenda_habilitado)
+export async function empresaGoogleHabilitado(empresaId: string | null | undefined): Promise<boolean> {
+  if (!empresaId) return false;
+  const { data, error } = await getServiceSupabase()
+    .from('agend_empresas')
+    .select('google_agenda_habilitado')
+    .eq('id', empresaId)
+    .maybeSingle();
+  return !error && data?.google_agenda_habilitado === true;
+}
+
 export async function getConta(profissionalId: string): Promise<Conta | null> {
   if (!googleConfigured() || !profissionalId) return null;
-  const { data } = await getServiceSupabase()
+  const supabase = getServiceSupabase();
+  const { data: prof } = await supabase.from('agend_profissionais').select('empresa_id').eq('id', profissionalId).maybeSingle();
+  if (!(await empresaGoogleHabilitado(prof?.empresa_id))) return null;
+  const { data } = await supabase
     .from('agend_google_contas')
     .select('profissional_id, email, refresh_token, calendar_id, bloquear_ocupados, criar_meet')
     .eq('profissional_id', profissionalId)

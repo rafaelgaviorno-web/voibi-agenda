@@ -9,6 +9,7 @@ export default async function AgendaConfigPage({ params, searchParams }: { param
   const { empresa_id, agenda_id } = await params;
   const { google: googleStatus } = await searchParams;
   let googleConta: any = null;
+  let googleHabilitado = false;
   
   let agenda = null;
   let disponibilidade = [];
@@ -63,6 +64,8 @@ export default async function AgendaConfigPage({ params, searchParams }: { param
       .eq('profissional_id', agenda_id)
       .maybeSingle();
     googleConta = contaData || null;
+    const { empresaGoogleHabilitado } = await import('@/lib/google-calendar');
+    googleHabilitado = await empresaGoogleHabilitado(empresa_id);
   }
 
   // === Server Actions ===
@@ -255,6 +258,7 @@ export default async function AgendaConfigPage({ params, searchParams }: { param
        agenda={agenda}
        googleConta={googleConta}
        googleDisponivel={googleConfigured()}
+       googleHabilitado={googleHabilitado}
        googleStatus={googleStatus || null}
        onDisconnectGoogle={disconnectGoogle}
        onSaveGoogleOpcoes={saveGoogleOpcoes}

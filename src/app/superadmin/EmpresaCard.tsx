@@ -35,6 +35,7 @@ export default function EmpresaCard({ empresa, planos }: { empresa: any; planos:
         cnpj: String(fd.get('cnpj') || ''),
         plano_id: String(fd.get('plano_id') || ''),
         fuso_horario: String(fd.get('fuso_horario') || ''),
+        google_agenda_habilitado: fd.get('google_agenda_habilitado') === 'on',
       });
       if (!res.success) return setError(res.error || 'Erro ao salvar.');
       close();
@@ -78,7 +79,10 @@ export default function EmpresaCard({ empresa, planos }: { empresa: any; planos:
         </div>
         <p className="text-xs text-zinc-400 mb-1">Slug: {empresa.slug}</p>
         {empresa.cnpj && <p className="text-xs text-zinc-400 mb-1">CNPJ: {empresa.cnpj}</p>}
-        <p className="text-xs font-semibold text-brand-400 mb-6">Plano: {empresa.agend_planos?.nome || 'Sem plano'}</p>
+        <p className="text-xs font-semibold text-brand-400 mb-1">Plano: {empresa.agend_planos?.nome || 'Sem plano'}</p>
+        <p className={`text-xs mb-6 ${empresa.google_agenda_habilitado ? 'text-emerald-400' : 'text-zinc-500'}`}>
+          Google Agenda: {empresa.google_agenda_habilitado ? 'liberado' : 'desativado'}
+        </p>
         <div className="mt-auto space-y-2">
           <Link
             href={`/dashboard/${empresa.id}/calendar`}
@@ -148,6 +152,21 @@ export default function EmpresaCard({ empresa, planos }: { empresa: any; planos:
                     ))}
                   </select>
                 </div>
+                <label className="flex items-start gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-950/40 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="google_agenda_habilitado"
+                    defaultChecked={!!empresa.google_agenda_habilitado}
+                    className="mt-0.5 w-4 h-4 accent-brand-500"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-white">Liberar integração com Google Agenda</span>
+                    <span className="block text-xs text-zinc-400">
+                      Mostra a opção &quot;Conectar Google Agenda&quot; (com link do Google Meet) nas agendas desta empresa.
+                      Desligar para a sincronização, mas mantém as contas já conectadas.
+                    </span>
+                  </span>
+                </label>
                 <p className="text-xs text-zinc-500">
                   Trocar o slug muda o link público da clínica. Links antigos enviados aos pacientes deixam de funcionar.
                 </p>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession, canAccessEmpresa } from '@/lib/session';
 import { canUseAgendas } from '@/lib/permissions';
 import { getServiceSupabase } from '@/lib/supabase/client';
-import { buildAuthUrl, encodeState, googleConfigured } from '@/lib/google-calendar';
+import { buildAuthUrl, encodeState, googleConfigured, empresaGoogleHabilitado } from '@/lib/google-calendar';
 import { requestOrigin } from '../origin';
 
 // GET /api/google/connect?empresa=<id>&agenda=<id>  ->  tela de consentimento do Google
@@ -23,6 +23,9 @@ export async function GET(request: NextRequest) {
   }
   if (!(await canUseAgendas(getServiceSupabase(), session, empresaId, [agendaId]))) {
     return NextResponse.redirect(`${back}?google=sem_acesso`);
+  }
+  if (!(await empresaGoogleHabilitado(empresaId))) {
+    return NextResponse.redirect(`${back}?google=nao_liberado`);
   }
 
   return NextResponse.redirect(buildAuthUrl(encodeState({ agendaId, empresaId }), origin));

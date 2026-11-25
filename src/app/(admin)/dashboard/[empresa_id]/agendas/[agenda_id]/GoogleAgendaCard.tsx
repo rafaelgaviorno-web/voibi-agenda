@@ -10,6 +10,7 @@ const STATUS_MSG: Record<string, { ok: boolean; text: string }> = {
   sem_acesso: { ok: false, text: 'Você não tem acesso a esta agenda.' },
   nao_configurado: { ok: false, text: 'A integração com o Google ainda não foi configurada no servidor (GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET).' },
   erro: { ok: false, text: 'Não foi possível concluir a conexão com o Google. Tente de novo.' },
+  nao_liberado: { ok: false, text: 'A integração com o Google Agenda não está liberada para esta empresa.' },
 };
 
 export default function GoogleAgendaCard({ empresaId, agendaId, conta, disponivel, status, onDisconnect, onSaveOpcoes }: any) {

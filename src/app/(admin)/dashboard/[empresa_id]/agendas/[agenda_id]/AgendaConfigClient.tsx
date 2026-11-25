@@ -18,11 +18,12 @@ export default function AgendaConfigClient({
   onSaveDisponibilidade,
   googleConta,
   googleDisponivel,
+  googleHabilitado,
   googleStatus,
   onDisconnectGoogle,
   onSaveGoogleOpcoes
 }: any) {
-  const [activeTab, setActiveTab] = useState(googleStatus ? 'google' : 'basico');
+  const [activeTab, setActiveTab] = useState(googleStatus && googleHabilitado ? 'google' : 'basico');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -230,16 +231,16 @@ export default function AgendaConfigClient({
           Formulário do Cliente
         </button>
 
-        <button 
+        {googleHabilitado && <button 
           onClick={() => setActiveTab('google')}
           className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'google' ? 'border-blue-600 text-blue-600' : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600'}`}
         >
           <CalendarCheck className="w-4 h-4" />
           Google Agenda
-        </button>
+        </button>}
       </div>
 
-      {activeTab === 'google' && (
+      {activeTab === 'google' && googleHabilitado && (
         <GoogleAgendaCard
           empresaId={empresaId}
           agendaId={agenda.id}

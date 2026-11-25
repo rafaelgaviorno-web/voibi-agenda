@@ -11,7 +11,7 @@ async function isSuperadmin() {
 
 export async function updateEmpresa(
   empresaId: string,
-  data: { nome: string; slug: string; cnpj: string; plano_id: string; fuso_horario?: string }
+  data: { nome: string; slug: string; cnpj: string; plano_id: string; fuso_horario?: string; google_agenda_habilitado?: boolean }
 ) {
   if (!(await isSuperadmin())) return { success: false, error: 'Acesso negado.' };
 
@@ -31,6 +31,7 @@ export async function updateEmpresa(
       cnpj: data.cnpj.trim() || null,
       plano_id: data.plano_id || null,
       ...(isValidTimeZone(data.fuso_horario) ? { fuso_horario: data.fuso_horario } : {}),
+      ...(typeof data.google_agenda_habilitado === 'boolean' ? { google_agenda_habilitado: data.google_agenda_habilitado } : {}),
     })
     .eq('id', empresaId);
 
