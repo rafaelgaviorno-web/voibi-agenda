@@ -30,6 +30,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
       status_atendimento,
       observacao,
       is_encaixe,
+      meet_link,
       created_at,
       agend_clientes_finais(id, nome, email, telefone),
       agend_tipos_evento(id, nome, duracao_minutos),
