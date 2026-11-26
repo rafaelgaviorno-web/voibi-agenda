@@ -239,7 +239,7 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   if (!resolvedProf) {
     const { data: firstProf } = await supabase
       .from('agend_profissionais')
-      .select('id, nome, cor, webhook_url, permitir_sobreposicao')
+      .select('id, nome, cor, webhook_url, permitir_sobreposicao, antecedencia_minima_horas')
       .eq('empresa_id', auth.empresa.id)
       .order('created_at', { ascending: true })
       .limit(1)
@@ -362,6 +362,17 @@ export const POST = withApiLogger(async function POST(request: NextRequest) {
   const isEncaixe = body.is_encaixe === true || body.encaixe === true;
 
   if (!isEncaixe) {
+    const antecedenciaHoras = Number((resolvedProf as any).antecedencia_minima_horas ?? 0);
+    if (antecedenciaHoras > 0) {
+      const nowClinic = clinicNow(auth.empresa.fuso_horario);
+      const minAllowedTime = new Date(nowClinic.getTime() + antecedenciaHoras * 60 * 60 * 1000);
+      if (startDate < minAllowedTime) {
+        return NextResponse.json({
+          error: `Esta agenda exige antecedência mínima de ${antecedenciaHoras} ${antecedenciaHoras === 1 ? 'hora' : 'horas'} para agendamento.`
+        }, { status: 400 });
+      }
+    }
+
     const [y, m, d] = rawInicio.slice(0, 10).split('-').map(Number);
     const safeDate = new Date(y, m - 1, d, 12, 0, 0);
     const dayOfWeek = safeDate.getDay();

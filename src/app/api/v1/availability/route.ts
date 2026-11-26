@@ -55,7 +55,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   const dayOfWeek = safeDate.getDay(); // 0 = Domingo, 6 = Sábado
 
   let eventType: { id?: string; duracao_minutos?: number; buffer_antes_minutos?: number; buffer_depois_minutos?: number; antecedencia_min_horas?: number; profissional_id?: string | null } | null = null;
-  let resolvedProf: { id: string; nome: string; intervalo_minutos?: number } | null = null;
+  let resolvedProf: { id: string; nome: string; intervalo_minutos?: number; antecedencia_minima_horas?: number } | null = null;
 
   // 1. Obter Event Type se informado
   if (eventTypeId) {
@@ -89,7 +89,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   if (!resolvedProf) {
     const { data: allProfs } = await supabase
       .from('agend_profissionais')
-      .select('id, nome, cor, intervalo_minutos')
+      .select('id, nome, cor, intervalo_minutos, antecedencia_minima_horas')
       .eq('empresa_id', auth.empresa.id)
       .order('nome', { ascending: true });
 
@@ -112,9 +112,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
 
     const diaInicio = startOfDay(date).toISOString();
     const diaFim = endOfDay(date).toISOString();
-    const minNotice = searchParams.get('respeitar_antecedencia') === 'true' 
-      ? (eventType?.antecedencia_min_horas ?? 0) 
-      : 0;
+    const forceIgnoreNotice = searchParams.get('respeitar_antecedencia') === 'false';
 
     const allFormattedSlots: { start: string; end: string; time: string; agenda: { id: string; nome: string } }[] = [];
     const agendasDisponiveis: { id: string; nome: string; available_times: string[] }[] = [];
@@ -159,7 +157,7 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
           durationMinutes: eventType?.duracao_minutos || p.intervalo_minutos || 30,
           bufferBeforeMinutes: eventType?.buffer_antes_minutos || 0,
           bufferAfterMinutes: eventType?.buffer_depois_minutos || 0,
-          minNoticeHours: minNotice,
+          minNoticeHours: forceIgnoreNotice ? 0 : (p.antecedencia_minima_horas ?? eventType?.antecedencia_min_horas ?? 0),
           intervalMinutes: p.intervalo_minutos || 30
         },
         parsedBookings,
@@ -282,10 +280,11 @@ export const GET = withApiLogger(async function GET(request: NextRequest) {
   const parsedBookings = (bookings || []).map(b => ({ start: new Date(b.inicio), end: new Date(b.fim) }));
   const mappedRegras = regras.map(r => ({ startTime: r.hora_inicio, endTime: r.hora_fim }));
 
-  // Por padrão não bloqueamos artificialmente 24h na consulta em tempo real da IA, a não ser que pedido explicitamente
-  const minNotice = searchParams.get('respeitar_antecedencia') === 'true' 
-    ? (eventType?.antecedencia_min_horas ?? 0) 
-    : 0;
+  // Respeita a antecedência mínima configurada na agenda (ou no tipo de evento, se houver), a menos que desabilitado explicitamente
+  const forceIgnoreNotice = searchParams.get('respeitar_antecedencia') === 'false';
+  const minNotice = forceIgnoreNotice
+    ? 0
+    : (resolvedProf.antecedencia_minima_horas ?? eventType?.antecedencia_min_horas ?? 0);
 
   const slots = getAvailableSlots(
     date,

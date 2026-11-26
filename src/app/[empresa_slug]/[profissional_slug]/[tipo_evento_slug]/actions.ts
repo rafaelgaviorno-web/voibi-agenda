@@ -12,7 +12,7 @@ export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
 
   const { data: eventType } = await supabase
     .from('agend_tipos_evento')
-    .select('*, agend_profissionais!inner(id, agend_empresas(fuso_horario))')
+    .select('*, agend_profissionais!inner(id, antecedencia_minima_horas, agend_empresas(fuso_horario))')
     .eq('id', eventTypeId)
     .single();
 
@@ -51,7 +51,7 @@ export async function getSlotsForDate(eventTypeId: string, dateStr: string) {
       durationMinutes: eventType.duracao_minutos,
       bufferBeforeMinutes: eventType.buffer_antes_minutos,
       bufferAfterMinutes: eventType.buffer_depois_minutos,
-      minNoticeHours: eventType.antecedencia_min_horas
+      minNoticeHours: (eventType.agend_profissionais as any)?.antecedencia_minima_horas ?? eventType.antecedencia_min_horas ?? 0
     },
     parsedBookings,
     parsedBlocks,

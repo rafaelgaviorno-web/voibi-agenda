@@ -35,6 +35,11 @@ export default function AgendaConfigClient({
   const [isUploadingFoto, setIsUploadingFoto] = useState(false);
   const [cor, setCor] = useState(agenda.cor || '#4285f4');
   const [intervaloMinutos, setIntervaloMinutos] = useState<number>(agenda.intervalo_minutos || 30);
+  const [antecedenciaMinimaHoras, setAntecedenciaMinimaHoras] = useState<number>(agenda.antecedencia_minima_horas ?? 0);
+  const presetsAntecedencia = [0, 1, 2, 4, 6, 12, 24, 48, 72];
+  const [modoAntecedenciaCustom, setModoAntecedenciaCustom] = useState<boolean>(
+    !presetsAntecedencia.includes(agenda.antecedencia_minima_horas ?? 0)
+  );
   const [webhookUrl, setWebhookUrl] = useState(agenda.webhook_url || '');
   const [permitirSobreposicao, setPermitirSobreposicao] = useState(agenda.permitir_sobreposicao || false);
   const [campos, setCampos] = useState<any[]>(agenda.campos_personalizados || []);
@@ -133,6 +138,7 @@ export default function AgendaConfigClient({
         cor,
         foto_url: fotoUrl, 
         intervalo_minutos: intervaloMinutos,
+        antecedencia_minima_horas: antecedenciaMinimaHoras,
         webhook_url: webhookUrl, 
         permitir_sobreposicao: permitirSobreposicao, 
         campos_personalizados: campos 
@@ -351,6 +357,51 @@ export default function AgendaConfigClient({
                </select>
                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                  Define o intervalo entre os horários disponíveis desta agenda (gerados para a IA e no agendamento).
+               </p>
+            </div>
+            <div>
+               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Antecedência Mínima para Agendamento</label>
+               <div className="flex flex-wrap items-center gap-3">
+                 <select
+                   value={modoAntecedenciaCustom ? 'custom' : String(antecedenciaMinimaHoras)}
+                   onChange={e => {
+                     const val = e.target.value;
+                     if (val === 'custom') {
+                       setModoAntecedenciaCustom(true);
+                     } else {
+                       setModoAntecedenciaCustom(false);
+                       setAntecedenciaMinimaHoras(Number(val));
+                     }
+                   }}
+                   className="flex-1 min-w-[220px] bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                 >
+                   <option value="0">Sem antecedência mínima (pode agendar para agora)</option>
+                   <option value="1">1 hora de antecedência</option>
+                   <option value="2">2 horas de antecedência</option>
+                   <option value="4">4 horas de antecedência</option>
+                   <option value="6">6 horas de antecedência</option>
+                   <option value="12">12 horas de antecedência</option>
+                   <option value="24">24 horas (1 dia) de antecedência</option>
+                   <option value="48">48 horas (2 dias) de antecedência</option>
+                   <option value="72">72 horas (3 dias) de antecedência</option>
+                   <option value="custom">Personalizado (definir em horas)</option>
+                 </select>
+                 {modoAntecedenciaCustom && (
+                   <div className="flex items-center gap-2">
+                     <input
+                       type="number"
+                       min={0}
+                       max={720}
+                       value={antecedenciaMinimaHoras}
+                       onChange={e => setAntecedenciaMinimaHoras(Math.max(0, Number(e.target.value || 0)))}
+                       className="w-24 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                     />
+                     <span className="text-xs text-zinc-500 dark:text-zinc-400">horas</span>
+                   </div>
+                 )}
+               </div>
+               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                 Define com quantas horas de antecedência o paciente/cliente pode se agendar nesta agenda (vale para o link público e para a IA).
                </p>
             </div>
             <div>

@@ -76,6 +76,7 @@ export default async function AgendaConfigPage({ params, searchParams }: { param
     cor: string;
     foto_url?: string | null; 
     intervalo_minutos?: number;
+    antecedencia_minima_horas?: number;
     webhook_url?: string; 
     permitir_sobreposicao?: boolean; 
     campos_personalizados?: any[]; 
@@ -94,6 +95,7 @@ export default async function AgendaConfigPage({ params, searchParams }: { param
         cor: data.cor,
         foto_url: data.foto_url !== undefined ? data.foto_url : null,
         intervalo_minutos: data.intervalo_minutos || 30,
+        antecedencia_minima_horas: Math.max(0, Number(data.antecedencia_minima_horas || 0)),
         webhook_url: data.webhook_url || null,
         permitir_sobreposicao: !!data.permitir_sobreposicao,
         campos_personalizados: data.campos_personalizados || []
